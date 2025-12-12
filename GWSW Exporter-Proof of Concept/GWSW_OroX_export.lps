@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Debug"/>
+    <Units>
+      <Unit>
+        <Filename Value="GWSW_OroX_export.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="9"/>
+        <CursorPos X="62" Y="4"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="formmain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="FormMain"/>
+        <TopLine Value="95"/>
+        <CursorPos X="51" Y="117"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\uiexportview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uIExportView"/>
+        <EditorIndex Value="1"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\oroxexportpresenter.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="OroxExportPresenter"/>
+        <EditorIndex Value="6"/>
+        <CursorPos Y="24"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="OroxExportModel"/>
+        <EditorIndex Value="7"/>
+        <CursorPos Y="24"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\gwswtypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GWSWTypes"/>
+        <EditorIndex Value="2"/>
+        <CursorPos Y="24"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\uigwswdataprovider.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uIGWSWDataProvider"/>
+        <EditorIndex Value="3"/>
+        <CursorPos Y="24"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\querydataprovider.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="QueryDataProvider"/>
+        <EditorIndex Value="4"/>
+        <CursorPos Y="24"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\csvdataprovider.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CSVDataProvider"/>
+        <EditorIndex Value="5"/>
+        <CursorPos Y="24"/>
+        <UsageCount Value="127"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="src\mappingmanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="MappingManager"/>
+        <EditorIndex Value="8"/>
+        <UsageCount Value="113"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\packages\fcl-db\src\base\db.pas"/>
+        <UnitName Value="DB"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1673"/>
+        <CursorPos X="14" Y="1689"/>
+        <UsageCount Value="1"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\rtl\objpas\sysutils\sysstrh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="187"/>
+        <CursorPos X="10" Y="198"/>
+        <UsageCount Value="1"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\Config\onlinepackagemanager\packages\fpspreadsheet\source\common\fpspreadsheet.pas"/>
+        <UnitName Value="fpSpreadsheet"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="3"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\packages\rtl-objpas\src\inc\variants.pp"/>
+        <UnitName Value="Variants"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="71"/>
+        <CursorPos X="10" Y="87"/>
+        <UsageCount Value="4"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="279"/>
+        <CursorPos X="3" Y="298"/>
+        <UsageCount Value="8"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\Config\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcOracle.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1378"/>
+        <CursorPos Y="1394"/>
+        <UsageCount Value="23"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\Config\onlinepackagemanager\packages\zeosdbo\src\component\ZAbstractConnection.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="315"/>
+        <CursorPos X="14" Y="331"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\Config\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcIntfs.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="230"/>
+        <CursorPos X="3" Y="247"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1730" Column="55" TopLine="1707"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="532" Column="71" TopLine="504"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1193" Column="12" TopLine="1176"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1192" Column="3" TopLine="1176"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1191" Column="6" TopLine="1176"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1141" Column="30" TopLine="1123"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1196" Column="56" TopLine="1175"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="532" Column="18" TopLine="515"/>
+      </Position>
+      <Position>
+        <Filename Value="src\gwswtypes.pas"/>
+        <Caret Line="107" Column="23" TopLine="89"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="532" Column="3" TopLine="515"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1753" TopLine="1731"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1867" Column="37" TopLine="1838"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1871" Column="64" TopLine="1838"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="443" Column="43" TopLine="425"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="444" Column="17" TopLine="426"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="449" TopLine="431"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="917" Column="4" TopLine="899"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="526" TopLine="509"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+        <Caret Line="1396" Column="78" TopLine="1372"/>
+      </Position>
+      <Position>
+        <Filename Value="src\uiexportview.pas"/>
+        <Caret Line="12" Column="15"/>
+      </Position>
+      <Position>
+        <Filename Value="src\uiexportview.pas"/>
+        <Caret Line="24"/>
+      </Position>
+      <Position>
+        <Filename Value="src\gwswtypes.pas"/>
+        <Caret Line="107" Column="23" TopLine="89"/>
+      </Position>
+      <Position>
+        <Filename Value="src\uigwswdataprovider.pas"/>
+        <Caret Line="25" Column="28"/>
+      </Position>
+      <Position>
+        <Filename Value="src\querydataprovider.pas"/>
+        <Caret Line="6" Column="22"/>
+      </Position>
+      <Position>
+        <Filename Value="src\csvdataprovider.pas"/>
+        <Caret Line="150"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportpresenter.pas"/>
+        <Caret Line="53" Column="33" TopLine="44"/>
+      </Position>
+      <Position>
+        <Filename Value="src\oroxexportmodel.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="src\mappingmanager.pas"/>
+        <Caret Line="87" Column="129" TopLine="57"/>
+      </Position>
+      <Position>
+        <Filename Value="GWSW_OroX_export.lpr"/>
+        <Caret Line="13" Column="18"/>
+      </Position>
+      <Position>
+        <Filename Value="GWSW_OroX_export.lpr"/>
+        <Caret Column="21"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+  <Debugging>
+    <BreakPoints>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="src\oroxexportmodel.pas"/>
+        <Line Value="284"/>
+      </Item>
+    </BreakPoints>
+  </Debugging>
+</CONFIG>
