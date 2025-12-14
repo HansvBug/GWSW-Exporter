@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Debug"/>
+    <Units>
+      <Unit>
+        <Filename Value="gwsw_exporter.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="35" Y="13"/>
+        <UsageCount Value="22"/>
+      </Unit>
+      <Unit>
+        <Filename Value="views\view.main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmMain"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="presenters\presenter.main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="7"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="models\model.base.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="11"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\common.consts.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="5"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\applogging.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AppLogging"/>
+        <EditorIndex Value="14"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\settings.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Settings"/>
+        <EditorIndex Value="13"/>
+        <CursorPos X="98" Y="16"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\common.utils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="views\view.configure.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmConfigure"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="presenters\presenter.configure.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="4"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="presenters\presenter.configure.trax.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="3"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="models\model.configure.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="6"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="presenters\presenter.trax.pas"/>
+        <EditorIndex Value="8"/>
+        <CursorPos Y="2"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="models\model.decl.pas"/>
+        <EditorIndex Value="12"/>
+        <CursorPos X="38"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="models\model.intf.pas"/>
+        <EditorIndex Value="9"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="models\model.main.pas"/>
+        <EditorIndex Value="10"/>
+        <CursorPos X="40"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\exp.dirinfo.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="41"/>
+        <CursorPos X="28" Y="59"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\lcl\include\customform.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3190"/>
+        <CursorPos X="44" Y="3226"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\lcl\menus.pp"/>
+        <UnitName Value="Menus"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="336"/>
+        <CursorPos X="14" Y="351"/>
+        <UsageCount Value="10"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="176" TopLine="151"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="177" TopLine="152"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="178" TopLine="154"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="179" TopLine="155"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="180" TopLine="156"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="181" TopLine="157"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="168" Column="20" TopLine="158"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="181" TopLine="158"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="178" Column="59" TopLine="161"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="179" Column="59" TopLine="162"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="180" Column="59" TopLine="163"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="181" Column="59" TopLine="164"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="182" Column="59" TopLine="165"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="183" Column="59" TopLine="166"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="184" Column="59" TopLine="168"/>
+      </Position>
+      <Position>
+        <Filename Value="common\common.utils.pas"/>
+        <Caret Line="65" Column="66" TopLine="29"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.configure.pas"/>
+        <Caret Line="382" TopLine="359"/>
+      </Position>
+      <Position>
+        <Filename Value="presenters\presenter.configure.trax.pas"/>
+        <Caret Line="97" TopLine="79"/>
+      </Position>
+      <Position>
+        <Filename Value="presenters\presenter.configure.pas"/>
+        <Caret Line="54" TopLine="33"/>
+      </Position>
+      <Position>
+        <Filename Value="common\common.consts.pas"/>
+        <Caret Line="44" Column="42" TopLine="19"/>
+      </Position>
+      <Position>
+        <Filename Value="models\model.configure.pas"/>
+        <Caret Line="164" TopLine="149"/>
+      </Position>
+      <Position>
+        <Filename Value="presenters\presenter.main.pas"/>
+        <Caret Line="18" Column="5"/>
+      </Position>
+      <Position>
+        <Filename Value="presenters\presenter.trax.pas"/>
+        <Caret Line="314" Column="7" TopLine="282"/>
+      </Position>
+      <Position>
+        <Filename Value="models\model.intf.pas"/>
+        <Caret Line="49" Column="28" TopLine="31"/>
+      </Position>
+      <Position>
+        <Filename Value="models\model.main.pas"/>
+        <Caret Line="67" Column="54" TopLine="54"/>
+      </Position>
+      <Position>
+        <Filename Value="models\model.base.pas"/>
+        <Caret Line="96" Column="12" TopLine="58"/>
+      </Position>
+      <Position>
+        <Filename Value="models\model.decl.pas"/>
+        <Caret Line="101" Column="25" TopLine="92"/>
+      </Position>
+      <Position>
+        <Filename Value="common\settings.pas"/>
+        <Caret Line="166" Column="43" TopLine="156"/>
+      </Position>
+      <Position>
+        <Filename Value="common\applogging.pas"/>
+        <Caret Line="19" Column="3"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.configure.pas"/>
+        <Caret Column="41"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

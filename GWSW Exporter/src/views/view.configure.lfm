@@ -1,0 +1,76 @@
+object frmConfigure: TfrmConfigure
+  Left = 530
+  Height = 367
+  Top = 37
+  Width = 705
+  Caption = 'frmConfigure'
+  ClientHeight = 367
+  ClientWidth = 705
+  DesignTimePPI = 144
+  LCLVersion = '4.0.0.4'
+  object stbInfo: TStatusBar
+    Left = 0
+    Height = 36
+    Top = 331
+    Width = 705
+    Panels = <>
+  end
+  object pgcConfigure: TPageControl
+    Left = 0
+    Height = 200
+    Top = 0
+    Width = 705
+    ActivePage = tbsMiscellaneous
+    Align = alTop
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    TabIndex = 0
+    TabOrder = 1
+    object tbsMiscellaneous: TTabSheet
+      Caption = 'tbsMiscellaneous'
+      ClientHeight = 162
+      ClientWidth = 697
+      object gbLogging: TGroupBox
+        Left = 12
+        Height = 120
+        Top = 12
+        Width = 278
+        Caption = 'gbLogging'
+        ClientHeight = 90
+        ClientWidth = 274
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        object chkActiveLogging: TCheckBox
+          Left = 12
+          Height = 29
+          Top = 8
+          Width = 166
+          Caption = 'chkActiveLogging'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+          OnChange = chkActiveLoggingChange
+        end
+        object chkAppendLogging: TCheckBox
+          Left = 12
+          Height = 29
+          Top = 48
+          Width = 182
+          Caption = 'chkAppendLogging'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 1
+        end
+      end
+    end
+  end
+  object btnClose: TButton
+    Left = 584
+    Height = 38
+    Top = 280
+    Width = 113
+    Anchors = [akRight, akBottom]
+    Caption = 'btnClose'
+    TabOrder = 2
+  end
+end

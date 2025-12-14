@@ -1,0 +1,40 @@
+[view.main]
+miProgram=&Program
+miProgramClose=&Quit
+
+miOptions=&Options
+miOptionsOptions=&Options...
+miOptionsLanguage=&Language
+miOptionsLanguageEN=&English
+miOptionsLanguageNL=&Dutch
+
+tsPrepare=Prepare
+tsSettings=Settings
+tsQuery=Query
+gbConnection=Connection
+gbGetData=Get data from database
+gbExport=Export
+btnSaveQuery=Save
+BitBtnSelectMappingsFile=...
+lblMappingsFile=Select mapping file
+lblDatabaseName=Database
+lblUserName=User
+lblPassword=Password
+
+
+[view.main.statusbartexts]
+Welcome=Welcome.
+DirIsNotWriteable=
+ErrorCreateDir=(!) Unexpected error when creating the directories.
+ErrorReadSettings=(!) Unexpected error retrieving the settings.
+ErrorReadFormState=(!) Unexpected error when retrieving the window position.
+ErrorStoreFormState=(!) Unexpected error when saving the window position.
+ErrorSaveSingleSetting=(!) Unexpected error when saving a setting.
+
+
+[view.main.hints]
+
+
+[view.main.logging]
+SwitchlanguageNL=Language adapted to Dutch.
+SwitchlanguageEN=Language changed to English.

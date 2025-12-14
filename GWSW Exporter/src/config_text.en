@@ -1,0 +1,20 @@
+[view.configure]
+frmConfigure=Options
+tbsMiscellaneous=Miscellaneous
+chkActiveLogging=Activate logging
+chkAppendLogging=Append logfile
+gbLogging=Logging
+btnClose=Sluiten
+
+
+[view.configure.statusbartexts]
+
+
+[view.configure.hints]
+chkActiveLogging=Restart the application after a change.
+chkAppendLogging=Restart the application after a change.
+gbLogging==Restart the application after a change.
+
+
+[view.configure.logging]
+
