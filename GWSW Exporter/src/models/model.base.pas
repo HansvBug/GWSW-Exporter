@@ -78,6 +78,7 @@ type
       setWriteSettings,
       setReadFormState: Boolean;
       setMessage: String;
+      setMappingFile: String;
     end;
 
     PSingleSettingRec = ^TSingleSettingRec;
@@ -95,6 +96,34 @@ type
       mpWidth,
       rpWidth: Integer;
     end;
+
+    { Database connection data }
+    PDbConnectRec = ^TDbConnectRec;
+    TDbConnectRec = record
+      DatabaseName,
+      UserName,
+      SchemaPassword,
+      Message: String;
+      HasConnection: Boolean;
+    end;
+
+    PRetrieveDataRec = ^TRetrieveDataRec;
+    TRetrieveDataRec = record
+      SqlText,
+      OrganizationName: String;
+      DataSource: TObject;
+    end;
+
+    PExportToOroxTtlFileRec = ^TExportToOroxTtlFileRec;
+    TExportToOroxTtlFileRec = record
+      //Dataset: TObject;
+      //DataProvider: TObject;
+      FileName,
+      MappingFile,
+      OrganizationName: String;
+    end;
+
+
 
 { ---------------------------------------------------------------------------- }
   { TTransaction is our container vessel for changes }

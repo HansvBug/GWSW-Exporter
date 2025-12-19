@@ -66,6 +66,12 @@ type
   PSingleSettingRec         = model.base.PSingleSettingRec;
   TstbPanelsSize            = model.base.TstbPanelsSize;
   PStbPanelsSize            = model.base.PStbPanelsSize;
+  TDbConnectRec             = model.base.TDbConnectRec;
+  PDbConnectRec             = model.base.PDbConnectRec;
+  TRetrieveDataRec          = model.base.TRetrieveDataRec;
+  PRetrieveDataRec          = model.base.PRetrieveDataRec;
+  TExportToOroxTtlFileRec   = model.base.TExportToOroxTtlFileRec;
+  PExportToOroxTtlFileRec   = model.base.PExportToOroxTtlFileRec;
 
 
 { utility functions, here we publicly export these functions, to be made available
@@ -202,13 +208,14 @@ begin { first we check if the reason is in our TransactionFactory, if so then ge
       prCustom: fTrx:= TTransaction.Create(aModReason); // 1 ~ doesn't cause an exception, 0 does!
       prDataChanged: fTrx:= TTextEdit.Create(aModReason); // 1
       //...
-      prCreateDir         : fTrx:= TCreDirTrx.Create(aModReason);
-      prAppSettings       : fTrx:= TSettingstrx.Create(aModReason);
-      prAppSingleSetting  : fTrx:= TSingleSettingTrx.Create(aModReason);
-      prFormState         : fTrx:= TSettingsTrx.Create(aModReason);
-      prFormStateConfig   : fTrx:= TSettingsConfigTrx.Create(aModReason);
-      prAppSettingsConfig : fTrx:= TSettingsConfigTrx.Create(aModReason);
-
+      prCreateDir           : fTrx:= TCreDirTrx.Create(aModReason);
+      prAppSettings         : fTrx:= TSettingstrx.Create(aModReason);
+      prAppSingleSetting    : fTrx:= TSingleSettingTrx.Create(aModReason);
+      prFormState           : fTrx:= TSettingsTrx.Create(aModReason);
+      prFormStateConfig     : fTrx:= TSettingsConfigTrx.Create(aModReason);
+      prAppSettingsConfig   : fTrx:= TSettingsConfigTrx.Create(aModReason);
+      prRetrieveData        : fTrx:= TRetrieveDataTrx.Create(aModReason);
+      prExportToOroxTtlFile : fTrx:= TExportToOroxTtlFileTrx.Create(aModReason);
       /// etc...
 
       else fTrx:= TTransaction.Create(aModReason); // 0 or anything undefined by us

@@ -1,2 +1,2 @@
 "# GWSW Exporter Repository" 
-"Deze repository bevat meerdere GWSW exporter projecten." 
+"This repository contains two GWSW export projects." 

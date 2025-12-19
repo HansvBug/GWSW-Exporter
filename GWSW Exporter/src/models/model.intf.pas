@@ -34,9 +34,14 @@ type
     procedure WriteSingleSetting(SettingData : PSingleSettingRec);
     procedure StartLogging;
     procedure StopLogging;
-    procedure WriteToLog(const aLogAction, LogText: String);
+    procedure WriteToLog(const LogType, LogText: String);
     function SetStatusbarPanelsWidth(stbWidth, lpWidth, rpWidth: Integer): TstbPanelsSize;
     function IsFileInUse(const FileName: String): Boolean;
+
+    procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
+    function IsConnected: Boolean;
+    function RetrieveData(Data: PRetrieveDataRec): TRetrieveDataRec;
+    function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
 
   end; { IModelMain }
 
@@ -107,6 +112,7 @@ type
     procedure StartLogging;
     procedure WriteToLog(const aSection, aLogType, LogText: String);
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
+    procedure MakeDbConnection(DbConnectionData: PDbConnectRec);
 
     property Model: IModelMain read get_Model; // TODO: write set_Model;
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -161,7 +167,6 @@ type
     property Observer: IobsSubscriber read get_Observer write set_Observer;
     property Presenter: IPresenterConfigure read get_Presenter write set_Presenter;
   end; { IViewConfigure }
-
 {$interfaces com}
 
 { convenience function for cleaning up CORBA references }

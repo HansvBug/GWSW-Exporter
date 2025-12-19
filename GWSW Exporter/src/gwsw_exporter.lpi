@@ -16,8 +16,8 @@
     </General>
     <VersionInfo>
       <UseVersionInfo Value="True"/>
-      <MinorVersionNr Value="1"/>
-      <StringTable Comments="GWSW OroX export naar ttl bestand." CompanyName="Hans van Buggenum" FileDescription="GWSW OroX export naar ttl bestand." InternalName="GWSW-Bridge" LegalCopyright="Hans van Buggenum" OriginalFilename="GWSW-OroX-Exporter" ProductName="GWSW Exporter" ProductVersion="1.0.0.0"/>
+      <MinorVersionNr Value="2"/>
+      <StringTable Comments="GWSW OroX export naar ttl bestand." CompanyName="Hans van Buggenum" FileDescription="GWSW OroX export naar ttl bestand." InternalName="GWSW-Bridge" LegalCopyright="Hans van Buggenum" OriginalFilename="GWSW-OroX-Exporter" ProductName="GWSW Exporter" ProductVersion="1.0.0"/>
     </VersionInfo>
     <BuildModes>
       <Item Name="Default" Default="True"/>
@@ -104,6 +104,18 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="laz_fpspreadsheet_visual_dsgn"/>
+      </Item>
+      <Item>
+        <PackageName Value="laz_fpspreadsheet_visual"/>
+      </Item>
+      <Item>
+        <PackageName Value="zcomponentdesign"/>
+      </Item>
+      <Item>
+        <PackageName Value="zcomponent"/>
+      </Item>
+      <Item>
         <PackageName Value="SynEditDsgn"/>
       </Item>
       <Item>
@@ -169,6 +181,41 @@
       <Unit>
         <Filename Value="models\model.configure.pas"/>
         <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\databasemodule.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="DatabaseModule"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\querydataprovider.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="QueryDataProvider"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\oroxexport.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="OroxExport"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\interfacewrapper.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="InterfaceWrapper"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\gwswtypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GWSWTypes"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\mappingmanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="MappingManager"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\uigwswdataprovider.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uIGWSWDataProvider"/>
       </Unit>
     </Units>
   </ProjectOptions>

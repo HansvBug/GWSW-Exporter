@@ -41,6 +41,7 @@ type
     { Configuration fields. }
     fAppendLogFile: Boolean;
     fLanguage: String;
+    fMappingFile : String;
     fSettingsFile: String;
     fAppName: String;
     fAppVersion: String;
@@ -105,6 +106,7 @@ type
     property Language: String read fLanguage write fLanguage;
     property ActivateLogging: Boolean read fActivateLogging write fActivateLogging;
     property AppendLogFile: Boolean read fAppendLogFile write fAppendLogFile;
+    property MappingFile: String read fMappingFile write fMappingFile;
 
     { Operation status. }
     property Succes: Boolean read fSucces write fSucces;
@@ -214,6 +216,7 @@ begin
       ActivateLogging:= ReadBool('Configure', 'ActivateLogging', True);
       AppendLogFile:= ReadBool('Configure', 'AppendLogFile', True);
       Language:= ReadString('Configure', 'Language', 'en');
+      MappingFile:= ReadString('Configure', 'MappingFile', '');
       // new setting...
 
       Succes:= True;

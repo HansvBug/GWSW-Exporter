@@ -3,29 +3,39 @@ unit view.main;
 {$mode objfpc}{$H+}
 interface
 uses Classes, SysUtils, Forms, StdCtrls, Controls, Graphics, Dialogs, ComCtrls,
-  ExtCtrls, Menus, DBGrids, Buttons, SynEdit, SynHighlighterSQL, istrlist,
-  model.intf, model.decl, presenter.main, presenter.trax;
+  ExtCtrls, Menus, DBGrids, Buttons, fpspreadsheetctrls, SynEdit,
+  SynHighlighterSQL, istrlist, model.intf, model.decl, presenter.main,
+  presenter.trax, DB, fpcsvexport;
 
 type
   { TfrmMain }
 
-  TfrmMain = class(TForm,IViewMain)
+  TfrmMain = class(TForm, IViewMain)
     BitBtnSelectMappingsFile : TBitBtn;
+    btnConnect : TButton;
+    btnGetData : TButton;
+    btnExportToFile : TButton;
+    btnExportDbgridToCsv : TButton;
     btnSaveQuery : TButton;
+    btnOpenQuery : TButton;
+    cbGWSWVersion : TComboBox;
     dbgSewerData : TDBGrid;
+    edtMappingsFile : TEdit;
+    edtOrganizationName : TEdit;
     edtDatabaseName : TEdit;
     edtUserName : TEdit;
     edtPassword : TEdit;
-    edtMappingsFile : TEdit;
     gbConnection : TGroupBox;
     gbExport : TGroupBox;
     gbGetData : TGroupBox;
     gbQuery : TGroupBox;
     gbSettings : TGroupBox;
+    lblGWSWVersion : TLabel;
+    lblMappingsFile : TLabel;
+    lblOrganizationName : TLabel;
     lblDatabaseName : TLabel;
     lblUserName : TLabel;
     lblPassword : TLabel;
-    lblMappingsFile : TLabel;
     MainMenu1 : TMainMenu;
     miOptionsLanguageNL : TMenuItem;
     miOptionsLanguageEN : TMenuItem;
@@ -37,6 +47,8 @@ type
     miProgram : TMenuItem;
     PageControl1 : TPageControl;
     Panel1 : TPanel;
+    pnlSettings : TPanel;
+    pnlQuery : TPanel;
     pnlPrepareData : TPanel;
     pnlPrepareMain : TPanel;
     pnlMainTop : TPanel;
@@ -44,12 +56,22 @@ type
     pnlMainAllClient : TPanel;
     Splitter1 : TSplitter;
     stbInfo : TStatusBar;
-    SynEdit1 : TSynEdit;
+    SynEditSqlQuery : TSynEdit;
     SynSQLSyn1 : TSynSQLSyn;
     tsQuery : TTabSheet;
     tsPrepare : TTabSheet;
     tsSettings : TTabSheet;
+    procedure BitBtnSelectMappingsFileClick(Sender : TObject);
+    procedure btnConnectClick(Sender : TObject);
+    procedure btnExportDbgridToCsvClick(Sender : TObject);
+    procedure btnExportToFileClick(Sender : TObject);
+    procedure btnGetDataClick(Sender : TObject);
+    procedure btnOpenQueryClick(Sender : TObject);
+    procedure btnSaveQueryClick(Sender : TObject);
+    procedure PageControl1Change(Sender : TObject);
   private
+
+
     fPresenter: IPresenterMain;
     fSubscriber: IobsSubscriber;
 
@@ -78,6 +100,7 @@ type
     procedure miOptionsOptionsOnClick(Sender : TObject);
     procedure miOptionsLanguageENOnClick(Sender : TObject);
     procedure miOptionsLanguageNLOnClick(Sender : TObject);
+    procedure edtMappingsFileOnChange(Sender : TObject);
 
   protected
     procedure DoStaticTexts(Texts: IStrings);           
@@ -86,6 +109,9 @@ type
     procedure DoAppSettings({%H-}anObj: TObject; aData: PSettingsRec);
     procedure DoFormState({%H-}anObj: TObject; Settings: PSettingsRec);
     procedure DoStbPanelWidth(anObj: TObject; aData: pointer);
+    procedure DoDbConnection(anObj: TObject; aData: PDbConnectRec);
+    procedure DoRetrieveData(anObj: TObject; aData: PRetrieveDataRec);
+    procedure DoExportToOroxTtlFile(anObj: TObject; aData: PExportToOroxTtlFileRec);
     procedure HandleObsNotify(aReason: ptrint; aNotifyObj: TObject; aData: pointer);
   public
     procedure AfterConstruction; override;
@@ -105,6 +131,195 @@ uses obs_prosu, common.consts, common.utils, view.configure;
 
 { TfrmMain }
 {$Region 'getter/setter'}
+
+procedure TfrmMain.btnConnectClick(Sender : TObject);
+var
+  lRec: TDbConnectRec;
+begin
+  { #todo : Eventhandler nog los koppelen }
+  Screen.Cursor:= crHourGlass;
+  lRec.DatabaseName:= edtDatabaseName.Text;
+  lRec.UserName:= edtUserName.Text;
+  lRec.SchemaPassword:= edtPassword.Text;
+  lRec.HasConnection:= False;
+
+  fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.StatusbarTexts','Connecting'), 0);
+  fPresenter.MakeDbConnection(@lRec);
+end;
+
+procedure TfrmMain.btnExportDbgridToCsvClick(Sender : TObject);
+var
+  csvExporter: TCSVExporter;
+  saveDialog: TSaveDialog;
+begin
+  { #todo : Make this MVP proof }
+  csvExporter:= TCSVExporter.Create(Nil);
+  saveDialog:= TSaveDialog.Create(Nil);
+  try
+    csvExporter.Dataset:= dbgSewerData.DataSource.DataSet;
+
+    saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveCSVFile');
+    saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgCSVFilesFilter');
+    saveDialog.DefaultExt:= 'csv';
+    saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName; { #todo : Make Linux proof };;
+    saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt];
+
+    if saveDialog.Execute then begin
+      Screen.Cursor:= crHourGlass;
+      csvExporter.FileName:= saveDialog.FileName;
+      csvExporter.Execute;
+      Screen.Cursor:= crDefault;
+    end;
+
+  finally
+    csvExporter.Free;
+    saveDialog.Free;
+  end;
+end;
+
+procedure TfrmMain.btnExportToFileClick(Sender : TObject);
+var
+  saveDialog: TSaveDialog;
+  lTrx: TExportToOroxTtlFileTrx;
+  lFileName: String;
+  lCanContinue: Boolean;
+begin
+  lCanContinue:= False;
+  if dbgSewerData.DataSource = Nil then begin
+    ShowMessage(fPresenter.GetstaticText(UnitName, 'QueryNotActive'));  { #todo : create a msgdialog }
+    Exit;
+  end;
+  if edtMappingsFile.Text = '' then begin
+    ShowMessage('Mappingsbestand ontbreekt');
+    Exit
+  end;
+
+  saveDialog:= TSaveDialog.Create(Nil);
+  saveDialog.Filter := 'GWSW-OroX Bestanden (*.orox.ttl)|*.orox.ttl|Turtle Bestanden (*.ttl)|*.ttl|Alle bestanden (*.*)|*.*';
+  saveDialog.DefaultExt := 'orox.ttl';  // Is prescribed in this way.
+  saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adExport; { #todo : Make Linux proof };
+  try
+    if saveDialog.Execute then begin
+      lFileName:= saveDialog.FileName;
+      lCanContinue:= True;
+    end;
+  finally
+    saveDialog.Free;
+  end;
+
+  if lCanContinue then begin
+    try
+      lTrx:= fPresenter.TrxMan.StartTransaction(prExportToOroxTtlFile) as TExportToOroxTtlFileTrx;
+
+      lTrx.OrganizationName:= edtOrganizationName.Text;
+      lTrx.FileName:= lFileName;
+      lTrx.MappingFile:= edtMappingsFile.Text;
+      fPresenter.TrxMan.CommitTransaction;
+
+    except
+      fPresenter.TrxMan.RollbackTransaction;
+      fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'ErrorExportToOroxTtlFile'), 0);
+    end;
+  end;
+end;
+
+procedure TfrmMain.BitBtnSelectMappingsFileClick(Sender : TObject);
+var
+  openDialog: TOpenDialog;
+begin
+  openDialog:= TOpenDialog.Create(self);
+  openDialog.Title:= fPresenter.GetstaticText('view.main.', 'SelectMapFile');
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adDomainlist; { #todo : Make Linux proof }
+                          // ExtractFilePath(ParamStr(0)) + PathDelim + adDomainlist;
+  openDialog.Options:= [ofFileMustExist];
+  openDialog.Filter:= 'BOR-GWSW mapping files|*.ods';
+  try
+    if openDialog.Execute then begin
+      edtMappingsFile.OnChange:= Nil;  // temporarily disable otherwise WriteSingleSetting triggers 2x
+      edtMappingsFile.Text:= openDialog.FileName;
+      edtMappingsFile.OnChange:= @edtMappingsFileOnChange;
+      WriteSingleSetting('MappingFile', openDialog.FileName);
+    end;
+  finally
+    openDialog.Free;
+  end;
+end;
+
+procedure TfrmMain.btnGetDataClick(Sender : TObject);
+var
+  lTrx: TRetrieveDataTrx;
+begin
+  { #todo : Eventhandler nog los koppelen }
+  Screen.Cursor:= crHourGlass;
+  fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'RetrievingData'), 0);
+
+  lTrx:= fPresenter.TrxMan.StartTransaction(prRetrieveData) as TRetrieveDataTrx;
+  try
+    lTrx.DataGrid:= dbgSewerData;
+    lTrx.DataSource:= Nil;
+    lTrx.SqlText:= SynEditSqlQuery.Text;
+    lTrx.OrganizationName:= edtOrganizationName.Text;
+
+    fPresenter.TrxMan.CommitTransaction;
+    fPresenter.SetStatusbarText('', 0);
+  except
+    fPresenter.TrxMan.RollbackTransaction;
+    fPresenter.SetStatusbarText(FPresenter.GetstaticText('view.main.statusbartexts', 'ErrorRetrieveData'), 0);
+  end;
+end;
+
+procedure TfrmMain.btnOpenQueryClick(Sender : TObject);
+var
+  openDialog: TOpenDialog;
+begin
+  { #todo : Make this MVP proof }
+  openDialog:= TOpenDialog.Create(Nil);
+
+  openDialog.Title:= fPresenter.GetstaticText(UnitName, 'OpenTextFile');
+  openDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgTextFilesFilter');
+  openDialog.DefaultExt:= 'txt';
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName; { #todo : Make Linux proof };;
+  openDialog.Options:= openDialog.Options + [ofFileMustExist];
+
+  try
+    if openDialog.Execute then begin
+      SynEditSqlQuery.Lines.LoadFromFile(openDialog.FileName);
+      SynEditSqlQuery.Modified:= False;
+    end;
+  finally
+    openDialog.Free;
+  end;
+
+
+end;
+
+procedure TfrmMain.btnSaveQueryClick(Sender : TObject);
+var
+  saveDialog: TSaveDialog;
+begin
+  { #todo : Make this MVP proof }
+  saveDialog:= TSaveDialog.Create(Nil);
+  try
+    saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveTextFile');
+    saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgTextFilesFilter');
+    saveDialog.DefaultExt:= 'txt';
+    saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName; { #todo : Make Linux proof };;
+    saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt];
+
+    if saveDialog.Execute then begin
+      SynEditSqlQuery.Lines.SaveToFile(saveDialog.FileName);
+    end;
+  finally
+    saveDialog.Free;
+  end;
+end;
+
+procedure TfrmMain.PageControl1Change(Sender : TObject);
+begin
+  if PageControl1.ActivePageIndex = 1 then begin
+    edtMappingsFile.SelStart:= 0;
+  end;
+end;
 
 function TfrmMain.get_Observer: IobsSubscriber;
 begin
@@ -174,12 +389,12 @@ begin
       TLabel(lc).Caption:= Texts.Values[TLabel(lc).Name]
     else if (lc is TTabSheet) then
       TTabSheet(lc).Caption:= Texts.Values[TTabSheet(lc).Name]
-//    else if (lc is TCheckBox) then
-//      TCheckBox(lc).Caption:= Texts.Values[TCheckBox(lc).Name]
-//    else if (lc is TMemo) then
-//      TMemo(lc).Caption:= Texts.Values[TMemo(lc).Name]
-//    else if (lc is TComboBox) then
-//      TComboBox(lc).Caption:= Texts.Values[TComboBox(lc).Name]
+    else if (lc is TCheckBox) then
+      TCheckBox(lc).Caption:= Texts.Values[TCheckBox(lc).Name]
+    else if (lc is TMemo) then
+      TMemo(lc).Caption:= Texts.Values[TMemo(lc).Name]
+    else if (lc is TComboBox) then
+      TComboBox(lc).Caption:= Texts.Values[TComboBox(lc).Name]
     else if (lc is TBitBtn) then
       TBitBtn(lc).Caption:= Texts.Values[TBitBtn(lc).Name]
     // Clear the TEdit texts
@@ -187,8 +402,8 @@ begin
       TEdit(lc).Text:= Texts.Values[TEdit(lc).Text]
     else if (lc is TGroupBox) then
       TGroupBox(lc).Caption:= Texts.Values[TGroupBox(lc).Name]
-//    else if (lc is TRadioButton) then
-//        TRadioButton(lc).Caption:= Texts.Values[TRadioButton(lc).Name]
+    else if (lc is TRadioButton) then
+      TRadioButton(lc).Caption:= Texts.Values[TRadioButton(lc).Name]
   end;
 end;
 
@@ -237,6 +452,7 @@ begin
           miOptionsLanguageEN.Checked:= False;
           miOptionsLanguageNL.Checked:= True;
         end;
+        edtMappingsFile.Text:= setMappingFile;
       end;
     end;
   end;
@@ -280,6 +496,43 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoDbConnection(anObj : TObject; aData : PDbConnectRec);
+begin
+  With aData^ do begin
+    btnGetData.Enabled:= HasConnection;
+
+    if Message = 'Success' then begin
+      fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'DbConnEstablished'), 0);
+    end
+    else begin
+      fPresenter.SetStatusbarText(Message, 0);
+
+    end;
+  end;
+  Screen.Cursor:= crDefault;
+end;
+
+procedure TfrmMain.DoRetrieveData(anObj : TObject; aData : PRetrieveDataRec);
+begin
+  With aData^do begin
+    if anObj <> Nil then begin
+      TDBGrid(anObj).DataSource := TDataSource(aData^.DataSource);
+    end;
+  end;
+
+  Screen.Cursor:= crDefault;
+end;
+
+procedure TfrmMain.DoExportToOroxTtlFile(anObj : TObject; aData : PExportToOroxTtlFileRec);
+var
+  tmp: String;
+begin
+  With aData^ do begin
+    tmp:= '';
+  end;
+
+end;
+
 procedure TfrmMain.HandleObsNotify(aReason: ptrint; aNotifyObj: TObject; aData: pointer);
 begin
   case aReason of
@@ -293,6 +546,9 @@ begin
     prAppSettings             : DoAppSettings(aNotifyObj, aData);
     prFormState               : DoFormState(aNotifyObj,aData);
     prStatusBarPanelWidth     : DoStbPanelWidth(aNotifyObj,aData);
+    prDbConnection            : DoDbConnection(aNotifyObj,aData);
+    prRetrieveData            : DoRetrieveData(aNotifyObj,aData);
+    prExportToOroxTtlFile     : DoExportToOroxTtlFile(aNotifyObj,aData);
   end;
 end;
 {$EndRegion 'subscriber-events'}
@@ -302,7 +558,6 @@ begin
   inherited AfterConstruction; { now, everything is said & done, we're ready to show }
 
   self.Color:= clWindow;
-  PageControl1.ActivePageIndex:= 0;
 
   fCanContinue:= CheckLanguageFiles;  // In the View because at least 1 language file is required when creating the presenter(s) and the model(s). So check immediately.
   if fCanContinue then begin
@@ -327,6 +582,11 @@ begin
   miOptionsLanguageNL.OnClick:= @miOptionsLanguageNLOnClick;
   Self.OnShow:= @OnFormShow;
   Self.OnResize:= @OnFormResize;
+  edtMappingsFile.OnChange:= @edtMappingsFileOnChange;
+
+  btnGetData.Enabled:= False;
+  PageControl1.ActivePageIndex:= 0;
+  cbGWSWVersion.ItemIndex:= 0; { #note : There are no versions to choose from yet. Version 1.6 is still hard in the code }
 end;
 
 procedure TfrmMain.BeforeDestruction;
@@ -513,6 +773,11 @@ procedure TfrmMain.OnFormShow(Sender : TObject);
 begin
   if fCanContinue then ReadFormState;
   if fCanContinue then ReadSettings;
+  edtDatabaseName.SetFocus;
+
+  // Prevent the text from being selected and put cursor behind any text
+  edtDatabaseName.SelStart  := Length(edtDatabaseName.Text);
+  edtDatabaseName.SelLength := 0;
 end;
 
 procedure TfrmMain.OnFormResize(Sender : TObject);
@@ -554,6 +819,11 @@ begin
     WriteSingleSetting('Language', Lang);
     SetAppLanguage;
   end;
+end;
+
+procedure TfrmMain.edtMappingsFileOnChange(Sender : TObject);
+begin
+  WriteSingleSetting('MappingFile', edtMappingsFile.Text);
 end;
 
 end.

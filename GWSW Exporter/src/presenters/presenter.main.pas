@@ -36,6 +36,7 @@ type
     procedure WriteToLog(const aSection, LogType, LogText: String);
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
 
+    procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
 
     property Model: IModelMain read get_Model; // TODO: write set_Model; if needed...
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -113,6 +114,8 @@ begin { due to usage of 'out'-param, 'lt' can't be anything else than integer }
   case lt of
     0: lreason:= prMainStaticTexts;    // remember to correlate with model.sects
     1: lreason:= prStatusBarPanelText; // model.main: Const Sects: [view.main.StatusbarTexts]
+    3: lreason:= prLoggingText;        //model.main: Const Sects: [view.main.logging]
+
   end;
   fProvider.NotifySubscribers(lreason,nil,lsl);
   { below we make use of the fInternalMsg stringlist to support i18n }
@@ -201,6 +204,13 @@ var
 begin
   lRec:= fModel.SetStatusbarPanelsWidth(stbWithd, lpWidth,rpWidth);
   fProvider.NotifySubscribers(prStatusBarPanelWidth, Sender, @lRec);
+end;
+
+procedure TPresenterMain.MakeDbConnection(DbConnectionData : PDbConnectRec);
+begin
+  fModel.MakeDbConnection(DbConnectionData);
+
+  fProvider.NotifySubscribers(prDbConnection, Nil, DbConnectionData);
 end;
 
 initialization                         { we're taking advantage of the fact, that }

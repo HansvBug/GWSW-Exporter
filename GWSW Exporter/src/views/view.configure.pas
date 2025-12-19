@@ -13,7 +13,7 @@ type
 
   { TfrmConfigure }
 
-  TfrmConfigure = class(TForm)
+  TfrmConfigure = class(TForm, IViewConfigure)
     btnClose : TButton;
     chkActiveLogging : TCheckBox;
     chkAppendLogging : TCheckBox;

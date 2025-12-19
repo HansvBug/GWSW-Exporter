@@ -125,8 +125,39 @@ type
     property SettingValue: String read fSettingValue write fSettingValue;
   end;
 
+  { TRetrieveDataTrx }
+  TRetrieveDataTrx = class(TTransaction, ITrxExec)
+    private
+      fDataGrid : TObject;
+      fDataSet : TObject;
+      fOrganizationName : String;
+      fSqlText : String;
+    public
+      function Execute(aMgr: ITransactionManager): boolean;
+      property SqlText: String read fSqlText write fSqlText;
+      property OrganizationName: String read fOrganizationName write fOrganizationName;
+      property DataGrid: TObject read fDataGrid write fDataGrid;
+      property DataSource: TObject read fDataSet write fDataSet;
+  end;
 
+  { TExportToOroxTtlFileTrx }
 
+  TExportToOroxTtlFileTrx = class(TTransaction, ITrxExec)
+    private
+      fFileName : String;
+      fMappingFile : String;
+      fMessage : String;
+      fOrganizationName : String;
+      fSuccess : Boolean;
+    public
+      function Execute(aMgr: ITransactionManager): boolean;
+
+      property FileName: String read fFileName write fFileName;
+      property MappingFile: String read fMappingFile write fMappingFile;
+      property OrganizationName: String read fOrganizationName write fOrganizationName;
+      property Success: Boolean read fSuccess write fSuccess;
+      property Message: String read fMessage write fMessage;
+  end;
 
 
 implementation
@@ -314,6 +345,35 @@ begin
   end;
 end;
 
+{ TRetrieveDataTrx }
+function TRetrieveDataTrx.Execute(aMgr : ITransactionManager) : boolean;
+var
+  lRec: TRetrieveDataRec;
+begin
+  Result:= aMgr.OwnerMain.Model.IsConnected;
+
+  if Result then begin
+    lRec.DataSource:= Nil;
+    lRec.SqlText:= SqlText;
+    lRec:= aMgr.OwnerMain.Model.RetrieveData(@lRec);
+  end;
+
+  aMgr.OwnerMain.Provider.NotifySubscribers(prRetrieveData, DataGrid, @lRec);
+end;
+
+{ TExportToOroxTtlFileTrx }
+function TExportToOroxTtlFileTrx.Execute(aMgr : ITransactionManager) : boolean;
+var
+  lRec : TExportToOroxTtlFileRec;
+begin
+  lRec.OrganizationName:= OrganizationName;
+  lRec.FileName:= FileName;
+  lRec.MappingFile:= MappingFile;
+
+  lRec:= aMgr.OwnerMain.Model.ExportToOroxTtlFile(@lRec);
+
+  aMgr.OwnerMain.Provider.NotifySubscribers(prExportToOroxTtlFile, Nil, @lRec);
+end;
 
 procedure InitTrax;
 begin

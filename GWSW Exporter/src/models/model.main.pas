@@ -6,7 +6,7 @@ unit model.main;
 interface
 uses classes, sysutils, istrlist, model.decl, model.intf,
   LazFileUtils,
-  Settings, AppLogging;
+  Settings, AppLogging, DatabaseModule;
 //const
 
 type
@@ -15,6 +15,7 @@ type
   TModelMain = class(TObject,IModelMain)
   private { remember to use 'RegisterSection' in units, you want to add to 'Sects' :o) }
     fSettings: TSettings;
+    fDatabaseModule: TDatabaseModule;
 
   const Sects: TStringArray = ('[view.main]', '[view.main.statusbartexts]', '[view.main.hints]', '[view.main.logging]'); { very necessary, because we need it at idx 0 }
   var                                              
@@ -50,9 +51,17 @@ type
     procedure WriteSingleSetting(SettingData : PSingleSettingRec);
     procedure StartLogging;
     procedure StopLogging;
-    procedure WriteToLog(const aLogAction, LogText: String);
+    procedure WriteToLog(const LogType, LogText: String);
     function SetStatusbarPanelsWidth(stbWidth, lpWidth, rpWidth: Integer): TstbPanelsSize;
     function IsFileInUse(const FileName: String): Boolean;
+    // databasebeheer
+    function GetDatabaseModule: TDatabaseModule;
+    function IsConnected: Boolean;
+    procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
+
+    // Execute query and get data
+    function RetrieveData(data: PRetrieveDataRec): TRetrieveDataRec;
+    function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
   end;
 
 {$EndRegion 'TModelMainH'}
@@ -65,7 +74,8 @@ function gModelMain(aPresenter: IPresenterMain;const aRoot: shortstring): IModel
 
 
 implementation
-uses obs_prosu, strutils, common.consts, common.utils;
+uses obs_prosu, strutils, common.consts, common.utils, uIGWSWDataProvider, QueryDataProvider,
+  OroxExport;
 
 var Singleton: TModelMain = nil;
 
@@ -123,7 +133,9 @@ end; /// the above text can't be translated in the i18n'ed mvptexts, the count i
 
 destructor TModelMain.Destroy;
 begin
-  fTextCache:= nil; // com-object 
+  if Assigned(fDatabaseModule) then FreeAndNil(fDatabaseModule);
+
+  fTextCache:= nil; // com-object
   fPresenter:= nil;
 
   StopLogging;
@@ -326,6 +338,7 @@ begin
     setActivateLogging := fSettings.ActivateLogging;
     setAppendLogging:= fSettings.AppendLogFile;
     setLanguage:= fSettings.Language;
+    setMappingFile:= fSettings.MappingFile;
     //...
 
     setSucces:= fSettings.Succes;
@@ -448,10 +461,10 @@ begin
   end;
 end;
 
-procedure TModelMain.WriteToLog(const aLogAction, LogText : String);
+procedure TModelMain.WriteToLog(const LogType, LogText : String);
 begin
   if Logging <> Nil then begin
-    case aLogAction of
+    case LogType of
       'Information': Logging.WriteToLogInfo(LogText);
       'Warning': Logging.WriteToLogWarning(LogText);
       'Error': Logging.WriteToLogError(LogText);
@@ -474,6 +487,83 @@ end;
 function TModelMain.IsFileInUse(const FileName : String) : Boolean;
 begin
   Result:= common.utils.IsFileInUse(FileName);
+end;
+
+function TModelMain.GetDatabaseModule : TDatabaseModule;
+begin
+  Result:= fDatabaseModule;
+end;
+
+function TModelMain.IsConnected : Boolean;
+begin
+  Result:= False;
+  if Assigned(fDatabaseModule) and (fDatabaseModule.IsConnected) then
+    Result:= fDatabaseModule.IsConnected;
+end;
+
+procedure TModelMain.MakeDbConnection(DbConnectionData : PDbConnectRec);
+var
+  lResult: TConnectionResult;
+begin
+  if not Assigned(fDatabaseModule) then
+    fDatabaseModule:= TDatabaseModule.Create();
+
+  if not IsConnected then begin
+    try
+      lResult:= fDatabaseModule.MakeDbConnection(
+            DbConnectionData^.DatabaseName,
+            DbConnectionData^.UserName,
+            DbConnectionData^.SchemaPassword
+          );
+
+      DbConnectionData^.HasConnection:= lResult.Success;
+      DbConnectionData^.Message:= lResult.Message;
+
+      if DbConnectionData^.HasConnection then
+        fPresenter.WriteToLog('view.main', ltInformation, 'DbConnEstablished')
+      else begin
+        fPresenter.WriteToLog('view.main', ltError, 'DbConnFailed');
+        WriteToLog(ltError, DbConnectionData^.Message);
+      end;
+    except
+      on E: Exception do
+      begin
+        DbConnectionData^.HasConnection:= False;
+        DbConnectionData^.Message:= 'Error: ' + E.Message;
+        fPresenter.WriteToLog('view.main', ltInformation, 'DbConnFailed');
+        WriteToLog(ltError, e.Message);
+      end;
+    end;
+  end; { #todo : Maybe something else if there is already a connection... }
+end;
+
+function TModelMain.RetrieveData(data : PRetrieveDataRec) : TRetrieveDataRec;
+var
+  lResult: TDataSetResult;
+begin
+  if Assigned(fDatabaseModule) then begin
+    lResult:= fDatabaseModule.RetrieveData(data^.SqlText);
+
+    Result.DataSource:= lResult.DataSet;
+  end
+  else
+    Result.DataSource:= Nil;
+end;
+
+function TModelMain.ExportToOroxTtlFile(Data : PExportToOroxTtlFileRec) : TExportToOroxTtlFileRec;
+var
+  DataProvider: IGWSWDataProvider;
+  OroxExport: TOroxExport;
+begin
+  // Create a data provider. This is the query that retrieved the data.
+  DataProvider:= TQueryDataProvider.Create(fDatabaseModule.CurrentQuery);  // No free/nil required
+
+  OroxExport:= TOroxExport.Create(DataProvider, Data^.FileName, Data^.OrganizationName, Data^.MappingFile);
+  try
+    OroxExport.ExportToOrox;
+  finally
+    OroxExport.Free;
+  end;
 end;
 
 

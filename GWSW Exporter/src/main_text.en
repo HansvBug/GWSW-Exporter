@@ -1,4 +1,5 @@
 [view.main]
+frmMain=GWSW-Exporter
 miProgram=&Program
 miProgramClose=&Quit
 
@@ -15,11 +16,26 @@ gbConnection=Connection
 gbGetData=Get data from database
 gbExport=Export
 btnSaveQuery=Save
+btnOpenQuery=Open
 BitBtnSelectMappingsFile=...
 lblMappingsFile=Select mapping file
 lblDatabaseName=Database
 lblUserName=User
 lblPassword=Password
+lblOrganizationName=Organization
+lblGWSWVersion=GWSW version
+btnConnect=Connect
+btnGetData=Retrieve data
+btnExportDbgridToCsv=Save
+btnExportToFile=Export
+SelectMapFile=Select a mapping file
+QueryNotActive=Query is not running. First, activate the query.
+MappingsFileIsMissing=Mapping is missing. Go to settings tab.
+SaveTextFile=Save text file.
+SaveCSVFile=Save CSV file.
+DlgTextFilesFilter=Text files|*.txt|All files|*.*
+DlgCSVFilesFilter=CSV Files (*.csv)|All files (*.*)|*.*
+OpenTextFile=Open text file.
 
 
 [view.main.statusbartexts]
@@ -30,6 +46,11 @@ ErrorReadSettings=(!) Unexpected error retrieving the settings.
 ErrorReadFormState=(!) Unexpected error when retrieving the window position.
 ErrorStoreFormState=(!) Unexpected error when saving the window position.
 ErrorSaveSingleSetting=(!) Unexpected error when saving a setting.
+Connecting=Connecting...
+DbConnEstablished=Database connection established
+ErrorRetrieveData=(!) Unexpected error retrieving the data.
+RetrievingData=Retrieving data...
+fdataset=(!) Unexpected error creating the export file.
 
 
 [view.main.hints]
@@ -38,3 +59,5 @@ ErrorSaveSingleSetting=(!) Unexpected error when saving a setting.
 [view.main.logging]
 SwitchlanguageNL=Language adapted to Dutch.
 SwitchlanguageEN=Language changed to English.
+DbConnEstablished=Database connection established
+DbConnFailed=Database connection failed

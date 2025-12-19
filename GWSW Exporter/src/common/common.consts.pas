@@ -27,11 +27,14 @@ const
   prMainStaticTexts         = prUser + 2; { carries an 'IStrings' object in UserData }
   prCreateDir               = prUser + 3;
   prStatusBarPanelText      = prUser + 4;
-  prAppSettings             = prUser + 5;
-  prAppSingleSetting        = prUser + 6;
-  prFormState               = prUser + 7;
-  prStatusBarPanelWidth     = prUser + 8;
-
+  prLoggingText             = prUser + 5;
+  prAppSettings             = prUser + 6;
+  prAppSingleSetting        = prUser + 7;
+  prFormState               = prUser + 8;
+  prStatusBarPanelWidth     = prUser + 9;
+  prDbConnection            = prUser + 10;
+  prRetrieveData            = prUser + 11;
+  prExportToOroxTtlFile     = prUser + 12;
 
   prDirDataNeeded = prUser + 100; { carries a TDirInfoTrx in aNotifyClass }
   prFetchDirData = prUser + 101; { carries a TDirInfoTrx in aNotifyClass & an 'IStrings' in UserData }
@@ -53,6 +56,9 @@ const
   SGUIDITrxExec = '{2E618F58-DE15-4A79-ADEF-C4E0A7CBECA4}';            //=^
   SGUIDITrxExecNoRes = '{5E4DCDBA-8CB0-45E4-8DC3-6CD859DB4F1B}';       //=^
   SGUIDIViewMain = '{5AC3C283-C7EB-437D-8A72-3A0BD7A47B1C}';           //=^
+  SGUIDIModelConfigure = '{F5E9E12D-F9B5-412F-9708-C751F50A14D2}';
+  SGUIDIPresenterConfigure = '{C948C2C9-2590-4030-B8B3-54B44AEB06F9}';
+  SGUIDIViewConfigure = '{07D9D3BE-8426-4E7A-BC7F-5AC0BBD70803}';
 
   { targettexts below lets you use 1 handler in view, 1 result record and differentiate on target-id }
   TargetTexts: TStringArray = ('Directories','Resources','Models','Presenters','Views'); // example
