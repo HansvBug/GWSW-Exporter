@@ -22,10 +22,10 @@ type
     Breedte: Integer;  // in mm
     Lengte: Integer;   // in mm
     Hoogte: Integer;   // in mm
+    Diameter: Integer;
     MateriaalURI: string;
     VormURI: string;
     Maaiveldhoogte: Double;
-    Grondwaterstand: Double;
     Begindatum: TDateTime;
     WijzeInwinning: TGWSWWijzeInwinning;
     StelselID: string;  //
@@ -91,7 +91,6 @@ end;
      MateriaalURI: string;
      VormURI: string;
      Wanddikte: Integer;
-     TypeReiniging: string;
      // Topologie
      X: Double;
      Y: Double;
@@ -111,6 +110,7 @@ end;
       EindPutID: string;
       Lengte: Double;
       Diameter: Integer;
+      Breedte: Integer;
       Hoogte: Integer;
       MateriaalURI: string;
       StatusFunctionerenURI: string;

@@ -40,6 +40,7 @@ type
   private
     { Configuration fields. }
     fAppendLogFile: Boolean;
+    fDisableErrorReport : Boolean;
     fLanguage: String;
     fMappingFile : String;
     fSettingsFile: String;
@@ -47,6 +48,7 @@ type
     fAppVersion: String;
     fAppBuildDate: String;
     fActivateLogging: Boolean;
+    fSqlFileLocation : String;
     fSucces: Boolean;
 
     { Form state fields. }
@@ -107,6 +109,8 @@ type
     property ActivateLogging: Boolean read fActivateLogging write fActivateLogging;
     property AppendLogFile: Boolean read fAppendLogFile write fAppendLogFile;
     property MappingFile: String read fMappingFile write fMappingFile;
+    property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
+    property SqlFileLocation: String read fSqlFileLocation write fSqlFileLocation;
 
     { Operation status. }
     property Succes: Boolean read fSucces write fSucces;
@@ -217,11 +221,13 @@ begin
       AppendLogFile:= ReadBool('Configure', 'AppendLogFile', True);
       Language:= ReadString('Configure', 'Language', 'en');
       MappingFile:= ReadString('Configure', 'MappingFile', '');
+      DisableErrorReport:= ReadBool('Configure', 'Disable_live_error_reporting', True);
+      SqlFileLocation:= ReadString('Configure', 'SQLfileLocation', '');
       // new setting...
 
       Succes:= True;
     end
-    else begin
+    else begin  // Never gets here. The settings file is created in the afterconstruct of view.main
       // Create new settings file with defaults.
       WriteString('Application', 'Name', AppName);
       WriteString('Application', 'Version', AppVersion);
@@ -238,6 +244,7 @@ begin
     Free;
   end;
 end;
+
 
 procedure TSettings.WriteSettings;
 begin
@@ -256,6 +263,10 @@ begin
       WriteString('Configure', 'Language', Language);
 
     //... new settings
+    WriteBool('Configure', 'Disable_live_error_report', DisableErrorReport);
+    WriteString('Configure', 'SQLfileLocation', SqlFileLocation);
+
+
     UpdateFile;
     Succes:= True;
   finally

@@ -24,18 +24,23 @@ lblUserName=User
 lblPassword=Password
 lblOrganizationName=Organization
 lblGWSWVersion=GWSW version
+lblProgress=Progress log
+lblError=Error log
 btnConnect=Connect
 btnGetData=Retrieve data
 btnExportDbgridToCsv=Save
 btnExportToFile=Export
+btnClose=Close
 SelectMapFile=Select a mapping file
 QueryNotActive=Query is not running. First, activate the query.
 MappingsFileIsMissing=Mapping is missing. Go to settings tab.
-SaveTextFile=Save text file.
+SaveSqlFile=Save sql file.
 SaveCSVFile=Save CSV file.
-DlgTextFilesFilter=Text files|*.txt|All files|*.*
+DlgSqlFilesFilter=SQL files|*.sql|All files|*.*
 DlgCSVFilesFilter=CSV Files (*.csv)|All files (*.*)|*.*
-OpenTextFile=Open text file.
+OpenSqlFile=Open sql file.
+chkPutGrondwaterstand=Grondwaterstand
+
 
 
 [view.main.statusbartexts]

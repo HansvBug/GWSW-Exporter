@@ -130,6 +130,7 @@ type
     private
       fDataGrid : TObject;
       fDataSet : TObject;
+      fMessage : String;
       fOrganizationName : String;
       fSqlText : String;
     public
@@ -138,12 +139,14 @@ type
       property OrganizationName: String read fOrganizationName write fOrganizationName;
       property DataGrid: TObject read fDataGrid write fDataGrid;
       property DataSource: TObject read fDataSet write fDataSet;
+      Property Message: String read fMessage write fMessage;
   end;
 
   { TExportToOroxTtlFileTrx }
 
   TExportToOroxTtlFileTrx = class(TTransaction, ITrxExec)
     private
+      fDisableErrorReport : Boolean;
       fFileName : String;
       fMappingFile : String;
       fMessage : String;
@@ -155,6 +158,7 @@ type
       property FileName: String read fFileName write fFileName;
       property MappingFile: String read fMappingFile write fMappingFile;
       property OrganizationName: String read fOrganizationName write fOrganizationName;
+      property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
       property Success: Boolean read fSuccess write fSuccess;
       property Message: String read fMessage write fMessage;
   end;
@@ -274,6 +278,7 @@ begin
         lRec.setApplicationBuildDate:= AppBuildDate;
         lRec.setWriteSettings:= WriteSettings;
 
+
         lRec:= aMgr.OwnerMain.Model.ReadSettings(@lRec);
 
         aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
@@ -351,6 +356,14 @@ var
   lRec: TRetrieveDataRec;
 begin
   Result:= aMgr.OwnerMain.Model.IsConnected;
+
+  if aMgr.OwnerMain.Model.GetSQLfileLocation <> '' then
+    Result:= True
+  else begin
+    Result:= False;
+    lRec.DataSource:= Nil;
+    lRec.Message:= 'SQL file not found.';
+  end;
 
   if Result then begin
     lRec.DataSource:= Nil;

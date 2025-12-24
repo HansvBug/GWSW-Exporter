@@ -234,7 +234,8 @@ begin
     setActivateLogging := fSettings.ActivateLogging;
     setAppendLogging:= fSettings.AppendLogFile;
     setLanguage:= fSettings.Language;
-
+    setDisableErrorReport:= fSettings.DisableErrorReport;
+    setSqlFileLocation:= fSettings.SqlFileLocation;
     //...
 
     setSucces:= fSettings.Succes;
@@ -279,6 +280,8 @@ begin
       if setLanguage <> '' then
         fSettings.Language:= setLanguage;
 
+      fSettings.DisableErrorReport:= setDisableErrorReport;
+      fSettings.SqlFileLocation:= setSqlFileLocation;
       //... add new settings
 
       fSettings.SettingsFile:= setSettingsFile;

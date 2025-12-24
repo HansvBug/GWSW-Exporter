@@ -6,16 +6,20 @@ unit model.main;
 interface
 uses classes, sysutils, istrlist, model.decl, model.intf,
   LazFileUtils,
-  Settings, AppLogging, DatabaseModule;
+  Settings, AppLogging, DatabaseModule, exportProgressReporter.intf;
 //const
 
 type
 {$Region 'TModelMainH'}
   { TModelMain }
-  TModelMain = class(TObject,IModelMain)
+  TModelMain = class(TObject,IModelMain, IExportProgressReporter)
   private { remember to use 'RegisterSection' in units, you want to add to 'Sects' :o) }
     fSettings: TSettings;
     fDatabaseModule: TDatabaseModule;
+
+    // IExportProgressReporter implementatie
+    procedure ReportProgress(const Message: string);
+    procedure ReportError(const ErrorMessage: string);
 
   const Sects: TStringArray = ('[view.main]', '[view.main.statusbartexts]', '[view.main.hints]', '[view.main.logging]'); { very necessary, because we need it at idx 0 }
   var                                              
@@ -30,7 +34,7 @@ type
     fTarget: integer; // for targetting the right result in view
     fTextCache: IStringList;
     { used while searching static text sections, new implementation ;) }
-    procedure DoEach(const aValue: string; const anIdx: ptrint; anObj: TObject; aData: pointer);
+    procedure DoEach(const aValue: string; const {%H-}anIdx: ptrint; {%H-}anObj: TObject; aData: pointer);
     function LeftWord(const aStr: string): string; // used while searching static text sections    
   public
     constructor Create(aPresenter: IPresenterMain;const aRoot: shortstring = ''); overload;
@@ -62,6 +66,7 @@ type
     // Execute query and get data
     function RetrieveData(data: PRetrieveDataRec): TRetrieveDataRec;
     function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
+    function GetSQLfileLocation: String;
   end;
 
 {$EndRegion 'TModelMainH'}
@@ -87,6 +92,18 @@ begin
 end;
 
 {$Region 'TModelMain'}
+
+procedure TModelMain.ReportProgress(const Message : string);
+begin
+  fPresenter.Provider.NotifySubscribers(prReportProgress, Self, Str2Pch('INFO: ' + Message));
+end;
+
+procedure TModelMain.ReportError(const ErrorMessage : string);
+begin
+  fPresenter.Provider.NotifySubscribers(prReportError, Self, Str2Pch('ERROR: ' + ErrorMessage));
+  WriteToLog('Error', 'Export: ' + ErrorMessage);
+end;
+
 { TModelMain }
 function TModelMain.Obj: TObject;
 begin
@@ -339,6 +356,7 @@ begin
     setAppendLogging:= fSettings.AppendLogFile;
     setLanguage:= fSettings.Language;
     setMappingFile:= fSettings.MappingFile;
+    setDisableErrorReport:= fSettings.DisableErrorReport;
     //...
 
     setSucces:= fSettings.Succes;
@@ -396,6 +414,11 @@ begin
        fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
        fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
        fSettings.AppBuildDate:= PSettingsRec(Settingsdata)^.setApplicationBuildDate;
+
+       fSettings.ActivateLogging:= True;
+       fSettings.AppendLogFile:= True;
+       fSettings.DisableErrorReport:= True;
+
        fSettings.WriteSettings;
      end;
   end;
@@ -545,6 +568,7 @@ begin
     lResult:= fDatabaseModule.RetrieveData(data^.SqlText);
 
     Result.DataSource:= lResult.DataSet;
+    Result.Success:= lResult.Success;
   end
   else
     Result.DataSource:= Nil;
@@ -555,17 +579,37 @@ var
   DataProvider: IGWSWDataProvider;
   OroxExport: TOroxExport;
 begin
-  // Create a data provider. This is the query that retrieved the data.
-  DataProvider:= TQueryDataProvider.Create(fDatabaseModule.CurrentQuery);  // No free/nil required
+  Result.Success:= False;
+  Result.Message:= '';
 
-  OroxExport:= TOroxExport.Create(DataProvider, Data^.FileName, Data^.OrganizationName, Data^.MappingFile);
   try
-    OroxExport.ExportToOrox;
-  finally
-    OroxExport.Free;
+    // Create a data provider. This is the query that retrieved the data.
+    DataProvider:= TQueryDataProvider.Create(fDatabaseModule.CurrentQuery);  // No free/nil required
+
+    OroxExport:= TOroxExport.Create(DataProvider, Data^.FileName, Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter);
+    try
+      fSettings.ReadFile; // Kan vervelend worden. leest het hele settingsbestand opnieuw terwijl maar 1 setting nodig is.
+      OroxExport.ExportToOrox(fSettings.DisableErrorReport);
+      Result.Success:= True;
+      Result.Message:= 'Export voltooid'; { #todo : Taalinstelling }
+    finally
+      OroxExport.Free;
+    end;
+
+  except
+    on E: Exception do
+    begin
+      ReportError('Export gefaald: ' + E.Message);  { #todo : Taalinstelling }
+      Result.Success := False;
+      Result.Message := E.Message;
+    end;
   end;
 end;
 
+function TModelMain.GetSQLfileLocation : String;
+begin
+  Result:= fSettings.SqlFileLocation;
+end;
 
 
 

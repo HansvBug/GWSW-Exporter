@@ -46,10 +46,21 @@ object frmMain: TfrmMain
     Align = alBottom
     BevelOuter = bvNone
     Caption = 'pnlBottom'
+    ClientHeight = 75
+    ClientWidth = 1236
     Color = 13006080
     ParentBackground = False
     ParentColor = False
     TabOrder = 2
+    object btnClose: TButton
+      Left = 1104
+      Height = 38
+      Top = 24
+      Width = 113
+      Anchors = [akRight, akBottom]
+      Caption = 'btnClose'
+      TabOrder = 0
+    end
   end
   object pnlMainAllClient: TPanel
     Left = 0
@@ -70,10 +81,10 @@ object frmMain: TfrmMain
       Height = 588
       Top = 5
       Width = 1226
-      ActivePage = tsSettings
+      ActivePage = tsPrepare
       Align = alClient
       BorderSpacing.Around = 5
-      TabIndex = 1
+      TabIndex = 0
       TabOrder = 0
       OnChange = PageControl1Change
       object tsPrepare: TTabSheet
@@ -97,12 +108,12 @@ object frmMain: TfrmMain
             Left = 1
             Height = 548
             Top = 1
-            Width = 500
+            Width = 360
             Align = alLeft
             BevelOuter = bvNone
             Caption = 'Panel1'
             ClientHeight = 548
-            ClientWidth = 500
+            ClientWidth = 360
             Color = clSkyBlue
             ParentBackground = False
             ParentColor = False
@@ -111,11 +122,11 @@ object frmMain: TfrmMain
               Left = 8
               Height = 223
               Top = 0
-              Width = 485
+              Width = 345
               Anchors = [akTop, akLeft, akRight]
               Caption = 'gbConnection'
               ClientHeight = 193
-              ClientWidth = 481
+              ClientWidth = 341
               ParentBackground = False
               TabOrder = 0
               object edtDatabaseName: TEdit
@@ -191,11 +202,11 @@ object frmMain: TfrmMain
               Left = 8
               Height = 128
               Top = 264
-              Width = 485
+              Width = 345
               Anchors = [akTop, akLeft, akRight]
               Caption = 'gbGetData'
               ClientHeight = 98
-              ClientWidth = 481
+              ClientWidth = 341
               ParentBackground = False
               TabOrder = 1
               object btnGetData: TButton
@@ -228,11 +239,11 @@ object frmMain: TfrmMain
               Left = 8
               Height = 121
               Top = 408
-              Width = 485
+              Width = 345
               Anchors = [akTop, akLeft, akRight]
               Caption = 'gbExport'
               ClientHeight = 91
-              ClientWidth = 481
+              ClientWidth = 341
               ParentBackground = False
               TabOrder = 2
               object btnExportToFile: TButton
@@ -244,49 +255,170 @@ object frmMain: TfrmMain
                 TabOrder = 0
                 OnClick = btnExportToFileClick
               end
+              object ProgressBar: TProgressBar
+                Left = 8
+                Height = 30
+                Top = 56
+                Width = 328
+                TabOrder = 1
+              end
             end
           end
           object pnlPrepareData: TPanel
-            Left = 509
+            Left = 371
             Height = 548
             Top = 1
-            Width = 708
+            Width = 846
             Align = alClient
             BevelOuter = bvNone
             Caption = 'pnlPrepareData'
             ClientHeight = 548
-            ClientWidth = 708
-            Color = clSkyBlue
+            ClientWidth = 846
+            Color = 13006080
             ParentBackground = False
             ParentColor = False
             TabOrder = 1
-            object dbgSewerData: TDBGrid
-              Left = 8
-              Height = 489
-              Top = 8
-              Width = 691
-              Anchors = [akTop, akLeft, akRight, akBottom]
-              Color = clWindow
-              Columns = <>
-              Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgHeaderHotTracking, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert, dgDblClickAutoSize, dgDisplayMemoText]
+            object pnlDataGrid: TPanel
+              Left = 0
+              Height = 344
+              Top = 0
+              Width = 846
+              Align = alTop
+              BevelOuter = bvNone
+              Caption = 'pnlDataGrid'
+              ClientHeight = 344
+              ClientWidth = 846
+              Color = clSkyBlue
+              ParentBackground = False
+              ParentColor = False
               TabOrder = 0
+              object dbgSewerData: TDBGrid
+                Left = 8
+                Height = 270
+                Top = 16
+                Width = 834
+                Anchors = [akTop, akLeft, akRight, akBottom]
+                Color = clWindow
+                Columns = <>
+                Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgHeaderHotTracking, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert, dgDblClickAutoSize, dgDisplayMemoText]
+                TabOrder = 0
+              end
+              object btnExportDbgridToCsv: TButton
+                Left = 729
+                Height = 38
+                Top = 296
+                Width = 113
+                Anchors = [akRight, akBottom]
+                Caption = 'btnExportDbgridToCsv'
+                TabOrder = 1
+                OnClick = btnExportDbgridToCsvClick
+              end
             end
-            object btnExportDbgridToCsv: TButton
-              Left = 586
-              Height = 38
-              Top = 504
-              Width = 113
-              Anchors = [akRight, akBottom]
-              Caption = 'btnExportDbgridToCsv'
-              TabOrder = 1
-              OnClick = btnExportDbgridToCsvClick
+            object Splitter2: TSplitter
+              Cursor = crVSplit
+              Left = 0
+              Height = 10
+              Top = 344
+              Width = 846
+              Align = alTop
+              ResizeAnchor = akTop
+            end
+            object pnlProgress: TPanel
+              Left = 0
+              Height = 194
+              Top = 354
+              Width = 846
+              Align = alClient
+              BevelOuter = bvNone
+              Caption = 'pnlProgress'
+              ClientHeight = 194
+              ClientWidth = 846
+              Color = 13006080
+              ParentBackground = False
+              ParentColor = False
+              TabOrder = 2
+              object Panel2: TPanel
+                Left = 0
+                Height = 194
+                Top = 0
+                Width = 500
+                Align = alLeft
+                BevelOuter = bvNone
+                Caption = 'Panel2'
+                ClientHeight = 194
+                ClientWidth = 500
+                Color = clSkyBlue
+                ParentBackground = False
+                ParentColor = False
+                TabOrder = 0
+                object memReportProgress: TMemo
+                  Left = 8
+                  Height = 144
+                  Top = 40
+                  Width = 485
+                  Anchors = [akTop, akLeft, akRight, akBottom]
+                  Lines.Strings = (
+                    'mmExportLog'
+                  )
+                  ReadOnly = True
+                  ScrollBars = ssAutoBoth
+                  TabOrder = 0
+                end
+                object lblProgress: TLabel
+                  Left = 8
+                  Height = 25
+                  Top = 8
+                  Width = 88
+                  Caption = 'lblProgress'
+                end
+              end
+              object Splitter3: TSplitter
+                Left = 500
+                Height = 194
+                Top = 0
+                Width = 10
+              end
+              object Panel3: TPanel
+                Left = 510
+                Height = 194
+                Top = 0
+                Width = 336
+                Align = alClient
+                BevelOuter = bvNone
+                Caption = 'Panel3'
+                ClientHeight = 194
+                ClientWidth = 336
+                Color = clSkyBlue
+                ParentBackground = False
+                ParentColor = False
+                TabOrder = 2
+                object memReportError: TMemo
+                  Left = 8
+                  Height = 144
+                  Top = 40
+                  Width = 323
+                  Anchors = [akTop, akLeft, akRight, akBottom]
+                  Lines.Strings = (
+                    'mmReportError'
+                  )
+                  ScrollBars = ssAutoBoth
+                  TabOrder = 0
+                end
+                object lblError: TLabel
+                  Left = 8
+                  Height = 25
+                  Top = 8
+                  Width = 57
+                  Caption = 'lblError'
+                end
+              end
             end
           end
           object Splitter1: TSplitter
-            Left = 501
+            Left = 361
             Height = 548
             Top = 1
-            Width = 8
+            Width = 10
           end
         end
       end
@@ -408,7 +540,7 @@ object frmMain: TfrmMain
               ParentColor = False
               ParentFont = False
               TabOrder = 0
-              Gutter.Width = 81
+              Gutter.Width = 91
               Gutter.MouseActions = <>
               RightGutter.Width = 0
               RightGutter.MouseActions = <>
@@ -838,46 +970,245 @@ object frmMain: TfrmMain
               MouseTextActions = <>
               MouseSelActions = <>
               Lines.Strings = (
+                'Select'
+                '    ''LEIDING'' as OBJECT_TYPE,'
+                '    l.id, -- gebruikt bij debug, worder verder niets mee gedaan.'
+                '    l.object_guid as GUID,'#9#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    l.strengcode as NAAM,'#9#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    l.std_stelseltype as STELSEL_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
+                '    s.STELSELNAAM as STELSEL_NAAM, '#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    --l.STD_STRENGTYPE as LEIDING_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
+                '    COALESCE(l.VRIJVERVAL_LEIDINGSUBTYPE, l.VRIJVERVAL_LEIDINGTYPE, l.STD_STRENGTYPE)  as LEIDING_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
+                '    l.beginput_id as BEGINPUT_ID,'#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    l.eindput_id as EINDPUT_ID,'#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    l.lengte as LENGTE,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
+                '    l.breedte as BREEDTE,'#9#9#9#9#9#9#9#9#9'--> type = integer.'
+                '    l.hoogte as HOOGTE,'#9#9#9#9#9#9#9#9#9#9'--> type = integer.'
+                '    l.diameter as DIAMETER,'#9#9#9#9#9#9#9#9#9'--> type = integer.'
+                '    l.std_materiaal_rioolleiding as MATERIAAL,'#9#9#9#9'--> type = string / varchar.'
+                '    l.vorm as VORM,'#9#9#9#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    l.status_functioneren as STATUS_FUNCTIONEREN,'#9#9#9'--> type = string / varchar.'
+                '    NULL as PUT_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
+                '    NULL as KOLK_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
+                '    NULL as MAAIVELD,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
+                '    l.aanlegjaar as BEGINDATUM,'#9#9#9#9#9#9#9#9'--> aanlegjaar, wordt omgezet naar een datum.'
+                '    NULL as EINDDATUM,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    ''GEMETEN'' as WIJZE_INWINNING,'#9#9#9#9#9#9#9'--> type = string / varchar.  --> is (nog) niet geïmplementeerd.'
+                '    l.bob_begin_actueel as BOB_BEGIN,'#9#9#9#9#9#9'--> type = double.'
+                '    l.bob_eind_actueel as BOB_EIND,'#9#9#9#9#9#9#9'--> type = double.'
+                '    NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> Nog niet ingebouwd'
+                '    NULL as TYPE_REINIGING,                                 --> n.v.t. (velden gelijk houden voor union)'
+                '    NULL as VERBINDINGSTYPE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as FUNDERING,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as AANTAL_WONINGEN,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as AANTAL_IE_RECREATIE,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as AFVOEREND_OPPERVLAK,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as LATERAALDEBIET_DWA,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as LATERAALDEBIET_HWA,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    SDO_UTIL.TO_WKTGEOMETRY(l.GEOMETRIE) as WKT_GEOMETRY,'#9'--> type = string / varchar.'
+                '    l.STELSEL_ID as STELSEL_ID'#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                'FROM gv_vrijv_leiding l'
+                'LEFT JOIN gv_stelsel s ON l.STELSEL_ID = s.OBJECT_GUID  -- stelselnaam kunnen ophalen'
+                'WHERE l.eind_tijd is null'
+                '--AND l.id = 69719'
+                ''
+                'UNION ALL'
+                ''
+                ''
                 'SELECT'
-                '    ''STELSEL'' as OBJECT_TYPE,'
-                '    s.ID, -- gebruikt bij debug, worder verder niets mee gedaan.'
-                '    s.object_guid as GUID,'#9#9#9#9#9'--> moet van het type string / varchar zijn.'
-                '    s.STELSELCODE as NAAM,'
-                '    s.STELSELTYPE as STELSEL_TYPE,'
+                '    ''PUT'' as OBJECT_TYPE,'
+                '    p.id, -- gebruikt bij debug, worder verder niets mee gedaan.'
+                '    p.object_guid as GUID,'#9#9#9#9#9'--> moet van het type string / varchar zijn.'
+                '    p.putcode as NAAM,'#9#9#9#9#9#9'--> moet van het type string / varchar zijn.'
+                '    -- VOEG HIER STELSEL_TYPE TOE: haal het uit gv_stelsel'
+                '    s.STELSELTYPE as STELSEL_TYPE,          -- ← HIER AANGEPAST: was NULL'
                 '    s.STELSELNAAM as STELSEL_NAAM,'
                 '    NULL as LEIDING_TYPE,'
                 '    NULL as BEGINPUT_ID,'
                 '    NULL as EINDPUT_ID,'
-                '    NULL as LENGTE,'
-                '    NULL as BREEDTE,'
-                '    NULL as HOOGTE,'
-                '    NULL as DIAMETER,'
-                '    NULL as MATERIAAL,'
-                '    NULL as VORM,'
-                '    NULL as STATUS_FUNCTIONEREN,'
-                '    NULL as PUT_TYPE,'
+                '    p.Lengte as LENGTE,'
+                '    p.breedte as BREEDTE,'
+                '    p.Hoogte_put as HOOGTE,'
+                '    p.DIAMETER as DIAMETER,'
+                '    p.materiaal_gwsw as MATERIAAL,'
+                '    p.vorm_gwsw as VORM,'
+                '    null as STATUS_FUNCTIONEREN,'
+                '    COALESCE(p.std_rioolputtype, p.RIOOLPUTSUBTYPE_GWSW,  p.RIOOLPUTTYPE_GWSW)  as PUT_TYPE,'
                 #9'NULL as KOLK_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'#9
-                '    NULL as MAAIVELD,'
-                '    NULL as GRONDWATER,'
-                '    NULL as BEGINDATUM,'
+                '    p.maaiveldhoogte_actueel as MAAIVELD,'
+                '    p.aanlegjaar as BEGINDATUM,'
                 #9'NULL as EINDDATUM,'
-                '    NULL as WIJZE_INWINNING,'
+                '    ''GEMETEN'' as WIJZE_INWINNING,'
                 '    NULL as BOB_BEGIN,'
-                '    NULL as BOB_EIND,'#9
-                #9'NULL as WANDDIKTE,'#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                '    NULL as TYPE_REINIGING,                                 --> n.v.t. (velden gelijk houden voor union)    '
-                #9'NULL as VERBINDINGSTYPE,'#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as FUNDERING,'#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as DATUM_INSPECTIE,'#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as DATUM_REINIGING,'#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as WIONTHEMA,'#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as AANTAL_WONINGEN,'#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as AFVOEREND_OPPERVLAK,'#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as LATERAALDEBIET_DWA,'#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as LATERAALDEBIET_HWA,'#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as BOB_EIND,'
+                #9'NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as TYPE_REINIGING,                                 --> N.v.t., niet geïmplenteerd'
+                #9'NULL as VERBINDINGSTYPE,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as FUNDERING,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AANTAL_WONINGEN,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AFVOEREND_OPPERVLAK,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as LATERAALDEBIET_DWA,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as LATERAALDEBIET_HWA,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    SDO_UTIL.TO_WKTGEOMETRY(p.GEOMETRIE) as WKT_GEOMETRY,'#9'--> type = string / varchar.'
+                '    p.STELSEL_ID'#9#9#9#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                'FROM gv_rioolput p'
+                '-- BELANGRIJK: Gebruik LEFT JOIN in plaats van alleen JOIN voor stelsel'
+                'LEFT JOIN gv_stelsel s ON p.STELSEL_ID = s.OBJECT_GUID  -- stelselnaam EN stelseltype ophalen'
+                'WHERE p.eind_tijd is null'
+                '--AND p.id in (62960, 65884)'
+                ''
+                'UNION ALL'
+                ''
+                'SELECT'
+                '    ''PERSLEIDING'' as OBJECT_TYPE,'
+                '    pl.id, -- gebruikt bij debug, worder verder niets mee gedaan.'
+                '    pl.object_guid as GUID,'#9#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    NULL as NAAM,'#9#9#9#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    pl.std_stelseltype as STELSEL_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
+                '    s.STELSELNAAM as STELSEL_NAAM, '#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    pl.MECH_LEIDINGTYPE_GWSW as LEIDING_TYPE,'#9#9#9#9'--> type = string / varchar.'
+                '    pl.POMPPUT_ID as BEGINPUT_ID,'#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    pl.LOZINGSPUT_ID as EINDPUT_ID,'#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    pl.lengte as LENGTE,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
+                '    pl.Breedte as BREEDTE,'#9#9#9#9#9#9#9#9#9#9'--> type = integer.'
+                '    pl.hoogte as HOOGTE,'#9#9#9#9#9#9#9#9#9#9'--> type = integer.'
+                '    pl.diameter as DIAMETER,'#9#9#9#9#9#9#9#9#9'--> type = integer.'
+                '    pl.MATERIAAL_GWSW as MATERIAAL,'#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    pl.vorm as VORM,'#9#9#9#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                '    pl.status_functioneren as STATUS_FUNCTIONEREN,'#9#9#9'--> type = string / varchar.'
+                '    NULL as PUT_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
+                #9'NULL as KOLK_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
+                '    NULL as MAAIVELD,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
+                '    pl.aanlegjaar as BEGINDATUM,'#9#9#9#9#9#9#9#9'--> aanlegjaar, wordt omgezet naar een datum.'
+                #9'NULL as EINDDATUM,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    NULL as WIJZE_INWINNING,'#9#9#9#9#9#9#9#9'--> type = string / varchar.  --> is (nog) niet geïmplementeerd.'
+                '    NULL as BOB_BEGIN,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
+                '    NULL as BOB_EIND,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
+                #9'NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> Nog niet ingebouwd'
+                '    NULL as TYPE_REINIGING,                                 --> n.v.t. (velden gelijk houden voor union)'
+                #9'NULL as VERBINDINGSTYPE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as FUNDERING,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as AANTAL_WONINGEN,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as AFVOEREND_OPPERVLAK,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as LATERAALDEBIET_DWA,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as LATERAALDEBIET_HWA,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    --SDO_UTIL.TO_WKTGEOMETRY(pl.GEOMETRIE) as WKT_GEOMETRY,'#9'--> type = string / varchar.'
+                ''
+                '    CASE'
+                '        WHEN SDO_GEOM.VALIDATE_GEOMETRY(pl.geometrie, 0.005) = ''TRUE'''
+                '        THEN SDO_UTIL.TO_WKTGEOMETRY(pl.geometrie)'
+                '        ELSE NULL'
+                '    END as WKT_GEOMETRY,'
+                ''
+                '    pl.STELSEL_ID as STELSEL_ID'#9#9#9#9#9#9#9#9'--> type = string / varchar.'
+                'FROM gv_mech_leiding pl'
+                'LEFT JOIN gv_stelsel s ON pl.STELSEL_ID = s.OBJECT_GUID  -- stelselnaam kunnen ophalen'
+                'WHERE pl.eind_tijd is null'
+                ''
+                'UNION ALL'
+                ''
+                'SELECT'
+                '    ''KOLK'' as OBJECT_TYPE,  -- Gebruik ''PUT'' zodat het als put wordt behandeld'
+                '    k.ID,'
+                '    k.object_guid as GUID,'
+                '    k.kolkcode as NAAM,'
+                '    NULL as STELSEL_TYPE,  -- Geen stelsel info beschikbaar'
+                '    NULL as STELSEL_NAAM,   -- Geen stelsel info beschikbaar'
+                '    NULL as LEIDING_TYPE,'
+                '    NULL as BEGINPUT_ID,'
+                '    NULL as EINDPUT_ID,'
+                '    k.lengte as LENGTE,'
+                '    k.breedte as BREEDTE,'
+                '    k.hoogte as HOOGTE,'
+                '    k.diameter as DIAMETER,'
+                '    k.materiaal as MATERIAAL,'
+                '    k.vorm as VORM,'
+                '    NULL as STATUS_FUNCTIONEREN,'
+                '    NULL as PUT_TYPE,  -- Vaste waarde "KOLK" als puttype'
+                '    k.KOLKTYPE as KOLK_TYPE,'
+                '    NULL as MAAIVELD,'
+                '    NULL as BEGINDATUM,'
+                '    NULL as EINDDATUM,'
+                '    ''GEMETEN'' as WIJZE_INWINNING,'
+                '    NULL as BOB_BEGIN,'
+                '    NULL as BOB_EIND,'
+                '    k.wanddikte as WANDDIKTE,'
+                '    k.TYPE_REINIGING as TYPE_REINIGING, -- zit niet in de ttl'
+                '    NULL as VERBINDINGSTYPE,'
+                '    NULL as FUNDERING,'
+                '    NULL as DATUM_INSPECTIE,'
+                '    NULL as DATUM_REINIGING,  -- TYPE_REINIGING overslaan, is geen datum'
+                '    NULL as WIONTHEMA,'
+                '    NULL as AANTAL_WONINGEN,'
+                '    NULL as AANTAL_IE_BEDRIJVEN,'
+                '    NULL as AANTAL_IE_RECREATIE,'
+                '    NULL as AFVOEREND_OPPERVLAK,'
+                '    NULL as LATERAALDEBIET_DWA,'
+                '    NULL as LATERAALDEBIET_HWA,'
+                '    NULL as LATERAAL_AFVOEREND_OPPERVLAK,'
+                '    SDO_UTIL.TO_WKTGEOMETRY(k.GEOMETRIE) as WKT_GEOMETRY,  -- Geometrie is wel beschikbaar'
+                '    NULL as STELSEL_ID  -- Geen stelsel_id'
+                'FROM gv_kolk k'
+                'WHERE k.eind_tijd is null'
+                ''
+                'UNION ALL'
+                ''
+                'SELECT'
+                '    ''STELSEL'' as OBJECT_TYPE,'
+                '    s.ID, -- gebruikt bij debug, worder verder niets mee gedaan.'
+                '    s.object_guid as GUID,'#9#9#9#9#9'--> type = string / varchar.'
+                '    s.STELSELCODE as NAAM,'#9#9#9#9#9'--> type = string / varchar.'
+                '    s.STELSELTYPE as STELSEL_TYPE,'#9#9#9'--> type = string / varchar.'
+                '    s.STELSELNAAM as STELSEL_NAAM,'#9#9#9'--> type = string / varchar.'
+                '    NULL as LEIDING_TYPE,'#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as BEGINPUT_ID,'#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as EINDPUT_ID,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as LENGTE,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as BREEDTE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as HOOGTE,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as DIAMETER,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as MATERIAAL,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as VORM,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as STATUS_FUNCTIONEREN,'#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as PUT_TYPE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as KOLK_TYPE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as MAAIVELD,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as BEGINDATUM,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as EINDDATUM,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as WIJZE_INWINNING,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as BOB_BEGIN,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as BOB_EIND,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as WANDDIKTE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as TYPE_REINIGING,                 --> N.v.t., niet geïmplenteerd'
+                #9'NULL as VERBINDINGSTYPE,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as FUNDERING,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as DATUM_INSPECTIE,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as DATUM_REINIGING,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as WIONTHEMA,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AANTAL_WONINGEN,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as AFVOEREND_OPPERVLAK,'#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as LATERAALDEBIET_DWA,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as LATERAALDEBIET_HWA,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as WKT_GEOMETRY,'#9#9#9#9#9'--> type = string / varchar.'
                 '    s.OBJECT_GUID as STELSEL_ID'#9#9#9#9'--> type = string / varchar.'
                 'FROM gv_stelsel s'
@@ -911,7 +1242,7 @@ object frmMain: TfrmMain
                   Options = [sgmoDeDuplicateMarksOnOverflow]
                 end
                 object SynGutterLineNumber1: TSynGutterLineNumber
-                  Width = 21
+                  Width = 31
                   MouseActions = <>
                   MarkupInfo.Background = clBtnFace
                   MarkupInfo.Foreground = clNone

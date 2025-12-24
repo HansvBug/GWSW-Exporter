@@ -42,6 +42,7 @@ type
     function IsConnected: Boolean;
     function RetrieveData(Data: PRetrieveDataRec): TRetrieveDataRec;
     function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
+    function GetSQLfileLocation: String;
 
   end; { IModelMain }
 
@@ -113,6 +114,7 @@ type
     procedure WriteToLog(const aSection, aLogType, LogText: String);
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
     procedure MakeDbConnection(DbConnectionData: PDbConnectRec);
+    function GetSQLfileLocation: String;
 
     property Model: IModelMain read get_Model; // TODO: write set_Model;
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -128,6 +130,7 @@ type
     function get_TrxMan: ITransactionManager;
     procedure set_Provider(aValue: IobsProvider);
     procedure GetStaticTexts(const aSection: string);
+    function GetstaticText(const aView, aText: string): string;
     procedure RefreshTextCache(const aSection,aLangStr: string);
     //...
     procedure SwitchLanguage(const aSection: String);

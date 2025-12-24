@@ -5,7 +5,7 @@
     <PathDelim Value="\"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="gwsw_exporter"/>
+      <Title Value="Gwsw-exporter"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
@@ -16,7 +16,7 @@
     </General>
     <VersionInfo>
       <UseVersionInfo Value="True"/>
-      <MinorVersionNr Value="2"/>
+      <MinorVersionNr Value="3"/>
       <StringTable Comments="GWSW OroX export naar ttl bestand." CompanyName="Hans van Buggenum" FileDescription="GWSW OroX export naar ttl bestand." InternalName="GWSW-Bridge" LegalCopyright="Hans van Buggenum" OriginalFilename="GWSW-OroX-Exporter" ProductName="GWSW Exporter" ProductVersion="1.0.0"/>
     </VersionInfo>
     <BuildModes>
@@ -60,6 +60,11 @@
               </Win32>
             </Options>
           </Linking>
+          <Other>
+            <CompilerMessages>
+              <IgnoredMessages idx6058="True"/>
+            </CompilerMessages>
+          </Other>
         </CompilerOptions>
       </Item>
       <Item Name="Release">
@@ -70,6 +75,7 @@
             <Filename Value="gwsw_exporter"/>
           </Target>
           <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
             <OtherUnitFiles Value="src\views;src\presenters;src\models;src\common"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
@@ -198,11 +204,6 @@
         <UnitName Value="OroxExport"/>
       </Unit>
       <Unit>
-        <Filename Value="common\interfacewrapper.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="InterfaceWrapper"/>
-      </Unit>
-      <Unit>
         <Filename Value="common\gwswtypes.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="GWSWTypes"/>
@@ -216,6 +217,10 @@
         <Filename Value="common\uigwswdataprovider.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uIGWSWDataProvider"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\exportprogressreporter.intf.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
   </ProjectOptions>

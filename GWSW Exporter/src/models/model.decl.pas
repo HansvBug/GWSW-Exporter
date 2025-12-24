@@ -2,7 +2,7 @@
 unit model.decl;
 {$mode ObjFPC}{$H+}
 interface 
-uses classes,sysutils,contnrs, common.consts, istrlist, obs_prosu, model.base, model.intf,
+uses classes,sysutils, {contnrs,} common.consts, {istrlist,} obs_prosu, model.base, model.intf,
   presenter.trax, presenter.configure.trax;
 const
   Version = '0.21.04.2025'; // 1.st commit,  (mvp made easy set up by cdbc)
@@ -16,6 +16,7 @@ const
   adLogging    = 'Logging';
   adDomainlist = 'Domainlist';
   adExport     = 'Export';
+  adQueries    = 'Queries';
 
 type
   TTransaction = model.base.TTransaction;  { ancester alias }

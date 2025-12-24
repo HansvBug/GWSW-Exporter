@@ -7,7 +7,7 @@ const
   { Application constants }
   Application_version            = '0.1.0.0';
   Application_initial_start_date = '12-12-2025';
-  Application_build_date         = '14-12-2025';
+  Application_build_date         = '24-12-2025';
 
   { (a)pplication (m)essages }
   amSucces = 'Success';
@@ -35,6 +35,8 @@ const
   prDbConnection            = prUser + 10;
   prRetrieveData            = prUser + 11;
   prExportToOroxTtlFile     = prUser + 12;
+  prReportProgress          = prUser + 13;
+  prReportError             = prUser + 14;
 
   prDirDataNeeded = prUser + 100; { carries a TDirInfoTrx in aNotifyClass }
   prFetchDirData = prUser + 101; { carries a TDirInfoTrx in aNotifyClass & an 'IStrings' in UserData }
@@ -46,6 +48,7 @@ const
   prFormStateConfig      = prUser + 1001;
   prAppSettingsConfig    = prUser + 1002;
   prStaticHintsConfig    = prUser + 1003;
+  prAppSingleSettingConfig = prUser + 1004;
 
   (* from model.decl *)
   { string guids for the interfaces in this app, used when we can't "see" the type }

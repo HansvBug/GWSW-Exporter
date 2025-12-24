@@ -13,6 +13,7 @@ type
     procedure Open;
     procedure Close;
     function First: Boolean;
+    function Last: Boolean;
     function Next: Boolean;
     function EOF: Boolean;
 

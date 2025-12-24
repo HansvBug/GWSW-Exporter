@@ -5,6 +5,11 @@ chkActiveLogging=Activate logging
 chkAppendLogging=Append logfile
 gbLogging=Logging
 btnClose=Sluiten
+chkDisableErrorReport=Turn off error reporting
+lblQueryFileLocation=Locatie query bestand
+BitBtnQueryFileLocation=...
+SelectQueryFile=Select the query file.
+
 
 
 [view.configure.statusbartexts]

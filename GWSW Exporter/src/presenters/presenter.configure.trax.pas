@@ -20,6 +20,7 @@ type
     private
       fActivateLogging: Boolean;
       fAppendLogging: Boolean;
+      fDisableErrorReport : Boolean;
       fLanguage: String;
 
       fAppName: string;
@@ -38,6 +39,7 @@ type
       fRead: Boolean;
       fReadFrmState: Boolean;
       fSettingsFile: String;
+      fSqlFileLocation : String;
       fSuccess: boolean;
       fWrite: Boolean;
       fStoreFrmState: Boolean;
@@ -68,7 +70,11 @@ type
       property FormRestoredLeft: Integer read fFrmRestoredLeft write fFrmRestoredLeft;
       property FormRestoredHeight: Integer read fFrmRestoredHeight write fFrmRestoredHeight;
       property FormRestoredWidth: Integer read fFrmRestoredWidth write fFrmRestoredWidth;
+
+      property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
+      property SqlFileLocation: String read fSqlFileLocation write fSqlFileLocation;
     end;
+
 
 implementation
 // uses StrUtils; { for: 'IndexText' etc... }
@@ -118,7 +124,8 @@ begin
         lRec.setApplicationBuildDate:= AppBuildDate;
         lRec.setWriteSettings:= WriteSettings;
         lRec:= aMgr.OwnerConfig.Model.ReadSettings(@lRec);
-        lRec.setFrmName := FormName;
+        lRec.setFrmName:= FormName;
+
 
         aMgr.OwnerConfig.Provider.NotifySubscribers(prAppSettingsConfig, Self, @lRec);
       end;
@@ -151,6 +158,9 @@ begin
         lRec.setApplicationName:= ApplicationName;
         lRec.setApplicationVersion:= Application_version;
         lRec.setApplicationBuildDate:= Application_build_date;
+
+        lRec.setDisableErrorReport:= DisableErrorReport;
+        lRec.setSqlFileLocation:= SqlFileLocation;
 
         lRec:= aMgr.OwnerConfig.Model.WriteSettings(@lRec);
         aMgr.OwnerConfig.Provider.NotifySubscribers(prAppSettingsConfig, Self, @lRec);

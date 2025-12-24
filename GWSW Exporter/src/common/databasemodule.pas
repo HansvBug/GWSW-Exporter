@@ -19,6 +19,7 @@ type
 
   TDataSetResult = record
     DataSet: TDataSource;
+    Success: Boolean;
   end;
 
 
@@ -158,6 +159,7 @@ begin
         Open;
         EnableControls;
         Result.DataSet:= fDataSource;
+        if RecordCount> 0 then Result.Success:= True else Result.Success:= False;
       finally
         { #note : finally of except nog ivoeren }
       end;

@@ -7,20 +7,26 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-  istrlist, model.intf, model.decl, presenter.configure, presenter.configure.trax, common.utils;
+  Buttons, istrlist, model.intf, model.decl, presenter.configure,
+  presenter.configure.trax, common.utils;
 
 type
 
   { TfrmConfigure }
 
   TfrmConfigure = class(TForm, IViewConfigure)
+    BitBtnQueryFileLocation : TBitBtn;
     btnClose : TButton;
     chkActiveLogging : TCheckBox;
     chkAppendLogging : TCheckBox;
+    chkDisableErrorReport : TCheckBox;
+    edtSqlFileLocation : TEdit;
     gbLogging : TGroupBox;
+    lblQueryFileLocation : TLabel;
     pgcConfigure : TPageControl;
     stbInfo : TStatusBar;
     tbsMiscellaneous : TTabSheet;
+    procedure BitBtnQueryFileLocationClick(Sender : TObject);
     procedure chkActiveLoggingChange(Sender : TObject);
   private
     fPresenter: IPresenterConfigure;
@@ -90,6 +96,24 @@ begin
   else begin
     chkAppendLogging.Enabled:= False;
     chkAppendLogging.Checked:= False;
+  end;
+end;
+
+procedure TfrmConfigure.BitBtnQueryFileLocationClick(Sender : TObject);
+var
+  openDialog: TOpenDialog;
+begin
+  openDialog:= TOpenDialog.Create(self);
+  openDialog.Title:= fPresenter.GetstaticText('view.configure', 'SelectQueryFile');
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adQueries; { #todo : Make Linux proof }
+  openDialog.Options:= [ofFileMustExist];
+  openDialog.Filter:= 'SQL files|*.sql';
+  try
+    if openDialog.Execute then begin
+      edtSqlFileLocation.Text:= openDialog.FileName;
+    end;
+  finally
+    openDialog.Free;
   end;
 end;
 
@@ -225,6 +249,8 @@ begin
     lTrx.AppendLogging:= chkAppendLogging.Checked;
     lTrx.Language:= Lang;
     lTrx.SettingsLocationAndFileName:= GetSettingsFile;
+    lTrx.DisableErrorReport:= chkDisableErrorReport.Checked;
+    lTrx.SqlFileLocation:= edtSqlFileLocation.Text;
 
     fPresenter.TrxMan.CommitTransaction;
   except
@@ -297,6 +323,8 @@ begin
       if (setReadSettings) and (setFrmName = UnitName) then begin
         chkActiveLogging.Checked:= setActivateLogging;
         chkAppendLogging.Checked:= setAppendLogging;
+        chkDisableErrorReport.Checked:= setDisableErrorReport;
+        edtSqlFileLocation.Text:= setSqlFileLocation;
       end
       else if (setWriteSettings) and (setFrmName = UnitName) then begin
         // ...

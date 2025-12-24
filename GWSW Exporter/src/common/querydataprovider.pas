@@ -22,6 +22,7 @@ type
     procedure Open;
     procedure Close;
     function First: Boolean;
+    function Last: Boolean;
     function Next: Boolean;
     function EOF: Boolean;
 
@@ -38,8 +39,8 @@ implementation
 constructor TQueryDataProvider.Create(AQuery : TObject);
 begin
   inherited Create;
-  FQuery := TZQuery(AQuery);
-  FCurrentRecord := 0;
+  FQuery:= TZQuery(AQuery);
+  FCurrentRecord:= 0;
 end;
 
 destructor TQueryDataProvider.Destroy;
@@ -51,71 +52,78 @@ procedure TQueryDataProvider.Open;
 begin
   if not FQuery.Active then
     FQuery.Open;
-  FCurrentRecord := 0;
+  FCurrentRecord:= 0;
 end;
 
 procedure TQueryDataProvider.Close;
 begin
-  FCurrentRecord := 0;
+  FCurrentRecord:= 0;
 end;
 
 function TQueryDataProvider.First: Boolean;
 begin
   FQuery.First;
-  FCurrentRecord := 0;
-  Result := not FQuery.EOF;
+  FCurrentRecord:= 0;
+  Result:= not FQuery.EOF;
+end;
+
+function TQueryDataProvider.Last : Boolean;
+begin
+  FQuery.Last;
+  FCurrentRecord:= 0;
+  Result:= not FQuery.EOF;
 end;
 
 function TQueryDataProvider.Next: Boolean;
 begin
   FQuery.Next;
   Inc(FCurrentRecord);
-  Result := not FQuery.EOF;
+  Result:= not FQuery.EOF;
 end;
 
 function TQueryDataProvider.EOF: Boolean;
 begin
-  Result := FQuery.EOF;
+  Result:= FQuery.EOF;
 end;
 
 function TQueryDataProvider.GetFieldValue(const FieldName: string): Variant;
 begin
   try
     if FQuery.FieldByName(FieldName).IsNull then
-      Result := Null
+      Result:= Null
     else
-      Result := FQuery.FieldByName(FieldName).Value;
+      Result:= FQuery.FieldByName(FieldName).Value;
   except
     on E: Exception do
-      Result := Null;
+      Result:= Null;
   end;
 end;
 
 function TQueryDataProvider.FieldExists(const FieldName: string): Boolean;
 begin
   try
-    Result := FQuery.FindField(FieldName) <> nil;
+    Result:= FQuery.FindField(FieldName) <> nil;
   except
-    Result := False;
+    Result:= False;
   end;
 end;
 
 function TQueryDataProvider.GetObjectType: string;
 begin
-  Result := Trim(GetFieldValue('OBJECT_TYPE'));
+  Result:= Trim(GetFieldValue('OBJECT_TYPE'));
 
   if Result = '' then
-    Result := 'ONBEKEND'; { #todo : Moet een melding naar de view sturen }
+    Result:= 'ONBEKEND'; { #todo : Moet een melding naar de view sturen }
 end;
 
 function TQueryDataProvider.GetRecordCount: Integer;
 begin
-  Result := FQuery.RecordCount;
+  Result:= FQuery.RecordCount;
 end;
 
 function TQueryDataProvider.GetProviderType: string;
 begin
-  Result := 'TQuery';
+  Result:= 'TQuery';
 end;
 
 end.

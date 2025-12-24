@@ -24,6 +24,7 @@ type
     constructor Create(const aRootPath: shortstring;aTrxMgr: TTransactionManager);
     destructor Destroy; override;
     procedure GetStaticTexts(const aSection: string);
+    function GetstaticText(const aView, aText: string): string;
     procedure RefreshTextCache(const aSection,aLangStr: string);
     //...
     procedure SwitchLanguage(const aSection : String);
@@ -36,7 +37,6 @@ type
 
 
 implementation
-
 
 { TPresenterConfigure }
 function TPresenterConfigure.get_Model: IModelConfigure;
@@ -113,6 +113,16 @@ begin { due to usage of 'out'-param, 'lt' can't be anything else than integer }
   fProvider.NotifySubscribers(lreason,nil,lsl);
   { below we make use of the fInternalMsg stringlist to support i18n }
   fProvider.NotifySubscribers(prStatus,nil,Str2Pch(fInternalMsg.Values['msgUpnRun'])); ///<-i18n
+end;
+
+function TPresenterConfigure.GetstaticText(const aView, aText : string) : string;
+var
+  ldummy: integer;
+  statText: string;
+begin
+  FInternalMsg:= FModel.GetStaticTexts(aView, ldummy);
+  statText:= FInternalMsg.Values[aText];
+  result:= statText;
 end;
 
 procedure TPresenterConfigure.RefreshTextCache(const aSection,aLangStr: string); //=^

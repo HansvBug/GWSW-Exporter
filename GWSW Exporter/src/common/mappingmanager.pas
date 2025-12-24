@@ -77,9 +77,9 @@ begin
     for MappingType:= Low(TMappingType) to High(TMappingType) do begin
       case MappingType of
         { #note : De werkbladnamen moeten intstelbaar worden }
-        mtMateriaalPut      : SheetName := 'Materiaal_Put';
+        mtMateriaalPut      : SheetName := 'Materiaal_Put';      // wordt ook bij kolk gebruik. wellicht scheiden
         mtMateriaalLeiding  : SheetName := 'Materiaal_leiding';
-        mtVormPut           : SheetName := 'Vorm_Put';
+        mtVormPut           : SheetName := 'Vorm_Put';           // wordt ook bij kolk gebruik. wellicht scheiden
         mtVormLeiding       : SheetName := 'Vorm_Leiding';
         mtStatusFunctioneren: SheetName := 'StatusFunctioneren';
         mtStelseltype       : SheetName := 'Stelseltype';

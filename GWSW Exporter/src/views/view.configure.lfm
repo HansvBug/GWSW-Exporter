@@ -7,7 +7,6 @@ object frmConfigure: TfrmConfigure
   ClientHeight = 367
   ClientWidth = 705
   DesignTimePPI = 144
-  LCLVersion = '4.0.0.4'
   object stbInfo: TStatusBar
     Left = 0
     Height = 36
@@ -17,7 +16,7 @@ object frmConfigure: TfrmConfigure
   end
   object pgcConfigure: TPageControl
     Left = 0
-    Height = 200
+    Height = 272
     Top = 0
     Width = 705
     ActivePage = tbsMiscellaneous
@@ -27,7 +26,7 @@ object frmConfigure: TfrmConfigure
     TabOrder = 1
     object tbsMiscellaneous: TTabSheet
       Caption = 'tbsMiscellaneous'
-      ClientHeight = 162
+      ClientHeight = 234
       ClientWidth = 697
       object gbLogging: TGroupBox
         Left = 12
@@ -61,6 +60,38 @@ object frmConfigure: TfrmConfigure
           ShowHint = True
           TabOrder = 1
         end
+      end
+      object chkDisableErrorReport: TCheckBox
+        Left = 352
+        Height = 29
+        Top = 32
+        Width = 202
+        Caption = 'chkDisableErrorReport'
+        TabOrder = 1
+      end
+      object lblQueryFileLocation: TLabel
+        Left = 24
+        Height = 25
+        Top = 173
+        Width = 160
+        Caption = 'lblQueryFileLocation'
+      end
+      object edtSqlFileLocation: TEdit
+        Left = 216
+        Height = 33
+        Top = 165
+        Width = 424
+        TabOrder = 2
+        Text = 'edtSqlFileLocation'
+      end
+      object BitBtnQueryFileLocation: TBitBtn
+        Left = 656
+        Height = 33
+        Top = 165
+        Width = 33
+        Caption = 'BitBtnQueryFileLocation'
+        TabOrder = 3
+        OnClick = BitBtnQueryFileLocationClick
       end
     end
   end

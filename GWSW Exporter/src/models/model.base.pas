@@ -79,6 +79,8 @@ type
       setReadFormState: Boolean;
       setMessage: String;
       setMappingFile: String;
+      setDisableErrorReport: Boolean;
+      setSqlFileLocation: String;
     end;
 
     PSingleSettingRec = ^TSingleSettingRec;
@@ -112,15 +114,17 @@ type
       SqlText,
       OrganizationName: String;
       DataSource: TObject;
+      Message: String;
+      Success: Boolean;
     end;
 
     PExportToOroxTtlFileRec = ^TExportToOroxTtlFileRec;
     TExportToOroxTtlFileRec = record
-      //Dataset: TObject;
-      //DataProvider: TObject;
       FileName,
       MappingFile,
       OrganizationName: String;
+      Success: Boolean;
+      Message: String;
     end;
 
 

@@ -25,17 +25,22 @@ lblUserName=User
 lblPassword=Wachtwoord
 lblOrganizationName=Organisatie
 lblGWSWVersion=GWSW versie
+lblProgress=Voortgang log
+lblError=Fouten log
 btnConnect=Connect
 btnGetData=Haal de data op
 btnExportToFile=Export
+btnClose=Sluiten
 SelectMapFile=Selecteer een mappings bestand
 QueryNotActive=Query is niet actief. Activeer eerst de query.
 MappingsFileIsMissing=Mappingsbestand ontbreekt. Ga naar tabblad instellingen.
-SaveTextFile=Opslaan tekst bestand.
+SaveSqlFile=Opslaan sql bestand.
 SaveCSVFile=Opslaan csv bestand.
-DlgTextFilesFilter=Tekstbestanden|*.txt|Alle bestanden|*.*
+DlgSqlFilesFilter=SQL bestanden|*.sql|Alle bestanden|*.*
 DlgCSVFilesFilter=CSV Bestanden (*.csv)|Alle bestanden (*.*)|*.*
-OpenTextFile=Open tekst bestand.
+OpenSqlFile=Open sql bestand.
+chkPutGrondwaterstand=Grondwaterstand
+
 
 
 [view.main.statusbartexts]

@@ -39,6 +39,7 @@ uses
 
 begin
   RequireDerivedFormResource:=True;
+  Application.Title:= 'Gwsw-exporter';
   Application.Scaled:= True;
   Application.Initialize;
   Application.CreateForm(TfrmMain, frmMain);

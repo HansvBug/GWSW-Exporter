@@ -37,6 +37,7 @@ type
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
 
     procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
+    function GetSQLfileLocation: String;
 
     property Model: IModelMain read get_Model; // TODO: write set_Model; if needed...
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -211,6 +212,11 @@ begin
   fModel.MakeDbConnection(DbConnectionData);
 
   fProvider.NotifySubscribers(prDbConnection, Nil, DbConnectionData);
+end;
+
+function TPresenterMain.GetSQLfileLocation : String;
+begin
+  Result:= fModel.GetSQLfileLocation;
 end;
 
 initialization                         { we're taking advantage of the fact, that }
