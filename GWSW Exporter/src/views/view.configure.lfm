@@ -1,107 +1,230 @@
 object frmConfigure: TfrmConfigure
   Left = 530
-  Height = 367
+  Height = 629
   Top = 37
-  Width = 705
+  Width = 1086
   Caption = 'frmConfigure'
-  ClientHeight = 367
-  ClientWidth = 705
+  ClientHeight = 629
+  ClientWidth = 1086
+  Color = 13006080
   DesignTimePPI = 144
+  LCLVersion = '4.4.0.0'
   object stbInfo: TStatusBar
     Left = 0
     Height = 36
-    Top = 331
-    Width = 705
+    Top = 593
+    Width = 1086
     Panels = <>
   end
-  object pgcConfigure: TPageControl
+  object pnlTop: TPanel
     Left = 0
-    Height = 272
+    Height = 75
     Top = 0
-    Width = 705
-    ActivePage = tbsMiscellaneous
+    Width = 1086
     Align = alTop
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    TabIndex = 0
+    BevelOuter = bvNone
+    Caption = 'pnlTop'
+    Color = 13006080
+    ParentBackground = False
+    ParentColor = False
     TabOrder = 1
-    object tbsMiscellaneous: TTabSheet
-      Caption = 'tbsMiscellaneous'
-      ClientHeight = 234
-      ClientWidth = 697
-      object gbLogging: TGroupBox
-        Left = 12
-        Height = 120
-        Top = 12
-        Width = 278
-        Caption = 'gbLogging'
-        ClientHeight = 90
-        ClientWidth = 274
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 0
-        object chkActiveLogging: TCheckBox
-          Left = 12
-          Height = 29
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Height = 75
+    Top = 518
+    Width = 1086
+    Align = alBottom
+    BevelOuter = bvNone
+    Caption = 'pnlBottom'
+    ClientHeight = 75
+    ClientWidth = 1086
+    Color = 13006080
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 2
+    object btnClose: TButton
+      Left = 960
+      Height = 38
+      Top = 32
+      Width = 113
+      Anchors = [akRight, akBottom]
+      Caption = 'btnClose'
+      TabOrder = 0
+    end
+  end
+  object pnlMain: TPanel
+    Left = 0
+    Height = 443
+    Top = 75
+    Width = 1086
+    Align = alClient
+    BevelOuter = bvNone
+    Caption = 'pnlMain'
+    ClientHeight = 443
+    ClientWidth = 1086
+    Color = clSkyBlue
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 3
+    object pgcConfigure: TPageControl
+      Left = 0
+      Height = 443
+      Top = 0
+      Width = 1086
+      ActivePage = tbsMiscellaneous
+      Align = alClient
+      TabIndex = 0
+      TabOrder = 0
+      object tbsMiscellaneous: TTabSheet
+        Caption = 'tbsMiscellaneous'
+        ClientHeight = 405
+        ClientWidth = 1078
+        object gbLogging: TGroupBox
+          Left = 720
+          Height = 232
           Top = 8
-          Width = 166
-          Caption = 'chkActiveLogging'
+          Width = 272
+          Caption = 'gbLogging'
+          ClientHeight = 202
+          ClientWidth = 268
+          ParentBackground = False
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
-          OnChange = chkActiveLoggingChange
+          object chkActiveLogging: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 8
+            Width = 166
+            Caption = 'chkActiveLogging'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 0
+            OnChange = chkActiveLoggingChange
+          end
+          object chkAppendLogging: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 48
+            Width = 182
+            Caption = 'chkAppendLogging'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 1
+          end
         end
-        object chkAppendLogging: TCheckBox
+        object lblQueryFileLocation: TLabel
           Left = 12
-          Height = 29
-          Top = 48
-          Width = 182
-          Caption = 'chkAppendLogging'
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 1
+          Height = 25
+          Top = 328
+          Width = 160
+          Caption = 'lblQueryFileLocation'
         end
-      end
-      object chkDisableErrorReport: TCheckBox
-        Left = 352
-        Height = 29
-        Top = 32
-        Width = 202
-        Caption = 'chkDisableErrorReport'
-        TabOrder = 1
-      end
-      object lblQueryFileLocation: TLabel
-        Left = 24
-        Height = 25
-        Top = 173
-        Width = 160
-        Caption = 'lblQueryFileLocation'
-      end
-      object edtSqlFileLocation: TEdit
-        Left = 216
-        Height = 33
-        Top = 165
-        Width = 424
-        TabOrder = 2
-        Text = 'edtSqlFileLocation'
-      end
-      object BitBtnQueryFileLocation: TBitBtn
-        Left = 656
-        Height = 33
-        Top = 165
-        Width = 33
-        Caption = 'BitBtnQueryFileLocation'
-        TabOrder = 3
-        OnClick = BitBtnQueryFileLocationClick
+        object edtSqlFileLocation: TEdit
+          Left = 204
+          Height = 33
+          Top = 320
+          Width = 424
+          TabOrder = 1
+          Text = 'edtSqlFileLocation'
+        end
+        object BitBtnQueryFileLocation: TBitBtn
+          Left = 644
+          Height = 33
+          Top = 320
+          Width = 33
+          Caption = 'BitBtnQueryFileLocation'
+          TabOrder = 2
+          OnClick = BitBtnQueryFileLocationClick
+        end
+        object gbErrorReporting: TGroupBox
+          Left = 8
+          Height = 232
+          Top = 8
+          Width = 272
+          Caption = 'gbErrorReporting'
+          ClientHeight = 202
+          ClientWidth = 268
+          ParentBackground = False
+          TabOrder = 3
+          object chkMapping: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 8
+            Width = 124
+            Caption = 'chkMapping'
+            TabOrder = 0
+          end
+          object chkFatal: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 48
+            Width = 89
+            Caption = 'chkFatal'
+            TabOrder = 1
+          end
+          object chkFieldIsEmpty: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 88
+            Width = 153
+            Caption = 'chkFieldIsEmpty'
+            TabOrder = 2
+          end
+          object chkFieldIsMissing: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 128
+            Width = 163
+            Caption = 'chkFieldIsMissing'
+            TabOrder = 3
+          end
+          object chkValueOutOfRange: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 168
+            Width = 195
+            Caption = 'chkValueOutOfRange'
+            TabOrder = 4
+          end
+        end
+        object gbMiscelleneous: TGroupBox
+          Left = 304
+          Height = 232
+          Top = 8
+          Width = 376
+          Caption = 'gbMiscelleneous'
+          ClientHeight = 202
+          ClientWidth = 372
+          ParentBackground = False
+          TabOrder = 4
+          object chkBdGridRowhighligth: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 8
+            Width = 211
+            Caption = 'chkBdGridRowhighligth'
+            TabOrder = 0
+          end
+          object chkAskToOpenExportFile: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 48
+            Width = 222
+            Caption = 'chkAskToOpenExportFile'
+            TabOrder = 1
+          end
+          object chkKeepLastOrganization: TCheckBox
+            Left = 16
+            Height = 29
+            Top = 88
+            Width = 224
+            Caption = 'chkKeepLastOrganization'
+            TabOrder = 2
+          end
+        end
       end
     end
-  end
-  object btnClose: TButton
-    Left = 584
-    Height = 38
-    Top = 280
-    Width = 113
-    Anchors = [akRight, akBottom]
-    Caption = 'btnClose'
-    TabOrder = 2
   end
 end

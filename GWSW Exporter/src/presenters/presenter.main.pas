@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit presenter.main;
 {$mode ObjFPC}{$H+}
 {$define dbg}
@@ -38,6 +38,9 @@ type
 
     procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
     function GetSQLfileLocation: String;
+    function GetKeepLastOrganization: Boolean;
+    function GetLastUsedOrganization: String;
+    procedure ExportInProgress(aData: TExportInProgressRec);
 
     property Model: IModelMain read get_Model; // TODO: write set_Model; if needed...
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -115,13 +118,13 @@ begin { due to usage of 'out'-param, 'lt' can't be anything else than integer }
   case lt of
     0: lreason:= prMainStaticTexts;    // remember to correlate with model.sects
     1: lreason:= prStatusBarPanelText; // model.main: Const Sects: [view.main.StatusbarTexts]
-    3: lreason:= prLoggingText;        //model.main: Const Sects: [view.main.logging]
+    3: lreason:= prLoggingText;        // model.main: Const Sects: [view.main.logging]
 
   end;
   fProvider.NotifySubscribers(lreason,nil,lsl);
   { below we make use of the fInternalMsg stringlist to support i18n }
   //fProvider.NotifySubscribers(prStatus,nil,Str2Pch(fInternalMsg.Values['msgUpnRun'])); ///<-i18n
-  FProvider.NotifySubscribers(prStatus, nil, Str2Pch(FInternalMsg.Values['Welcome'])); ///<-i18n  // Presenter only
+  fProvider.NotifySubscribers(prStatus, nil, Str2Pch(FInternalMsg.Values['Welcome'])); ///<-i18n  // Presenter only
 end;
 
 procedure TPresenterMain.RefreshTextCache(const aSection,aLangStr: string); //=^
@@ -146,7 +149,7 @@ begin
   fModel.SwitchLanguage;
   fInternalMsg:= fModel.GetStaticTexts(ClassName, ldummy);
   GetStaticTexts(aSection);
-  //fProvider.NotifySubscribers(prStatus,nil,Str2Pch('(!) Attention: TEST ')); // Voorbeeld. Meer gebruiken op deze manier.
+  //fProvider.NotifySubscribers(prStatus,nil,Str2Pch('(!) Attention: TEST ')); // Example.
 end;
 
 procedure TPresenterMain.SetStatusbarText(const aText : string; panel : word);
@@ -174,7 +177,11 @@ var
 begin
   fInternalMsg:= fModel.GetStaticTexts(aView, ldummy);
   statText:= fInternalMsg.Values[aText];
-  Result:= statText;
+
+  if statText <> '' then
+    Result:= statText
+  else
+    Result:= aText  // This allows values that are not in the language files to be sent to the view.
 end;
 
 procedure TPresenterMain.StartLogging;
@@ -189,7 +196,7 @@ var
   logSection: string;
 begin
   case aSection of
-    'view.main': begin
+    'view.main': begin  { #todo :   // --> niet meer handig }
        logSection := 'view.main.logging';
     end;
   end;
@@ -218,6 +225,22 @@ function TPresenterMain.GetSQLfileLocation : String;
 begin
   Result:= fModel.GetSQLfileLocation;
 end;
+
+function TPresenterMain.GetKeepLastOrganization: Boolean;
+begin
+  Result:= fModel.GetKeepLastOrganization;
+end;
+
+function TPresenterMain.GetLastUsedOrganization: String;
+begin
+  Result:= fModel.GetLastUsedOrganization;
+end;
+
+procedure TPresenterMain.ExportInProgress(aData : TExportInProgressRec);
+begin
+  fModel.DisableChildControls(aData);
+end;
+
 
 initialization                         { we're taking advantage of the fact, that }
   RegisterSection(TPresenterMain.ClassName); { 'Classname' is a class function }

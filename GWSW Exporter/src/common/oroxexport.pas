@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit OroxExport;
 
 {$mode ObjFPC}{$H+}
@@ -6,9 +6,9 @@ unit OroxExport;
 interface
 
 uses
-  SysUtils, Classes, TypInfo, Variants, Math, DateUtils,
+  SysUtils, Classes, TypInfo, Variants, Math, DateUtils, StrUtils,
   model.intf, uIGWSWDataProvider, GWSWTypes, MappingManager,
-  exportprogressreporter.intf;
+  exportprogressreporter.intf, GWSWValidationConfig, GWSWValidation;
 
 type
   { TOroxExport }
@@ -18,7 +18,8 @@ type
       fFileName: String;
       fOrganizationName: String;
       fProgressReporter: IExportProgressReporter;
-      fDisableErrorReport: Boolean;
+      fTotalRecords: Integer;
+      fCurrentRecord: Integer;
 
       fPutList: TList;
       fLeidingList: TList;
@@ -34,12 +35,17 @@ type
       procedure ClearKolkList;
       procedure ClearPersleidingList;
       function MapDatabaseToGWSW(DataProvider : IGWSWDataProvider; TotalRecords : Integer) : Boolean;  // Map de BOR data naar de GWSW domeinlijsten
-      function GenerateOroxTurtle(const FileName: string): Boolean;  // Bouw de ttl op
+      function GenerateOroxTurtle(const FileName, Version : string) : Boolean;  // Bouw de ttl op
       function MapStelselFromProvider(DataProvider: IGWSWDataProvider): PGWSWStelsel;
+      function InitializeStelsel(var Stelsel: PGWSWStelsel): Boolean;
       function MapPutFromProvider(DataProvider: IGWSWDataProvider): PGWSWPut;
+      function InitializePut(var Put : PGWSWPut) : Boolean;
       function MapLeidingFromProvider(DataProvider: IGWSWDataProvider): PGWSWLeiding;
+      function InitializeLeiding(var Leiding : PGWSWLeiding) : Boolean;
       function MapPersleidingFromProvider(DataProvider: IGWSWDataProvider): PGWSWPersleiding;
+      function InitializePersleiding(var Persleiding : PGWSWPersleiding) : Boolean;
       function MapKolkFromProvider(DataProvider: IGWSWDataProvider): PGWSWKolk;
+      function InitializeKolk(var Kolk : PGWSWKolk) : Boolean;
 
       function ParseWKTPoint(const WKT: string; out X, Y, Z: Double): Boolean;
       function GetDateFromYearField(DataProvider: IGWSWDataProvider; const FieldName: string;
@@ -66,28 +72,30 @@ type
       function FloatToOrox(Value : Double; Decimals : Integer) : String; // Ongeacht de landinstelling, het Orox ttl bestand verwacht een "." als decimaal scheidingsteken. (en geen ",")
       function FormatOrox(const FormatStr: string; const Args: array of const): string;// Regardless of the locale, the Orox ttl file expects a "." as a decimal separator. (and not ",")
 
-
-
       procedure ExportStelselToTurtle(SL: TStringList; const Stelsel: PGWSWStelsel);
       procedure ExportPutToTurtle(SL: TStringList; const Put: PGWSWPut);
       procedure ExportLeidingToTurtle(SL: TStringList; const Leiding: PGWSWLeiding);
       procedure ExportPersleidingToTurtle(SL: TStringList; const Persleiding: PGWSWPersleiding);
       procedure ExportKolkToTurtle(SL: TStringList; const Kolk: PGWSWKolk);
       //exportToTurtle helper
-      function WijzeInwinningToGWSW(Wijze: TGWSWWijzeInwinning): string;
+      function TryDifferentDateFormats(const ValueStr: string; out DateVal: TDateTime): Boolean;
 
       procedure ReportProgress(const Msg: string);
-      procedure ReportError(const ErrMsg: string);
+      procedure ReportError(const ErrMsg: string; const ErrorType: Integer = 0; const Guid: string = '');
+      procedure UpdateProgressCount(Current, Total: Integer);
+
+
     public
-      constructor Create(ADataProvider : IGWSWDataProvider; const FileName,
-        OrganizationName, MappingsFile : String; AProgressReporter : IExportProgressReporter);
+      constructor Create(ADataProvider : IGWSWDataProvider; const FileName, OrganizationName, MappingsFile : String; AProgressReporter: IExportProgressReporter);
       destructor Destroy; override;
-      procedure ExportToOrox(DisableErrorReport: Boolean);
+      procedure ExportToOrox(const GWSWversion: String);
+
   end;
 
 const Default_Z_Value = -9999; // De rioned server controleert op: Kenmerk Z_coordinaat - waarde wijkt af (min=-20,max=300)
 
 implementation
+uses common.consts;
 
 { TOroxExport }
 
@@ -162,51 +170,70 @@ end;
 
 function TOroxExport.MapDatabaseToGWSW(DataProvider : IGWSWDataProvider; TotalRecords : Integer) : Boolean;
 var
-  Stelsel, Put, Leiding: Boolean;
+  Stelsel, Put, Leiding, Persleiding, Kolk: Boolean;
 begin
   Result:= False;
   Stelsel:= False;
   Put:= False;
   Leiding:= False;
+  Persleiding:= False;
+  Kolk:= False;
+  // Initialiseer progress tracking
+  fTotalRecords:= TotalRecords;
+  fCurrentRecord:= 0;
 
   try
     ClearAllLists;
-
     DataProvider.Open;
     try
       if DataProvider.First then begin
         repeat
+          Inc(fCurrentRecord);
+
+          // Update progress every 100 records or at milestones
+          // Mapping is time-consuming. So update the gui less and update the progress bar per 100 records
+          if (fCurrentRecord mod 100 = 0) or (fCurrentRecord = 1) or (fCurrentRecord = TotalRecords) then
+            UpdateProgressCount(fCurrentRecord, TotalRecords);
+
           case UpperCase(DataProvider.GetObjectType) of
             'STELSEL': begin
               if not Stelsel then begin
-                Stelsel:= True;
-                ReportProgress('Mapping Stelsel...');
+                Stelsel:= True;  // Show only once.
+                ReportProgress('MappingSewerSystem');  // Mapping Stelsel...
               end;
               FStelselList.Add(MapStelselFromProvider(DataProvider));
             end;
             'PUT': begin
               if not Put then begin
                 Put:= True;
-                ReportProgress('Mapping Put...');
+                ReportProgress('MappingManhole'); // Mapping Put...
               end;
               FPutList.Add(MapPutFromProvider(DataProvider));
             end;
             'LEIDING': begin
               if not Leiding then begin
                 Leiding:= True;
-                ReportProgress('Mapping Leiding...');
+                ReportProgress('MappingPipeline');  // Mapping Leiding...
               end;
               FLeidingList.Add(MapLeidingFromProvider(DataProvider));
             end;
             'PERSLEIDING': begin
+              if not Persleiding then begin
+                Persleiding:= True;
+                ReportProgress('MappingMechanicalPipeline');
+              end;
               FPersLeidingList.Add(MapPersleidingFromProvider(DataProvider));
             end;
             'KOLK': begin
+              if not Kolk then begin
+                Kolk:= True;
+                ReportProgress('MappingGully');
+              end;
               FKolkList.Add(MapKolkFromProvider(DataProvider));
             end
             else begin
-              ReportError('Onbekend Object type aangetroffen.');
-              ReportError('Dit is: ' + UpperCase(DataProvider.GetObjectType))
+              ReportError('Onbekend Object type aangetroffen.');   { #todo : Taalinstelling }
+              ReportError('Dit is: ' + UpperCase(DataProvider.GetObjectType));
             end;
           end;
 
@@ -219,77 +246,96 @@ begin
     Result:= True;
   except
     on E: Exception do
-      raise Exception.Create('Mapping fout: ' + E.Message);   { #todo : Moet naar de view. }
+      raise Exception.Create('Mapping fout: ' + E.Message);   { #todo : Moet naar de view. } { #todo : Taalinstelling }
   end;
 end;
 
-function TOroxExport.GenerateOroxTurtle(const FileName : string) : Boolean;
+function TOroxExport.GenerateOroxTurtle(const FileName, Version : string) : Boolean;
 var
   SL: TStringList;
   i: Integer;
-  DummyStelsel: PGWSWStelsel;
+  TotalObjects, CurrentObject: Integer;
 begin
   Result:= False;
+
+  // Bereken totaal aantal objecten
+  TotalObjects:= fStelselList.Count + fPutList.Count + fLeidingList.Count +
+                 fPersleidingList.Count + fKolkList.Count;
+  CurrentObject:= 0;
+
   SL:= TStringList.Create;  // de specificaties schrijven utf 8 voor. (nodig voor é ë etc.)
   try
-    // Eerst een dummy stelsel toevoegen aan de lijst voor objecten zonder stelsel
-    // Nodig voor de kolken. Is niet voldoende/goed om de validatie meldingen te voorkomen. Nakijken.
-{    New(DummyStelsel);
-    DummyStelsel^.GUID:= 'DUMMY_STELSEL';
-    DummyStelsel^.aLabel:= 'Dummy stelsel voor objecten zonder stelsel';
-    DummyStelsel^.HasParts:= True;
-    DummyStelsel^.StelselTypeUri:= 'gwsw:GemengdStelsel';
-    FStelselList.Add(DummyStelsel);
-    }
 
     SL.WriteBOM:= False; { #todo : Uitzoeken. }
 
-    // Prefixes conform GWSW-OroX specificatie
+    // Prefixes conform GWSW-OroX specificatie.
     SL.Add('@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .');
     SL.Add('@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .');
     SL.Add('@prefix owl:     <http://www.w3.org/2002/07/owl#> .');
     SL.Add('@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .');
     SL.Add('@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .');
     SL.Add('@prefix geo:     <http://www.opengis.net/ont/geosparql#> .');
-    SL.Add('@prefix gwsw:    <http://data.gwsw.nl/1.6/totaal/> .');
+    SL.Add('@prefix gwsw:    <http://data.gwsw.nl/'+ Version + '/totaal/> .');
 
-    if fOrganizationName <> '' then
+    if fOrganizationName <> '' then  // fOrganizationName is now mandatory
       SL.Add('@prefix :        <http://sparql.gwsw.nl/repositories/' + fOrganizationName + '#> .')  // Dit komt voor de URI staan!
     else
       SL.Add('@prefix :        <http://sparql.gwsw.nl/repositories/#> .');  // Dit komt voor de URI staan!
 
     SL.Add('');
-    SL.Add('# gwsw-exporter, een export tool in aanbouw.');
+    SL.Add('# GWSW-Exporter. (https://codeberg.org/HansvBug/GWSW-Exporter)');
     SL.Add('# Exportdatum: ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+    SL.Add('# ' + fOrganizationName );
+    SL.Add('# ##############################################################');
     SL.Add('');
     SL.Add('');
 
     // Export Stelsels
     for i:= 0 to FStelselList.Count - 1 do begin
       ExportStelselToTurtle(SL, PGWSWStelsel(FStelselList[i]));
+      Inc(CurrentObject);
+      // The export is relatively fast so the gui may update more often here than during the mapping and we update the progress bar with 50 records
+      if (CurrentObject mod 100 = 0) and (TotalObjects > 0) then
+        UpdateProgressCount(CurrentObject, TotalObjects);
     end;
 
     // Export Putten. Als putten zonder leidingen worden geëxporteerd dan geeft de balidatie een fout. het "netwerk" is dan niet goed.
      for i:= 0 to FPutList.Count - 1 do begin
        ExportPutToTurtle(SL, PGWSWPut(FPutList[i]));
+       Inc(CurrentObject);
+       if (CurrentObject mod 100 = 0) and (TotalObjects > 0) then
+         UpdateProgressCount(CurrentObject, TotalObjects);
      end;
 
      // Export Leidingen
      for i:= 0 to FLeidingList.Count - 1 do begin
        ExportLeidingToTurtle(SL, PGWSWLeiding(FLeidingList[i]));
+       Inc(CurrentObject);
+       if (CurrentObject mod 100 = 0) and (TotalObjects > 0) then
+         UpdateProgressCount(CurrentObject, TotalObjects);
      end;
 
      // Export Persleidingen
      for i:= 0 to FPersleidingList.Count - 1 do begin
        ExportPersleidingToTurtle(SL, PGWSWPersleiding(FPersleidingList[i]));
+       Inc(CurrentObject);
+       if (CurrentObject mod 100 = 0) and (TotalObjects > 0) then
+         UpdateProgressCount(CurrentObject, TotalObjects);
      end;
 
      // Export Kolken
-     for i := 0 to FKolkList.Count - 1 do begin
+     for i:= 0 to FKolkList.Count - 1 do begin
        ExportKolkToTurtle(SL, PGWSWKolk(FKolkList[i]));
+       Inc(CurrentObject);
+       if (CurrentObject mod 100 = 0) and (TotalObjects > 0) then
+         UpdateProgressCount(CurrentObject, TotalObjects);
      end;
 
+    if TotalObjects > 0 then
+      UpdateProgressCount(TotalObjects, TotalObjects);
+
     // Opslaan
+    ReportProgress('Opslaan bestand...');
     SL.SaveToFile(FileName);
     Result:= True;
 
@@ -305,34 +351,34 @@ var
 begin
   New(Stelsel);
 
-  // Initialiseer
-  Stelsel^.aLabel:= '';
-  Stelsel^.HasParts:= True;
-  Stelsel^.StelselTypeUri:= '';
+  // Stop als InitializeStelsel faalt
+  if not InitializeStelsel(Stelsel) then
+  begin
+    Dispose(Stelsel);
+    ReportError('Stelsel: Initialisatie mislukt!');
+    Exit(nil);
+  end;
 
   if DataProvider.FieldExists('GUID') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('GUID'), '');
     if lValue <> '' then
       Stelsel^.GUID:= lValue
     else
-      ReportError('Stelsel: "GUID" is leeg');
+      ReportError('Stelsel: "GUID" is leeg.', eetFieldIsEmpty, Stelsel^.GUID);
   end
   else
-    ReportError('Stelsel: GUID veld ontbreekt');
-
+    ReportError('Stelsel: "Guid" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Korte naam (STELSELCODE)
   if DataProvider.FieldExists('NAAM') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('NAAM'), '');
     if lValue <> '' then
       Stelsel^.aLabel:= lValue
-    else begin
-      Stelsel^.aLabel:= '';
-      if not fDisableErrorReport then ReportError('Stelsel: "Naam" is leeg' + ' (' + Stelsel^.GUID + ')');
-    end
+    else
+      ReportError('Stelsel: "Naam" is leeg.', eetFieldIsEmpty, Stelsel^.GUID);
   end
   else
-    ReportError('Stelsel: "Naam" veld ontbreekt.');
+    ReportError('Stelsel: "Naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Lange naam  (STELSELNAAM)
   if DataProvider.FieldExists('STELSEL_NAAM') then begin
@@ -340,10 +386,10 @@ begin
     if lValue <> '' then
       Stelsel^.StelselNaam:= lValue
     else
-      if not fDisableErrorReport then ReportError('Stelsel: "Stelsel_naam" is leeg' + ' (' + Stelsel^.GUID + ')');
+      ReportError('Stelsel: "Stelselnaam" is leeg.', eetFieldIsEmpty, Stelsel^.GUID);
   end
   else
-    ReportError('Stelsel: "Stelsel_naam" ontbreekt.');
+    ReportError('Stelsel: "Stelsel naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Als er geen korte naam is, gebruik dan de lange naam voor aLabel
   if (Stelsel^.aLabel= '') and (Stelsel^.StelselNaam <> '') then
@@ -354,27 +400,45 @@ begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('STELSEL_TYPE'), ''));   // Default is "Onbekend"
     Stelsel^.StelselTypeUri:= fMappingManager.GetGWSWURI(mtStelseltype, lValue);
 
-    if Stelsel^.StelselTypeUri = 'gwsw:Onbekend' then begin
-      Stelsel^.StelselTypeUri:= '""';  { #todo : Default "gwsw:onbekend" vanuit DataProvider.GetFieldValue() is niet handig }
-      if not fDisableErrorReport then ReportError('Stelsel: "Stelsel_type" is leeg' + ' (' + Stelsel^.GUID + ')');
-
-      if lValue = '' then
-         if not fDisableErrorReport then ReportError('Stelsel: "Stelsel_type" is leeg' + ' (' + Stelsel^.GUID + ')');
+    if Stelsel^.StelselTypeUri = '' then begin
+      Stelsel^.StelselTypeUri:= '""';
+      ReportError('StelseltypeIsMissing', eetFieldIsEmpty, Stelsel^.GUID);
+    end
+    else if Stelsel^.StelselTypeUri = 'Mapping_error' then begin
+      Stelsel^.StelselTypeUri:= '""';
+      ReportError('Stelsel: "Stelseltype" veld niet conform gwsw domeinlijst.', eetMapping, Stelsel^.GUID);
     end
   end
   else
-    ReportError('Stelsel: "Stelsel_type" ontbreekt.');
+    ReportError('Stelsel: "Stelseltype" veld ontbreekt.', eetFieldIsMissing, '');
 
   Result:= Stelsel;
+end;
+
+function TOroxExport.InitializeStelsel(var Stelsel : PGWSWStelsel) : Boolean;
+begin
+  Result:= False;
+  if Stelsel = nil then Exit;
+
+  FillChar(Stelsel^, SizeOf(TGWSWStelsel), 0);
+  Stelsel^.GUID:= '';
+  Stelsel^.aLabel:= '';
+  Stelsel^.StelselNaam:= '';
+  Stelsel^.StelselTypeUri:= '';
+  Stelsel^.HasParts:= True;
+
+  Result:= True;
 end;
 
 function TOroxExport.MapPutFromProvider(DataProvider : IGWSWDataProvider) : PGWSWPut;
 var
   Put: PGWSWPut;
+  lVal: TGWSWValidationResult;
   WKTGeometry: string;
   GeoX, GeoY, GeoZ: Double;
   lValue: Variant;
   lDate: TDateTime;
+  tmp: String;
 begin
   // Misschien ... optie die aangeeft dat als er ook maar 1 mapping fout is dan wordt de put niet meegenomen
   // dan wordt het iets van
@@ -389,10 +453,16 @@ begin
   end;}
 
   New(Put);
+  if not InitializePut(Put) then begin
+    Dispose(Put);
+    ReportError('Put: Initialisatie mislukt!');
+    Exit(nil);
+  end;
 
   // Initialiseer nieuwe velden
   Put^.WKTGeometry:= '';
   Put^.HasWKTGeometry:= False;
+  Put^.StelselID:= '';
 
   // GUID
   if DataProvider.FieldExists('GUID') then begin
@@ -400,32 +470,31 @@ begin
     if lValue <> '' then
       Put^.GUID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Put: "GUID" is leeg' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "GUID" is leeg.', eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: GUID veld ontbreekt');  // Can never happen but still...
+    ReportError('Put: "GUID" veld ontbreekt.', eetFieldIsMissing, '');  // Can never happen but still...
 
-  // Naam
+  // Naam (putcode)
   if DataProvider.FieldExists('NAAM') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('NAAM'), '');
     if lValue <> '' then
       Put^.aLabel:= lValue
     else begin
-      Put^.aLabel:= '';
-      if not fDisableErrorReport then ReportError('Put: "Naam" is leeg' + ' (' + Put^.GUID + ')');
-      if not fDisableErrorReport then ReportError('Put: "Naam" is leeg, Dit is de PUTCODE die ontbreekt!!!');
+      // Put^.aLabel:= '';  = dubbel met   VarToStrDef
+      ReportError('Put: "Naam" is leeg.', eetFieldIsEmpty, Put^.GUID);
       // ernstig, dit is de putcode die dan in BOR ontbreekt
     end
   end
   else
-    ReportError('Put: "Naam" veld ontbreekt.');
+  ReportError('Put: "Naam" veld ontbreekt.', eetFieldIsMissing, '');
 
-  // Eerst proberen WKT geometrie te gebruiken
+  // Geometrie
   if DataProvider.FieldExists('WKT_GEOMETRY') then begin
-      WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');
+    WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');
 
-    if WKTGeometry <> '' then begin
-      Put^.WKTGeometry:= WKTGeometry;
+    if not VarIsNull(WKTGeometry) and (Trim(VarToStr(WKTGeometry)) <> '') then begin
+      Put^.WKTGeometry:= Trim(VarToStr(WKTGeometry));
       Put^.HasWKTGeometry:= True;
 
       // Parse ook naar X,Y,Z voor backward compatibility
@@ -435,140 +504,182 @@ begin
         Put^.Z:= GeoZ;
         Put^.HasOrientation:= (GeoX <> 0) and (GeoY <> 0);
       end
-      else begin
-        // Fallback naar individuele coordinaat velden
-        // Mag hiert nooit komen. Validatie vooraf maken
-        lValue:= DataProvider.GetFieldValue('X');
-        if not VarIsNull(lValue) then Put^.X:= lValue;
-
-        lValue:= DataProvider.GetFieldValue('Y');
-        if not VarIsNull(lValue) then Put^.Y:= lValue;
-
-        lValue:= DataProvider.GetFieldValue('Z');
-        if not VarIsNull(lValue) then Put^.Z:= lValue;
-
-        Put^.HasOrientation:= (Put^.X <> 0) and (Put^.Y <> 0);
-      end;
     end
-    else
-      ReportError('Put: "WKT-Geometry" is leeg.' + ' (' + Put^.GUID + ')');
+    else begin
+      ReportError('Put: "WKT-Geometry" is leeg. De put wordt niet in het exportbestand gezet.', eetFatal, Put^.GUID);
+      Dispose(Put);
+      Result:= nil;
+      Exit;
+    end
   end
   else begin
-    ReportError('Put: "WKT_Geometry" veld ontbreekt.');
+    ReportError('Put: "WKT_Geometry" veld ontbreekt.', eetFatal, '');
+    Dispose(Put);
+    Result:= nil;
+    Exit;
   end;
 
-  // Afmetingen met NULL checks
-  { #todo : Breedte mag nooit negatief zijn. Controle maken. }
-  if DataProvider.FieldExists('BREEDTE') then      { #todo : Dit soort naamgevingen  zoals breedte, hoogte, etc moeten naar een const. }
-  begin
+  // Breedte
+  if DataProvider.FieldExists('BREEDTE') then begin     { #todo : Dit soort naamgevingen  zoals breedte, hoogte, etc moeten naar een const. }
     lValue:= DataProvider.GetFieldValue('BREEDTE');
-    if not VarIsNull(lValue) then
-      Put^.Breedte:= lValue
+    if not VarIsNull(lValue) then begin
+      Put^.Breedte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePutWidth(Put);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Put^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Put: "Breedte" is leeg.' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Breedte" is leeg.', eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: "Breedte" veld ontbreekt.');
+    ReportError('Put: "Breedte" veld ontbreekt.', eetFieldIsMissing, '');
 
-  { #todo : Lengte mag nooit negatief zijn. Controle maken. }
+  // Lengte
   if DataProvider.FieldExists('LENGTE') then begin
     lValue:= DataProvider.GetFieldValue('LENGTE');
-    if not VarIsNull(lValue) then
-      Put^.Lengte:= lValue
+    if not VarIsNull(lValue) then begin
+      Put^.Lengte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePutLength(Put);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Put^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Put: "Lengte" veld is leeg.' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Lengte" veld is leeg.', eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: "Lengte" veld ontbreekt.');
+    ReportError('Put: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
 
-  { #todo : Hoogte mag nooit negatief zijn. Controle maken. }
+  // Hoogte
   if DataProvider.FieldExists('HOOGTE') then begin
     lValue:= DataProvider.GetFieldValue('HOOGTE');
-    if not VarIsNull(lValue) then
-      Put^.Hoogte:= lValue
+    if not VarIsNull(lValue) then begin
+      Put^.Hoogte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePutHeight(Put);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Put^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Put: "Hoogte" veld is leeg.' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Hoogte" veld is leeg.' , eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: "Hoogte" veld ontbreekt');
+    ReportError('Put: "Hoogte" veld ontbreekt.', eetFieldIsMissing, '');
 
-  // Diameter (noodzakelijk?...)
+  // Diameter
   if DataProvider.FieldExists('DIAMETER') then begin
     lValue:= DataProvider.GetFieldValue('DIAMETER');
-    if not VarIsNull(lValue) then
-      Put^.Diameter:= lValue
+    if not VarIsNull(lValue) then begin
+      Put^.Diameter:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePutDiameter(Put);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Put^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Put: "Diameter" veld is leeg.' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Diameter" veld is leeg.' , eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: "Diameter" veld ontbreekt');
-
+    ReportError('Put: "Diameter" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Materiaal mapping
   if DataProvider.FieldExists('MATERIAAL') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('MATERIAAL'), ''));
     Put^.MateriaalURI:= fMappingManager.GetGWSWURI(mtMateriaalPut, lValue);
+
     if Put^.MateriaalURI = '' then
-      if not fDisableErrorReport then ReportError('Put: "Materiaal" veld is leeg' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Materiaal" veld is leeg.', eetFieldIsEmpty, Put^.GUID)
+    else if Put^.MateriaalURI = 'Mapping_error' then begin
+      Put^.MateriaalURI:= '';
+      ReportError('Put: "Materiaal" veld niet conform gwsw domeinlijst.', eetMapping, Put^.GUID);
+    end
   end
   else
-    ReportError('Put: "Materiaal" veld ontbreekt.');
+    ReportError('Put: "Materiaal" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Vorm mapping
   if DataProvider.FieldExists('VORM') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('VORM'), ''));
     Put^.VormURI:= fMappingManager.GetGWSWURI(mtvormPut, lValue);
     if Put^.VormURI = '' then
-      if not fDisableErrorReport then ReportError('Put: "Vorm" veld is leeg' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Vorm" veld is leeg.', eetFieldIsEmpty, Put^.GUID)
+    else if Put^.VormURI = 'Mapping_error' then begin
+      Put^.VormURI:= '';
+      ReportError('Put: "Vorm" veld niet conform gwsw domeinlijst.', eetMapping, Put^.GUID);
+    end
   end
   else
-    ReportError('Put: "Vorm" veld ontbreekt.');
+    ReportError('Put: "Vorm" veld ontbreekt.', eetFieldIsMissing, '');
+
+  // Fundering mapping
+
+  if DataProvider.FieldExists('FUNDERING') then begin
+    lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('FUNDERING'), ''));
+    Put^.FunderingUri:= fMappingManager.GetGWSWURI(mtFundering, lValue);
+
+    if Put^.FunderingUri = '' then
+      ReportError('Put: "Fundering" veld is leeg.', eetFieldIsEmpty, Put^.GUID)
+    else if Put^.FunderingUri = 'Mapping_error' then begin
+      Put^.FunderingUri:= '';
+      ReportError('Put: "Fundering" veld niet conform gwsw domeinlijst.', eetMapping, Put^.GUID);
+    end
+  end
+  else
+    ReportError('Put: "Fundering" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Puttype mapping
   if DataProvider.FieldExists('PUT_TYPE') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('PUT_TYPE'), ''));
     Put^.PutTypeUri:= fMappingManager.GetGWSWURI(mtPutType, lValue);
     if Put^.PutTypeUri = '' then begin
-      Put^.PutTypeUri:= 'gwsw:Onbekend';  // Put^.PutTypeUri mag niet leeg zijn.
-      if not fDisableErrorReport then ReportError('Put: "Put_type" veld is leeg' + ' (' + Put^.GUID + ')');
-    end;
+      Put^.PutTypeUri:= '""';  // Zonder de "" geeft de gwsw validatie een error en ishet bestand niet bruikbaar.
+      ReportError('PuttypeIsMissing', eetFieldIsEmpty, Put^.GUID)
+    end
+    else if Put^.PutTypeUri = 'Mapping_error' then begin
+      Put^.PutTypeUri:= '""';  // Zonder de "" geeft de gwsw validatie een error en ishet bestand niet bruikbaar.
+      ReportError('Put: "Put type" veld niet conform gwsw domeinlijst.', eetMapping, Put^.GUID);
+    end
   end
   else
-    ReportError('Put: "Put_type" veld ontbreekt.');
+    ReportError('Put: "Puttype" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Maaiveld
-  if DataProvider.FieldExists('MAAIVELD') then begin
+  if DataProvider.FieldExists('MAAIVELD') then begin { #todo : MAAIVELD hernoemen naar MAAIVELD_HOOGTE }
     lValue:= DataProvider.GetFieldValue('MAAIVELD');
-    if not VarIsNull(lValue) then
-      Put^.Maaiveldhoogte:= lValue
+    if not VarIsNull(lValue) then begin
+      Put^.Maaiveldhoogte:= lValue;
+
+      lVal:= ValidatePutZCoord(Put);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Put^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Put: "Maaiveld" veld is leeg' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Maaiveldhoogte" veld is leeg.', eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: "Maaiveld" veld ontbreekt.');
+    ReportError('Put: "Maaiveld" veld ontbreekt.', eetFieldIsMissing, '');
 
-  // Begindatum. Wordt momenteel in BOR niet gebruikt. aanlegjaar omzetten naar een datum.
+  // Begindatum. Wordt momenteel in BOR niet gebruikt daar voor in de plaats: aanlegjaar omzetten naar een datum.
   if DataProvider.FieldExists('BEGINDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'BEGINDATUM');
     if lDate <> 0 then
       Put^.Begindatum:= lDate
     else begin
       Put^.Begindatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
-      if not fDisableErrorReport then ReportError('Put: "Begindatum" veld is leeg' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Begindatum" veld is leeg.', eetFieldIsEmpty, Put^.GUID);
     end
   end
   else
-    ReportError('Put: "Begindatum" veld ontbreekt.');
+    ReportError('Put: "Begindatum" veld ontbreekt.', eetFieldIsMissing, '');
 
-  // Wijze van inwinning
-  { #todo : Moet naar extern mappingsbestand }
-  { #note : Wordt niet gebruikt ! }
-  lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('WIJZE_INWINNING'), ''));
-  if lValue = 'GEMETEN' then Put^.WijzeInwinning:= wiGemeten
-  else if lValue = 'BEREKEND' then Put^.WijzeInwinning:= wiBerekend
-  else if lValue = 'GESCHAT' then Put^.WijzeInwinning:= wiGeschat
-  else if lValue = 'ONTWERP' then Put^.WijzeInwinning:= wiOntwerp
-  else Put^.WijzeInwinning:= wiOnbekend;
+  // Einddatum
+  if DataProvider.FieldExists('EINDDATUM') then begin
+    lDate:= GetDateFromYearField(DataProvider, 'EINDDATUM');
+    if lDate <> 0 then
+      Put^.Einddatum:= lDate
+    else begin
+      Put^.Einddatum:= 0;
+      ReportError('Put: "einddatum" veld is leeg.', eetFieldIsEmpty, Put^.GUID);
+    end
+  end
+  else
+    ReportError('Put: "Einddatum" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Stelsel relatie
   if DataProvider.FieldExists('STELSEL_ID') then begin
@@ -576,10 +687,10 @@ begin
     if lValue <> '' then
       Put^.StelselID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Put: "Stelsel_id" is leeg' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Stelsel id" is leeg.', eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: "Stelsel_id" veld ontbreekt.');
+    ReportError('Put: "Stelsel id" veld ontbreekt.', eetFieldIsMissing, '');
 
   // stelsel uit de mapping ophalen
   if DataProvider.FieldExists('STELSEL_NAAM') then begin
@@ -587,36 +698,79 @@ begin
     if lValue <> '' then
       Put^.Stelselnaam:= lValue
     else
-      if not fDisableErrorReport then ReportError('Put: "Stelsel_naam" veld ontbreekt.' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Stelsel_naam" veld is leeg.', eetFieldIsEmpty, Put^.GUID);
   end
   else
-    ReportError('Put: "Stelsel_naam" veld ontbreekt.');
-
+    ReportError('Put: "Stelsel naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Stelsel type mapping
   if DataProvider.FieldExists('STELSEL_TYPE') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('STELSEL_TYPE'), ''));
     Put^.StelselURI:= fMappingManager.GetGWSWURI(mtStelseltype, lValue);
+
     if Put^.StelselURI = '' then
-      if not fDisableErrorReport then ReportError('Put: "Stelsel_type" veld ontbreekt.' + ' (' + Put^.GUID + ')');
+      ReportError('Put: "Stelsel type" veld is leeg.', eetFieldIsEmpty, Put^.GUID)
+    else if Put^.StelselURI = 'Mapping_error' then begin
+      Put^.StelselURI:= '';
+      ReportError('Put: "Stelsel type" veld niet conform gwsw domeinlijst.', eetMapping, Put^.GUID);
+    end
   end
   else
-    ReportError('Put: "Stelsel_type" veld ontbreekt.');
+    ReportError('Put: "Stelseltype" veld ontbreekt.', eetFieldIsMissing, '');
 
-  Put^.HasOrientation:= (Put^.X <> 0) and (Put^.Y <> 0);
+  Put^.HasOrientation:= (not IsNan(Put^.X)) and (not IsNan(Put^.Y)) and
+                     (Put^.X <> 0) and (Put^.Y <> 0);
 
   Result:= Put;
+end;
+
+function TOroxExport.InitializePut(var Put : PGWSWPut) : Boolean;
+begin
+  Result:= False;
+  if Put = nil then Exit;
+
+  FillChar(Put^, SizeOf(TGWSWPut), 0);  // Zet alle velden op 0/nil/leeg
+
+  // String velden die niet automatisch geïnitialiseerd worden
+   Put^.WKTGeometry:= '';
+   Put^.GUID:= '';
+   Put^.aLabel:= '';
+   Put^.StelselID:= '';
+   Put^.Stelselnaam:= '';
+   Put^.MateriaalURI:= '';
+   Put^.VormURI:= '';
+   Put^.PutTypeUri:= '';
+   Put^.StelselURI:= '';
+
+   // Numerieke velden op NaN of default waarden
+   Put^.Maaiveldhoogte:= NaN;
+   Put^.Begindatum:= 0;
+   Put^.Einddatum:= 0;
+
+   Put^.X:= NaN;
+   Put^.Y:= NaN;
+   Put^.Z:= Default_Z_Value;  // Gebruik dezelfde default als in je constante
+   Put^.HasWKTGeometry:= False;
+   Put^.HasOrientation:= False;
+
+   Result:= True;
 end;
 
 function TOroxExport.MapLeidingFromProvider(DataProvider : IGWSWDataProvider) : PGWSWLeiding;
 var
   Leiding: PGWSWLeiding;
+  lVal: TGWSWValidationResult;
   WKTGeometry: string;
   lValue: Variant;
   lDate: TDateTime;
 begin
   New(Leiding);
-  FillChar(Leiding^, SizeOf(TGWSWLeiding), 0);
+
+  if not InitializeLeiding(Leiding) then begin
+    Dispose(Leiding);
+    ReportError('Leiding: Initialisatie mislukt!');
+    Exit(nil);
+  end;
 
   // GUID
   if DataProvider.FieldExists('GUID') then begin
@@ -624,24 +778,21 @@ begin
     if lValue <> '' then
       Leiding^.GUID:= lValue
     else
-      ReportError('Leiding: "GUID" is leeg' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "GUID" is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: GUID veld ontbreekt');  // Can never happen but still...
+    ReportError('Leiding: "Guid" veld ontbreekt.', eetFieldIsMissing, '');  // Can never happen but still...
 
+  // Naam
   if DataProvider.FieldExists('NAAM') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('NAAM'), '');
     if lValue <> '' then
       Leiding^.aLabel:= lValue
-    else begin
-      Leiding^.aLabel:= '';
-      if not fDisableErrorReport then ReportError('Leiding: "Naam" is leeg' + ' (' + Leiding^.GUID + ')');
-      if not fDisableErrorReport then ReportError('Leiding: "Naam" is leeg, Dit is de Strengcode die ontbreekt!!!');
-      // ernstig, dit is de strengcode die dan in BOR ontbreekt
-    end
+    else
+      ReportError('Leiding: "Naam" is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Naam" veld ontbreekt.');
+    ReportError('Leiding: "Naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Topologie - verbinding met putten
   if DataProvider.FieldExists('BEGINPUT_ID') then begin
@@ -649,20 +800,20 @@ begin
     if lValue <> '' then
       Leiding^.BeginPutID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Beginput_id" is leeg' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Beginput_id" is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Beginput_id" veld ontbreekt.');
+    ReportError('Leiding: "Beginput id" veld ontbreekt.', eetFieldIsMissing, '');
 
   if DataProvider.FieldExists('EINDPUT_ID') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('EINDPUT_ID'), '');
     if lValue <> '' then
       Leiding^.EindPutID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Eindput_id" is leeg' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Eindput_id" is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Eindput_id" veld ontbreekt.');
+    ReportError('Leiding: "Eindput id" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Stelsel informatie
   if DataProvider.FieldExists('STELSEL_ID') then begin
@@ -670,58 +821,72 @@ begin
     if lValue <> '' then
       Leiding^.StelselID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Stelsel_id" is leeg' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Stelsel_id" is leeg', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Stelsel_id" veld ontbreekt.');
+    ReportError('Leiding: "Stelsel id" veld ontbreekt.', eetFieldIsMissing, '');
 
-  // Afmetingen met NULL checks
-  if DataProvider.FieldExists('LENGTE') then begin { #todo : Lengte mag nooit negatief zijn. Controle maken. }
+  // Lengte
+  if DataProvider.FieldExists('LENGTE') then begin
     lValue:= DataProvider.GetFieldValue('LENGTE');
-    if not VarIsNull(lValue) then
-      Leiding^.Lengte:= lValue
-    else
-      if not fDisableErrorReport then ReportError('Leiding: "Lengte" veld is leeg.' + ' (' + Leiding^.GUID + ')');
-  end
-  else
-    ReportError('Leiding: "Lengte" veld ontbreekt.');
+    if not VarIsNull(lValue) then begin
+      Leiding^.Lengte:= VarAsType(lValue, varInteger);
 
-  //Breedte
-  { #todo : Breedte mag nooit negatief zijn. Controle maken. }
-  if DataProvider.FieldExists('BREEDTE') then      { #todo : Dit soort naamgevingen  zoals breedte, hoogte, etc moeten naar een const. }
-  begin
-    lValue:= DataProvider.GetFieldValue('BREEDTE');
-    if not VarIsNull(lValue) then
-      Leiding^.Breedte:= lValue
+      lVal:= ValidateLeidingLength(Leiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Leiding^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Breedte" is leeg.' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Lengte" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Breedte" veld ontbreekt.');
+    ReportError('Leiding: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
+
+  // Breedte
+  if DataProvider.FieldExists('BREEDTE') then begin
+    lValue:= DataProvider.GetFieldValue('BREEDTE');
+    if not VarIsNull(lValue) then begin
+      Leiding^.Breedte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidateLeidingWidth(Leiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Leiding^.GUID);
+    end
+    else
+      ReportError('Leiding: "Breedte" is leeg.', eetFieldIsEmpty, Leiding^.GUID);
+  end
+  else
+    ReportError('Leiding: "Breedte" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Hoogte
   if DataProvider.FieldExists('HOOGTE') then
   begin
     lValue:= DataProvider.GetFieldValue('HOOGTE');
-    if not VarIsNull(lValue) then
-      Leiding^.Hoogte:= lValue  // moet 0 decimalen hebben (is in [mm])
+    if not VarIsNull(lValue) then begin
+      Leiding^.Hoogte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidateLeidingHeight(Leiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Leiding^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Hoogte" is leeg.' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Hoogte" is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Hoogte" veld ontbreekt.');
+    ReportError('Leiding: "Hoogte" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Diameter
   if DataProvider.FieldExists('DIAMETER') then
   begin
     lValue:= DataProvider.GetFieldValue('DIAMETER');
-    if not VarIsNull(lValue) then
-      Leiding^.Diameter:= lValue
+    if not VarIsNull(lValue) then begin
+      Leiding^.Diameter:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidateLeidingDiameter(Leiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Leiding^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Diameter" is leeg.' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Diameter" is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Diameter" veld ontbreekt.');
+    ReportError('Leiding: "Diameter" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Materiaal mapping
   if DataProvider.FieldExists('MATERIAAL') then begin
@@ -729,66 +894,114 @@ begin
     Leiding^.MateriaalURI:= fMappingManager.GetGWSWURI(mtMateriaalLeiding, lValue);
 
     if Leiding^.MateriaalURI = '' then
-      if not fDisableErrorReport then ReportError('Leiding: "Materiaal" veld is leeg' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Materiaal" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID)
+
+    else if Leiding^.MateriaalURI = 'Mapping_error' then begin
+      Leiding^.MateriaalURI:= '';
+      ReportError('Leiding: "Materiaal" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
   end
   else
-    ReportError('Leiding: "Materiaal" veld ontbreekt.');
-
+    ReportError('Leiding: "Materiaal" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Vorm mapping
   if DataProvider.FieldExists('VORM') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('VORM'), ''));
     Leiding^.VormURI:= fMappingManager.GetGWSWURI(mtVormLeiding, lValue);
     if Leiding^.VormURI = '' then
-      if not fDisableErrorReport then ReportError('Leiding: "Vorm" veld is leeg' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Vorm" veld is leeg', eetFieldIsEmpty, Leiding^.GUID)
+    else if Leiding^.VormURI = 'Mapping_error' then begin
+      Leiding^.VormURI:= '';
+      ReportError('Leiding: "Vorm" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
   end
   else
-    ReportError('Leiding: "Vorm" veld ontbreekt.');
+    ReportError('Leiding: "Vorm" veld ontbreekt.', eetFieldIsMissing, '');
+
+  // Fundering mapping
+  if DataProvider.FieldExists('FUNDERING') then begin
+    lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('FUNDERING'), ''));
+    Leiding^.FunderingUri:= fMappingManager.GetGWSWURI(mtFundering, lValue);
+    if Leiding^.FunderingUri = '' then
+      ReportError('Leiding: "Fundering" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID)
+    else if Leiding^.FunderingUri = 'Mapping_error' then begin
+      Leiding^.FunderingUri:= '';
+      ReportError('Leiding: "Fundering" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
+  end
+  else
+    ReportError('Leiding: "Fundering" veld ontbreekt.', eetFieldIsMissing, '');
 
   // status functioneren
   if DataProvider.FieldExists('STATUS_FUNCTIONEREN') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('STATUS_FUNCTIONEREN'), ''));
     Leiding^.StatusFunctionerenURI:= fMappingManager.GetGWSWURI(mtStatusFunctioneren, lValue);
     if Leiding^.StatusFunctionerenURI = '' then
-      if not fDisableErrorReport then ReportError('Leiding: "Status functioneren" veld is leeg' + ' (' + Leiding^.GUID + ')');
+    ReportError('Leiding: "Status functioneren" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID)
+    else if Leiding^.StatusFunctionerenURI = 'Mapping_error' then begin
+      Leiding^.StatusFunctionerenURI:= '';
+      ReportError('Leiding: "Status functioneren" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
   end
   else
-    ReportError('Leiding: "Status functioneren" veld ontbreekt.');
-
-
+    ReportError('Leiding: "Status functioneren" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Stelsel type
   if DataProvider.FieldExists('STELSEL_TYPE') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('STELSEL_TYPE'), ''));
     Leiding^.StelselURI:= fMappingManager.GetGWSWURI(mtStelseltype, lValue);
+
     if Leiding^.StelselURI = '' then
-      if not fDisableErrorReport then ReportError('Leiding: "Stelsel_type" veld ontbreekt.' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Stelsel type" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID)
+    else if Leiding^.StelselURI = 'Mapping_error' then begin
+      Leiding^.StelselURI:= '';
+      ReportError('Leiding: "Stelsel type" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
   end
   else
-    ReportError('Leiding: "Stelsel_type" veld ontbreekt.');
+    ReportError('Leiding: "Stelseltype" veld ontbreekt.', eetFieldIsMissing, '');
 
-  // stelselnaam (vanuit gv_stelsel) { #todo : Wordt nog niet opgepakt in de export ??? }
+  // stelselnaam (vanuit gv_stelsel)
   if DataProvider.FieldExists('STELSEL_NAAM') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('STELSEL_NAAM'), '');
     if lValue <> '' then
       Leiding^.Stelselnaam:= lValue
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Stelsel_naam" veld ontbreekt.' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Stelsel_naam" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Stelsel_naam" veld ontbreekt.');
+    ReportError('Leiding: "Stelsel naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Leidingtype mapping
   if DataProvider.FieldExists('LEIDING_TYPE') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('LEIDING_TYPE'), ''));
     Leiding^.LeidingTypeURI:= fMappingManager.GetGWSWURI(mtLeidingType, lValue);
     if Leiding^.LeidingTypeURI = '' then begin
-      Leiding^.LeidingTypeURI:= 'gwsw:Onbekend';  // Leiding^.LeidingTypeURI mag niet leeg zijn.
-      if not fDisableErrorReport then ReportError('Leiding: "Leiding_type" veld is leeg' + ' (' + Leiding^.GUID + ')');
-    end;
+      Leiding^.LeidingTypeURI:= '""';
+      ReportError('LeidingtypeIsMissing', eetFieldIsEmpty, Leiding^.GUID)
+    end
+    else if Leiding^.LeidingTypeURI = 'Mapping_error' then begin
+      Leiding^.LeidingTypeURI:= '""';
+      ReportError('Leiding: "Leiding type" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
   end
   else
-    ReportError('Leiding: "Leiding_type" veld ontbreekt.');
+    ReportError('Leiding: "Leiding type" veld ontbreekt.', eetFieldIsMissing, '');
+
+  // WibonThema mapping
+  if DataProvider.FieldExists('WIBON_THEMA') then begin
+    lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('WIBON_THEMA'), ''));
+    Leiding^.WibonUri:= fMappingManager.GetGWSWURI(mtWibonThema, lValue);
+    if Leiding^.WibonUri = '' then begin
+      ReportError('Leiding: "Wion thema" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID)
+    end
+    else if Leiding^.WibonUri = 'Mapping_error' then begin
+      Leiding^.WibonUri := '';
+      ReportError('Leiding: "Wion thema" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
+  end
+  else
+    ReportError('Leiding: "Wion thema" veld ontbreekt.', eetFieldIsMissing, '');
 
   // BOB waarden
   if DataProvider.FieldExists('BOB_BEGIN') then begin
@@ -796,49 +1009,46 @@ begin
     if not VarIsNull(lValue) then
       Leiding^.BobBegin:= lValue
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Bob begin" veld is leeg.' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Bob begin" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Bob begin" veld ontbreekt');
+    ReportError('Leiding: "Bob begin" veld ontbreekt.', eetFieldIsMissing, '');
 
   if DataProvider.FieldExists('BOB_EIND') then begin
     lValue:= DataProvider.GetFieldValue('BOB_EIND');
     if not VarIsNull(lValue) then
       Leiding^.BobEind:= lValue
     else
-      if not fDisableErrorReport then ReportError('Leiding: "Bob eind" veld is leeg.' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Bob eind" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID);
   end
   else
-    ReportError('Leiding: "Bob eind" veld ontbreekt');
+    ReportError('Leiding: "Bob eind" veld ontbreekt.', eetFieldIsMissing, '');
 
-
-  // Begindatum. Wordt momenteel in BOR niet gebruikt. aanlegjaar omzetten naar een datum.
+  // Begindatum. Wordt momenteel in BOR niet gebruikt daar voor in de plaats: aanlegjaar omzetten naar een datum.
   if DataProvider.FieldExists('BEGINDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'BEGINDATUM');
     if lDate <> 0 then
       Leiding^.Begindatum:= lDate
     else begin
       Leiding^.Begindatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
-      if not fDisableErrorReport then ReportError('Leiding: "Begindatum" veld is leeg' + ' (' + Leiding^.GUID + ')');
+      ReportError('Leiding: "Begindatum" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID);
     end
   end
   else
-    ReportError('Leiding: "Begindatum" veld ontbreekt.');
+    ReportError('Leiding: "Begindatum" veld ontbreekt.', eetFieldIsMissing, '');
 
-
-  // Wijze van inwinning
-  { #todo : Moeet naar extern mappingsbestand }
-  lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('WIJZE_INWINNING'), ''));
-  if lValue = 'GEMETEN' then
-    Leiding^.WijzeInwinning:= wiGemeten
-  else if lValue = 'BEREKEND' then
-    Leiding^.WijzeInwinning:= wiBerekend
-  else if lValue = 'GESCHAT' then
-    Leiding^.WijzeInwinning:= wiGeschat
-  else if lValue = 'ONTWERP' then
-    Leiding^.WijzeInwinning:= wiOntwerp
+  // Einddatum
+  if DataProvider.FieldExists('EINDDATUM') then begin
+    lDate:= GetDateFromYearField(DataProvider, 'EINDDATUM');
+    if lDate <> 0 then
+      Leiding^.Einddatum:= lDate
+    else begin
+      Leiding^.Einddatum:= 0;
+      ReportError('Leiding: "einddatum" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID);
+    end
+  end
   else
-    Leiding^.WijzeInwinning:= wiOnbekend;
+    ReportError('Leiding: "Einddatum" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Reading geometry
   Leiding^.WKTGeometry:= '';
@@ -847,52 +1057,82 @@ begin
 
   WKTGeometry:= '';
 
-  if DataProvider.FieldExists('WKT_GEOMETRY') then
+  if DataProvider.FieldExists('WKT_GEOMETRY') then begin
     WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');
 
-  // Check if we have valid WKT geometry
-  if not VarIsNull(WKTGeometry) and (Trim(VarToStr(WKTGeometry)) <> '') then
-  begin
-    Leiding^.WKTGeometry:= Trim(VarToStr(WKTGeometry));
-    Leiding^.HasWKTGeometry:= True;
-  end;
-
-  // Optional: try to read coordinates of the start and end well as a backup
-  if DataProvider.FieldExists('BEGINPUT_X') and DataProvider.FieldExists('BEGINPUT_Y') then begin
-    lValue:= DataProvider.GetFieldValue('BEGINPUT_X');
-    if not VarIsNull(lValue) then Leiding^.BeginPutX:= lValue;
-
-    lValue:= DataProvider.GetFieldValue('BEGINPUT_Y');
-    if not VarIsNull(lValue) then Leiding^.BeginPutY:= lValue;
-
-    lValue:= DataProvider.GetFieldValue('BEGINPUT_Z');
-    if not VarIsNull(lValue) then Leiding^.BeginPutZ:= lValue;
-  end;
-
-  if DataProvider.FieldExists('EINDPUT_X') and DataProvider.FieldExists('EINDPUT_Y') then begin
-    lValue:= DataProvider.GetFieldValue('EINDPUT_X');
-    if not VarIsNull(lValue) then Leiding^.EindPutX:= lValue;
-
-    lValue:= DataProvider.GetFieldValue('EINDPUT_Y');
-    if not VarIsNull(lValue) then Leiding^.EindPutY:= lValue;
-
-    lValue:= DataProvider.GetFieldValue('EINDPUT_Z');
-    if not VarIsNull(lValue) then Leiding^.EindPutZ:= lValue;
+    if not VarIsNull(WKTGeometry) and (Trim(VarToStr(WKTGeometry)) <> '') then begin
+      Leiding^.WKTGeometry:= Trim(VarToStr(WKTGeometry));
+      Leiding^.HasWKTGeometry:= True;
+    end
+    else begin
+      ReportError('Leiding: "WKT_Geometry" is leeg. Leiding wordt niet in het exportbestand gezet.', eetFatal, Leiding^.GUID);
+      Dispose(Leiding);
+      Result:= nil;
+      Exit;
+    end;
+  end
+  else begin
+    ReportError('Leiding: "WKT_Geometry" veld ontbreekt.', eetFatal, '');
+    Dispose(Leiding);
+    Result:= nil;
+    Exit;
   end;
 
   Result:= Leiding;
 end;
 
+function TOroxExport.InitializeLeiding(var Leiding : PGWSWLeiding) : Boolean;
+begin
+  Result:= False;
+  if Leiding = nil then Exit;
+
+  FillChar(Leiding^, SizeOf(TGWSWLeiding), 0);  // Zet alle velden op 0/nil/leeg
+
+
+  // String velden
+  Leiding^.GUID:= '';
+  Leiding^.aLabel:= '';
+  Leiding^.BeginPutID:= '';
+  Leiding^.EindPutID:= '';
+  Leiding^.StelselID:= '';
+  Leiding^.Stelselnaam:= '';
+  Leiding^.WKTGeometry:= '';
+
+  // URI velden
+  Leiding^.MateriaalURI:= '';
+  Leiding^.VormURI:= '';
+  Leiding^.StatusFunctionerenURI:= '';
+  Leiding^.StelselURI:= '';
+  Leiding^.LeidingTypeURI:= '';
+  Leiding^.WibonUri:= '';
+
+  Leiding^.Lengte:= NaN;
+  Leiding^.BobBegin:= Nan;
+  Leiding^.BobEind:= Nan;
+  Leiding^.Begindatum:= 0;
+
+  // Boolean/Enum velden
+  Leiding^.HasWKTGeometry:= False;
+  Leiding^.HasMultipleVertices:= False;
+
+  Result:= True;
+end;
+
 function TOroxExport.MapPersleidingFromProvider(DataProvider : IGWSWDataProvider) : PGWSWPersleiding;
 var
   Persleiding: PGWSWPersleiding;
+  lVal: TGWSWValidationResult;
   lValue: Variant;
   lDate: TDateTime;
   WKTGeometry: Variant;  // Gebruik Variant zoals in andere functies
   WKTGeometryStr: string;
 begin
   New(Persleiding);
-//  FillChar(Persleiding^, SizeOf(TGWSWPersleiding), 0);
+  if not InitializePersleiding(Persleiding) then begin
+    Dispose(Persleiding);
+    ReportError('Persleiding: Initialisatie mislukt!');
+    Exit(nil);
+  end;
 
   // GUID
   if DataProvider.FieldExists('GUID') then begin
@@ -900,28 +1140,25 @@ begin
     if lValue <> '' then
       Persleiding^.GUID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "GUID" is leeg' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Leiding: "GUID" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: GUID veld ontbreekt');  // Can never happen but still...
+    ReportError('Leiding: "Guid" veld ontbreekt.', eetFieldIsMissing, '');   // Can never happen but still...
 
-
-
-  // Persleidingen hebben geen naam. object_guid als naam opvoeren.
+  // Naam
   if DataProvider.FieldExists('NAAM') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('NAAM'), '');
     if lValue <> '' then
       Persleiding^.aLabel:= lValue
-    else begin
+    else begin  // Persleidingen hebben geen naam. object_guid als naam opvoeren.
       if Persleiding^.GUID <> '' then
         Persleiding^.aLabel:= Persleiding^.GUID
       else
-        if not fDisableErrorReport then ReportError('Persleiding: "Naam" is leeg' + ' (' + Persleiding^.GUID + ')');
+        ReportError('Persleiding: "Naam" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
     end
   end
   else
-    ReportError('Persleiding: "Naam" veld ontbreekt.');
-
+    ReportError('Persleiding: "Naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Topologie - verbinding met putten
   if DataProvider.FieldExists('BEGINPUT_ID') then begin
@@ -929,20 +1166,20 @@ begin
     if lValue <> '' then
       Persleiding^.BeginPutID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Beginput_id" is leeg' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Beginput id" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Beginput_id" veld ontbreekt.');
+    ReportError('Persleiding: "Beginput id" veld ontbreekt.', eetFieldIsMissing, '');
 
   if DataProvider.FieldExists('EINDPUT_ID') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('EINDPUT_ID'), '');
     if lValue <> '' then
       Persleiding^.EindPutID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Eindput_id" is leeg' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Eindput id" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Beginput_id" veld ontbreekt.');
+    ReportError('Persleiding: "Eindput id" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Stelsel informatie
   if DataProvider.FieldExists('STELSEL_ID') then begin
@@ -950,88 +1187,118 @@ begin
     if lValue <> '' then
       Persleiding^.StelselID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Stelsel_id" is leeg' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Stelsel_id" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Stelsel_id" veld ontbreekt.');
+    ReportError('Persleiding: "Stelsel id" veld ontbreekt.', eetFieldIsMissing, '');
 
-  { #todo : Lengte mag nooit negatief zijn. Controle maken. }
+  // Lengte
   if DataProvider.FieldExists('LENGTE') then begin
     lValue:= DataProvider.GetFieldValue('LENGTE');
-    if not VarIsNull(lValue) then
-      Persleiding^.Lengte:= lValue;
-      if Persleiding^.Lengte > 1000 then
-        ReportError('Persleiding: "Lengte" veld is te groot. volgens GWSW: min=1,max=1000.  Lengte = ' + FloatToStr(Persleiding^.Lengte))
+    if not VarIsNull(lValue) then begin
+      Persleiding^.Lengte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePersleidingLength(Persleiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Persleiding^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Lengte" veld is leeg.' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Lengte" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Lengte" veld ontbreekt.');
+    ReportError('Persleiding: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
 
+  // Diameter
   if DataProvider.FieldExists('DIAMETER') then
   begin
     lValue:= DataProvider.GetFieldValue('DIAMETER');
-    if not VarIsNull(lValue) then
-      Persleiding^.Diameter:= lValue
+    if not VarIsNull(lValue) then begin
+      Persleiding^.Diameter:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePersleidingDiameter(Persleiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Persleiding^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Diameter" is leeg.' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Diameter" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Diameter" veld ontbreekt.');
+    ReportError('Persleiding: "Diameter" veld ontbreekt.', eetFieldIsMissing, '');
 
-
-  if DataProvider.FieldExists('BREEDTE') then
-  begin
+  // Breedte
+  if DataProvider.FieldExists('BREEDTE') then begin
     lValue:= DataProvider.GetFieldValue('BREEDTE');
-    if not VarIsNull(lValue) then
-      Persleiding^.Breedte:= lValue
+    if not VarIsNull(lValue) then begin
+      Persleiding^.Breedte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePersleidingWidth(Persleiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Persleiding^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Breedte" is leeg.' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Breedte" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Breedte" veld ontbreekt.');
+    ReportError('Persleiding: "Breedte" veld ontbreekt.', eetFieldIsMissing, '');
 
-
+  // Hoogte
   if DataProvider.FieldExists('HOOGTE') then
   begin
     lValue:= DataProvider.GetFieldValue('HOOGTE');
-    if not VarIsNull(lValue) then
-      Persleiding^.Hoogte:= lValue  // moet 0 decimalen hebben (is in [mm])
+    if not VarIsNull(lValue) then begin
+      Persleiding^.Hoogte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidatePersleidingHeight(Persleiding);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Persleiding^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Hoogte" is leeg.' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Hoogte" is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Hoogte" veld ontbreekt.');
+    ReportError('Persleiding: "Hoogte" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Materiaal mapping
   if DataProvider.FieldExists('MATERIAAL') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('MATERIAAL'), ''));
     Persleiding^.MateriaalURI:= fMappingManager.GetGWSWURI(mtMateriaalLeiding, lValue);
+
     if Persleiding^.MateriaalURI = '' then
-      if not fDisableErrorReport then ReportError('Persleiding: "Materiaal" veld is leeg' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Materiaal" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID)
+
+    else if Persleiding^.MateriaalURI = 'Mapping_error' then begin
+      Persleiding^.MateriaalURI:= '';
+      ReportError('Persleiding: "Materiaal" veld niet conform gwsw domeinlijst.', eetMapping, Persleiding^.GUID);
+    end
   end
   else
-    ReportError('Persleiding: "Materiaal" veld ontbreekt.');
+    ReportError('Persleiding: "Materiaal" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Status functioneren
   if DataProvider.FieldExists('STATUS_FUNCTIONEREN') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('STATUS_FUNCTIONEREN'), ''));
     Persleiding^.StatusFunctionerenURI:= fMappingManager.GetGWSWURI(mtStatusFunctioneren, lValue);
+
     if Persleiding^.StatusFunctionerenURI = '' then
-      if not fDisableErrorReport then ReportError('Persleiding: "Status functioneren" veld is leeg' + ' (' + Persleiding^.GUID + ')');
+    ReportError('Persleiding: "Status functioneren" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID)
+    else if Persleiding^.StatusFunctionerenURI = 'Mapping_error' then begin
+      Persleiding^.StatusFunctionerenURI:= '';
+      ReportError('Persleiding: "Status functioneren" veld niet conform gwsw domeinlijst.', eetMapping, Persleiding^.GUID);
+    end
   end
   else
-    ReportError('Persleiding: "Status functioneren" veld ontbreekt.');
+    ReportError('Persleiding: "Status functioneren" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Stelsel type
   if DataProvider.FieldExists('STELSEL_TYPE') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('STELSEL_TYPE'), ''));
     Persleiding^.StelselURI:= fMappingManager.GetGWSWURI(mtStelseltype, lValue);
+
     if Persleiding^.StelselURI = '' then
-      if not fDisableErrorReport then ReportError('Persleiding: "Stelsel_type" veld ontbreekt.' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Stelsel type" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID)
+    else if Persleiding^.StelselURI = 'Mapping_error' then begin
+      Persleiding^.StelselURI:= '""';
+      ReportError('Persleiding: "Stelsel type" veld niet conform gwsw domeinlijst.', eetMapping, Persleiding^.GUID);
+    end
   end
   else
-    ReportError('Persleiding: "Stelsel_type" veld ontbreekt.');
+    ReportError('Persleiding: "Stelseltype" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Stelselnaam
   if DataProvider.FieldExists('STELSEL_NAAM') then begin
@@ -1039,33 +1306,40 @@ begin
     if lValue <> '' then
       Persleiding^.Stelselnaam:= lValue
     else
-      if not fDisableErrorReport then ReportError('Persleiding: "Stelsel_naam" veld ontbreekt.' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Stelsel_naam" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
   end
   else
-    ReportError('Persleiding: "Stelsel_naam" veld ontbreekt.');
+    ReportError('Persleiding: "Stelsel naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Persleidingtype mapping
   if DataProvider.FieldExists('LEIDING_TYPE') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('LEIDING_TYPE'), ''));
     Persleiding^.PersleidingTypeURI:= fMappingManager.GetGWSWURI(mtPersleidingType, lValue);
     if Persleiding^.PersleidingTypeURI = '' then begin
-      Persleiding^.PersleidingTypeURI:= 'gwsw:Onbekend';  // Leiding^.LeidingTypeURI mag niet leeg zijn.
-      if not fDisableErrorReport then ReportError('Persleiding: "Leiding_type" veld is leeg' + ' (' + Persleiding^.GUID + ')');
-    end;
+      Persleiding^.PersleidingTypeURI:= '""';
+      ReportError('PersleidingtypeIsMissing', eetFieldIsEmpty, Persleiding^.GUID)
+    end
+    else if Persleiding^.PersleidingTypeURI = 'Mapping_error' then begin
+      Persleiding^.PersleidingTypeURI:= '""';
+      ReportError('Persleiding: "Leiding type" veld niet conform gwsw domeinlijst.', eetMapping, Persleiding^.GUID);
+    end
   end
   else
-    ReportError('Persleiding: "Leiding_type" veld ontbreekt.');
-
+    ReportError('Persleiding: "Leiding type" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Vorm mapping
   if DataProvider.FieldExists('VORM') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('VORM'), ''));
-    Persleiding^.VormURI:= fMappingManager.GetGWSWURI(mtVormLeiding, lValue);  { #todo : Let op dit is gelijk aan de leiding (streng). Misschien scheiden }
+    Persleiding^.VormURI:= fMappingManager.GetGWSWURI(mtVormLeiding, lValue);
     if Persleiding^.VormURI = '' then
-      if not fDisableErrorReport then ReportError('Persleiding: "Vorm" veld is leeg' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Vorm" veld is leeg', eetFieldIsEmpty, Persleiding^.GUID)
+    else if Persleiding^.VormURI = 'Mapping_error' then begin
+      Persleiding^.VormURI:= '';
+      ReportError('Persleiding: "Vorm" veld niet conform gwsw domeinlijst.', eetMapping, Persleiding^.GUID);
+    end
   end
   else
-    ReportError('Persleiding: "Vorm" veld ontbreekt.');
+    ReportError('Persleiding: "Vorm" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Datum velden
   if DataProvider.FieldExists('BEGINDATUM') then begin
@@ -1074,102 +1348,99 @@ begin
       Persleiding^.Begindatum:= lDate
     else begin
       Persleiding^.Begindatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
-      if not fDisableErrorReport then ReportError('Persleiding: "Begindatum" veld is leeg' + ' (' + Persleiding^.GUID + ')');
+      ReportError('Persleiding: "Begindatum" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
     end
   end
   else
-    ReportError('Persleiding: "Begindatum" veld ontbreekt.');
+    ReportError('Persleiding: "Begindatum" veld ontbreekt.', eetFieldIsMissing, '');
 
 
-  // Geometrie inlezen - UNIFORME AANPAK ZOALS MapLeidingFromProvider
   Persleiding^.WKTGeometry:= '';
   Persleiding^.HasWKTGeometry:= False;
   Persleiding^.HasMultipleVertices:= False;
 
-  // PRECIES DEZELFDE LOGICA ALS MapLeidingFromProvider
   WKTGeometryStr:= '';
 
-  if DataProvider.FieldExists('WKT_GEOMETRY') then
-  begin
+  if DataProvider.FieldExists('WKT_GEOMETRY') then begin
     WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');
-    if not VarIsNull(WKTGeometry) then
-      WKTGeometryStr:= Trim(VarToStr(WKTGeometry));
-  end
-  else if DataProvider.FieldExists('GEOMETRY') then
-  begin
-    WKTGeometry:= DataProvider.GetFieldValue('GEOMETRY');
-    if not VarIsNull(WKTGeometry) then
-      WKTGeometryStr:= Trim(VarToStr(WKTGeometry));
-  end;
 
-  // Controleer of we geldige WKT geometrie hebben - ZELFDE ALS MapLeidingFromProvider
-  if WKTGeometryStr <> '' then
-  begin
-    Persleiding^.WKTGeometry:= WKTGeometryStr;
-    Persleiding^.HasWKTGeometry:= True;
+    if not VarIsNull(WKTGeometry) and (Trim(VarToStr(WKTGeometry)) <> '') then begin
+      WKTGeometryStr:= Trim(VarToStr(WKTGeometry));
+      Persleiding^.WKTGeometry:= WKTGeometryStr;
+      Persleiding^.HasWKTGeometry:= True;
 
-    // Extra: specifieke verwerking voor persleiding geometrie
-    if Pos('LINESTRING', UpperCase(Persleiding^.WKTGeometry)) > 0 then
-    begin
-      ParsePersleidingGeometry(Persleiding);
+      // Extra: specifieke verwerking voor persleiding geometrie
+      if Pos('LINESTRING', UpperCase(Persleiding^.WKTGeometry)) > 0 then
+      begin
+        ParsePersleidingGeometry(Persleiding);
+      end;
+
+    end
+    else begin
+      ReportError('Leiding: "WKT_Geometry" is leeg. Leiding wordt niet in het exportbestand gezet.', eetFatal, Persleiding^.GUID);
+      Dispose(Persleiding);
+      Result:= nil;
+      Exit;
     end;
-  end;
-
-  // Optioneel: coördinaten van begin- en eindput als fallback
-  if DataProvider.FieldExists('BEGINPUT_X') then
-  begin
-    lValue:= DataProvider.GetFieldValue('BEGINPUT_X');
-    if not VarIsNull(lValue) then
-      Persleiding^.BeginPutX:= lValue;
-  end;
-
-  if DataProvider.FieldExists('BEGINPUT_Y') then
-  begin
-    lValue:= DataProvider.GetFieldValue('BEGINPUT_Y');
-    if not VarIsNull(lValue) then
-      Persleiding^.BeginPutY:= lValue;
-  end;
-
-  if DataProvider.FieldExists('BEGINPUT_Z') then
-  begin
-    lValue:= DataProvider.GetFieldValue('BEGINPUT_Z');
-    if not VarIsNull(lValue) then
-      Persleiding^.BeginPutZ:= lValue;
-  end;
-
-  if DataProvider.FieldExists('EINDPUT_X') then
-  begin
-    lValue:= DataProvider.GetFieldValue('EINDPUT_X');
-    if not VarIsNull(lValue) then
-      Persleiding^.EindPutX:= lValue;
-  end;
-
-  if DataProvider.FieldExists('EINDPUT_Y') then
-  begin
-    lValue:= DataProvider.GetFieldValue('EINDPUT_Y');
-    if not VarIsNull(lValue) then
-      Persleiding^.EindPutY:= lValue;
-  end;
-
-  if DataProvider.FieldExists('EINDPUT_Z') then
-  begin
-    lValue:= DataProvider.GetFieldValue('EINDPUT_Z');
-    if not VarIsNull(lValue) then
-      Persleiding^.EindPutZ:= lValue;
+  end
+  else begin
+    ReportError('Persleiding: "WKT_Geometry" veld ontbreekt.', eetFatal, '');
+    Dispose(Persleiding);
+    Result:= nil;
+    Exit;
   end;
 
   Result:= Persleiding;
 end;
 
+function TOroxExport.InitializePersleiding(var Persleiding : PGWSWPersleiding) : Boolean;
+begin
+  Result:= False;
+  if Persleiding = nil then Exit;
+
+  FillChar(Persleiding^, SizeOf(TGWSWPersleiding), 0);
+
+  // String velden
+  Persleiding^.GUID:= '';
+  Persleiding^.aLabel:= '';
+  Persleiding^.BeginPutID:= '';
+  Persleiding^.EindPutID:= '';
+  Persleiding^.StelselID:= '';
+  Persleiding^.Stelselnaam:= '';
+  Persleiding^.WKTGeometry:= '';
+
+  // URI velden
+  Persleiding^.MateriaalURI:= '';
+  Persleiding^.StatusFunctionerenURI:= '';
+  Persleiding^.StelselURI:= '';
+  Persleiding^.PersleidingTypeURI:= '';
+  Persleiding^.VormURI:= '';
+
+  Persleiding^.Lengte:= NaN;
+  Persleiding^.Begindatum:= NaN;
+
+  // Boolean velden
+  Persleiding^.HasWKTGeometry:= False;
+  Persleiding^.HasMultipleVertices:= False;
+
+  Result:= True;
+end;
+
 function TOroxExport.MapKolkFromProvider(DataProvider : IGWSWDataProvider) : PGWSWKolk;
 var
   Kolk: PGWSWKolk;
-  KolkTypeStr, MateriaalStr, VormStr: string;   { #todo : Kan weg. TempValue is voldoende }
+  lVal: TGWSWValidationResult;
   WKTGeometry: string;
   GeoX, GeoY, GeoZ: Double;
   lValue: Variant;
 begin
   New(Kolk);
+  if not InitializeKolk(Kolk) then
+  begin
+    Dispose(Kolk);
+    ReportError('Kolk: Initialisatie mislukt!');
+    Exit(nil);
+  end;
 
   // Guid
   if DataProvider.FieldExists('GUID') then begin
@@ -1177,157 +1448,162 @@ begin
     if lValue <> '' then
       Kolk^.GUID:= lValue
     else
-      if not fDisableErrorReport then ReportError('Kolk: "GUID" is leeg' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "GUID" is leeg.', eetFieldIsEmpty, Kolk^.GUID);
   end
   else
-    ReportError('Kolk: GUID veld ontbreekt');  // Can never happen but still...
+    ReportError('Kolk: "Guid" veld ontbreekt.', eetFieldIsMissing, '');  // Can never happen but still...
 
-
+  // Naam
   if DataProvider.FieldExists('NAAM') then begin
     lValue:= VarToStrDef(DataProvider.GetFieldValue('NAAM'), '');
     if lValue <> '' then
       Kolk^.aLabel:= lValue
     else begin
-      Kolk^.aLabel:= '';
-      if not fDisableErrorReport then ReportError('Kolk: "Naam" is leeg' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Naam" is leeg.', eetFieldIsEmpty, Kolk^.GUID);
     end
   end
   else
-    ReportError('Kolk: "Naam" veld ontbreekt.');
+    ReportError('Kolk: "Naam" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Geometrie inlezen
-  Kolk^.WKTGeometry := '';
-  Kolk^.HasWKTGeometry := False;
+  Kolk^.WKTGeometry:= '';
+  Kolk^.HasWKTGeometry:= False;
 
-  if DataProvider.FieldExists('WKT_GEOMETRY') or DataProvider.FieldExists('GEOMETRY') then begin
-    if DataProvider.FieldExists('WKT_GEOMETRY') then
-      WKTGeometry := DataProvider.GetFieldValue('WKT_GEOMETRY')
-    else
-      WKTGeometry := DataProvider.GetFieldValue('GEOMETRY');
+  if DataProvider.FieldExists('WKT_GEOMETRY') then begin
+    WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');
 
     if WKTGeometry <> '' then begin
-      Kolk^.WKTGeometry := WKTGeometry;
-      Kolk^.HasWKTGeometry := True;
+      Kolk^.WKTGeometry:= Trim(VarToStr(WKTGeometry));;
+      Kolk^.HasWKTGeometry:= True;
 
       // Parse ook naar X,Y,Z voor backward compatibility
       if ParseWKTPoint(WKTGeometry, GeoX, GeoY, GeoZ) then begin
-        Kolk^.X := GeoX;
-        Kolk^.Y := GeoY;
-        Kolk^.Z := GeoZ;
-        Kolk^.HasOrientation := (GeoX <> 0) and (GeoY <> 0);
+        Kolk^.X:= GeoX;
+        Kolk^.Y:= GeoY;
+        Kolk^.Z:= GeoZ;
+        Kolk^.HasOrientation:= (GeoX <> 0) and (GeoY <> 0);
       end
-      else begin
-        // Fallback naar individuele coordinaat velden
-        // Mag hier nooit komen. Validatie vooraf maken
-        lValue := DataProvider.GetFieldValue('X');
-        if not VarIsNull(lValue) then Kolk^.X := lValue else Kolk^.X := 0;
-
-        lValue := DataProvider.GetFieldValue('Y');
-        if not VarIsNull(lValue) then Kolk^.Y := lValue else Kolk^.Y := 0;
-
-        lValue := DataProvider.GetFieldValue('Z');
-        if not VarIsNull(lValue) then Kolk^.Z := lValue else Kolk^.Z := 0;
-
-        Kolk^.HasOrientation := (Kolk^.X <> 0) and (Kolk^.Y <> 0);
-      end;
+    end
+    else begin
+      ReportError('Kolk: "WKT-Geometry" is leeg. De kolk wordt niet in het exportbestand gezet.', eetFatal, Kolk^.GUID);
+      Dispose(Kolk);
+      Result:= nil;
+      Exit;
     end;
   end
   else begin
-    // Gebruik individuele coordinaat velden
-    // Mag hiert nooit komen. Validatie vooraf maken
-    lValue := DataProvider.GetFieldValue('X');
-    if not VarIsNull(lValue) then Kolk^.X := lValue else Kolk^.X := 0;
-
-    lValue := DataProvider.GetFieldValue('Y');
-    if not VarIsNull(lValue) then Kolk^.Y := lValue else Kolk^.Y := 0;
-
-    lValue := DataProvider.GetFieldValue('Z');
-    if not VarIsNull(lValue) then Kolk^.Z := lValue else Kolk^.Z := 0;
-
-    Kolk^.HasOrientation := (Kolk^.X <> 0) and (Kolk^.Y <> 0);
+    ReportError('Kolk: "WKT_Geometry" veld ontbreekt.', eetFatal, '');
+    Dispose(Kolk);
+    Result:= nil;
+    Exit;
   end;
 
-  // Afmetingen met NULL checks
-  { #todo : Breedte mag nooit negatief zijn. Controle maken. }
+  // Breedte
   if DataProvider.FieldExists('BREEDTE') then      { #todo : Dit soort naamgevingen  zoals breedte, hoogte, etc moeten naar een const. }
   begin
     lValue:= DataProvider.GetFieldValue('BREEDTE');
-    if not VarIsNull(lValue) then
-      Kolk^.Breedte:= lValue
+    if not VarIsNull(lValue) then begin
+      Kolk^.Breedte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidateKolkWidth(Kolk);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Kolk^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Kolk: "Breedte" is leeg.' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Breedte" is leeg.', eetFieldIsEmpty, Kolk^.GUID);
   end
   else
-    ReportError('Kolk: "Breedte" veld ontbreekt.');
+    ReportError('Kolk: "Breedte" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Lengte
-  { #todo : Lengte mag nooit negatief zijn. Controle maken. }
   if DataProvider.FieldExists('LENGTE') then begin
     lValue:= DataProvider.GetFieldValue('LENGTE');
-    if not VarIsNull(lValue) then
-      Kolk^.Lengte:= lValue
+    if not VarIsNull(lValue) then begin
+      Kolk^.Lengte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidateKolkLength(Kolk);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Kolk^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Kolk: "Lengte" veld is leeg.' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Lengte" veld is leeg.', eetFieldIsEmpty, Kolk^.GUID);
   end
   else
-    ReportError('Kolk: "Lengte" veld ontbreekt.');
+    ReportError('Kolk: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Hoogte
-  { #todo : Hoogte mag nooit negatief zijn. Controle maken. }
   if DataProvider.FieldExists('HOOGTE') then begin
     lValue:= DataProvider.GetFieldValue('HOOGTE');
-    if not VarIsNull(lValue) then
-      Kolk^.Hoogte:= lValue
+    if not VarIsNull(lValue) then begin
+      Kolk^.Hoogte:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidateKolkHeight(Kolk);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Kolk^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Kolk: "Hoogte" veld is leeg.' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Hoogte" veld is leeg.' , eetFieldIsEmpty, Kolk^.GUID);
   end
   else
-    ReportError('Kolk: "Hoogte" veld ontbreekt');
+    ReportError('Kolk: "Hoogte" veld ontbreekt.', eetFieldIsMissing, '');
 
-  // DIAMETER
+  // Diameter
   if DataProvider.FieldExists('DIAMETER') then begin
     lValue:= DataProvider.GetFieldValue('DIAMETER');
-    if not VarIsNull(lValue) then
-      Kolk^.Diameter:= lValue
+    if not VarIsNull(lValue) then begin
+      Kolk^.Diameter:= VarAsType(lValue, varInteger);
+
+      lVal:= ValidateKolkDiameter(Kolk);  // Validate
+      if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Kolk^.GUID);
+    end
     else
-      if not fDisableErrorReport then ReportError('Kolk: "Diameter" veld is leeg.' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Diameter" veld is leeg.' , eetFieldIsEmpty, Kolk^.GUID);
   end
   else
-    ReportError('Kolk: "Diameter" veld ontbreekt');
-
+    ReportError('Kolk: "Diameter" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Materiaal mapping
   if DataProvider.FieldExists('MATERIAAL') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('MATERIAAL'), ''));
-    Kolk^.MateriaalURI:= fMappingManager.GetGWSWURI(mtMateriaalPut, lValue);  { #todo : Let op, Materiaal is gelijk aan material put. onderscheid maken }
+    Kolk^.MateriaalURI:= fMappingManager.GetGWSWURI(mtMateriaalPut, lValue);
+
     if Kolk^.MateriaalURI = '' then
-      if not fDisableErrorReport then ReportError('Kolk: "Materiaal" veld is leeg' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Materiaal" veld is leeg.', eetFieldIsEmpty, Kolk^.GUID)
+
+    else if Kolk^.MateriaalURI = 'Mapping_error' then begin
+      Kolk^.MateriaalURI:= '';
+      ReportError('Kolk: "Materiaal" veld niet conform gwsw domeinlijst.', eetMapping, Kolk^.GUID);
+    end
   end
   else
-    ReportError('Kolk: "Materiaal" veld ontbreekt.');
-
+    ReportError('Kolk: "Materiaal" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Vorm mapping
   if DataProvider.FieldExists('VORM') then begin
-    lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('VORM'), ''));  { #todo : Let op, vorm is gelijk aan put.misschien obnderscheid maken }
+    lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('VORM'), ''));
     Kolk^.VormURI:= fMappingManager.GetGWSWURI(mtvormPut, lValue);
     if Kolk^.VormURI = '' then
-      if not fDisableErrorReport then ReportError('Kolk: "Vorm" veld is leeg' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Vorm" veld is leeg.', eetFieldIsEmpty, Kolk^.GUID)
+    else if Kolk^.VormURI = 'Mapping_error' then begin
+      Kolk^.VormURI:= '';
+      ReportError('Kolk: "Vorm" veld niet conform gwsw domeinlijst.', eetMapping, Kolk^.GUID);
+    end
   end
   else
-    ReportError('Kolk: "Vorm" veld ontbreekt.');
+    ReportError('Kolk: "Vorm" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Kolktype mapping
   if DataProvider.FieldExists('KOLK_TYPE') then begin
     lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('KOLK_TYPE'), ''));
     Kolk^.KolkTypeUri:= fMappingManager.GetGWSWURI(mtKolkType, lValue);
     if Kolk^.KolkTypeUri = '' then begin
-      Kolk^.KolkTypeUri:= 'gwsw:Kolk';  { #note : Deafult = Kolk }
-      if not fDisableErrorReport then ReportError('Kolk: "Kolk_type" veld is leeg' + ' (' + Kolk^.GUID + ')');
-    end;
+      Kolk^.KolkTypeUri:= '""';
+      ReportError('KolktypeIsMissing', eetFieldIsEmpty, Kolk^.GUID)
+    end
+    else if Kolk^.KolkTypeUri = 'Mapping_error' then begin
+      Kolk^.KolkTypeUri:= '""';
+      ReportError('Kolk: "Kolktype" veld niet conform gwsw domeinlijst.', eetMapping, Kolk^.GUID);
+    end
   end
   else
-    ReportError('Kolk: "Put_type" veld ontbreekt.');
+    ReportError('Kolk: "Kolktype" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Kolk-specifieke velden
   if DataProvider.FieldExists('WANDDIKTE') then begin
@@ -1335,14 +1611,37 @@ begin
     if not VarIsNull(lValue) then
       Kolk^.Wanddikte:= lValue
     else
-      if not fDisableErrorReport then ReportError('Kolk: "Wanddikte" veld is leeg.' + ' (' + Kolk^.GUID + ')');
+      ReportError('Kolk: "Wanddikte" veld is leeg.', eetFieldIsEmpty, Kolk^.GUID);
   end
   else
-    ReportError('Kolk: "Wanddikte" veld ontbreekt');
+    ReportError('Kolk: "Wanddikte" veld ontbreekt.', eetFieldIsMissing, '');
 
-  Kolk^.HasOrientation := (Kolk^.X <> 0) and (Kolk^.Y <> 0);
+  Kolk^.HasOrientation:= (Kolk^.X <> 0) and (Kolk^.Y <> 0);
 
-  Result := Kolk;
+  Result:= Kolk;
+end;
+
+function TOroxExport.InitializeKolk(var Kolk : PGWSWKolk) : Boolean;
+begin
+  Result:= False;
+  if Kolk = nil then Exit;
+
+  FillChar(Kolk^, SizeOf(TGWSWKolk), 0);
+
+  Kolk^.GUID:= '';
+  Kolk^.aLabel:= '';
+  Kolk^.WKTGeometry:= '';
+
+  // URI velden
+  Kolk^.MateriaalURI:= '';
+  Kolk^.VormURI:= '';
+  Kolk^.KolkTypeUri:= '';
+
+  // Boolean velden
+  Kolk^.HasWKTGeometry:= False;
+  Kolk^.HasOrientation:= False;
+
+  Result:= True;
 end;
 
 function TOroxExport.ParseWKTPoint(const WKT : string; out X, Y, Z : Double) : Boolean;
@@ -1425,12 +1724,13 @@ begin
   end;
 end;
 
-function TOroxExport.GetDateFromYearField(DataProvider : IGWSWDataProvider;
-         const FieldName : string; DefaultDay : Integer; DefaultMonth : Integer) : TDateTime;
+function TOroxExport.GetDateFromYearField(DataProvider: IGWSWDataProvider;
+  const FieldName: string; DefaultDay: Integer; DefaultMonth: Integer): TDateTime;
 var
   lValue: Variant;
-  YearStr: string;
+  ValueStr: string;
   YearInt: Integer;
+  DateVal: TDateTime;
 begin
   // Default value (0 means "no valid date")
   Result:= 0;
@@ -1439,25 +1739,45 @@ begin
   if VarIsNull(lValue) or VarIsEmpty(lValue) then
     Exit;
 
-  YearStr:= Trim(VarToStr(lValue));
-
-  if YearStr = '' then
+  ValueStr:= Trim(VarToStr(lValue));
+  if ValueStr = '' then
     Exit;
 
-  // Try to convert to integrity
-  if not TryStrToInt(YearStr, YearInt) then
+  { 1) Eerst: is het al een echte datum? }
+  // Probeer eerst als datum+tijd (voor strings zoals '31-12-2025 15:42:02')
+  if TryStrToDateTime(ValueStr, DateVal) then
+  begin
+    Result:= DateVal;
+    Exit;
+  end;
+
+  { 2) Probeer als alleen datum }
+  if TryStrToDate(ValueStr, DateVal) then
+  begin
+    Result:= DateVal;
+    Exit;
+  end;
+
+  { 3) Probeer met specifieke formaten als de locale conversie faalt }
+  if TryDifferentDateFormats(ValueStr, DateVal) then
+  begin
+    Result:= DateVal;
+    Exit;
+  end;
+
+  { 4) Zo niet: probeer het als jaartal }
+  if not TryStrToInt(ValueStr, YearInt) then
     Exit;
 
-  // Validate year (adjustable limits) { #todo : Optioneel maken. }  EN op zoek vooraf. 1800 is erg oud
-  if (YearInt < 1800) or (YearInt > YearOf(Date) + 10) then
-    Exit;  { #todo : To build in a notification }
-
-  // Create Date
+  { 5) Maak datum van jaartal }
   try
     Result:= EncodeDate(YearInt, DefaultMonth, DefaultDay);
   except
     on E: EConvertError do
-      Result:= 0;  // Invalid date  { #todo : Moet naar de view }
+    begin
+      ReportError('Ongeldige datum.');
+      Result:= 0; // Ongeldige datum
+    end;
   end;
 end;
 
@@ -1795,33 +2115,80 @@ begin
 end;
 
 procedure TOroxExport.AddPutKenmerken(SL : TStringList; const Put : PGWSWPut);
+var
+  tmp: String;
 begin
-  if not IsNan(Put^.Breedte) and (Put^.Breedte > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
-           FloatToOrox(Put^.Breedte, 3) + ' ] ;');
+  // Als puttype contains gemaal dan een aantal velden anders in de ttl zetten
+  if not IsNan(Put^.Breedte) and (Put^.Breedte > 0) then begin
+    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
+             FloatToOrox(Put^.Breedte, 3) + ' ] ;');
+    end
+    else
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteBouwwerk ; gwsw:hasValue ' +
+             FloatToOrox(Put^.Breedte, 0) + ' ] ;'); // Bij gemalen geen decimalen
+  end;
 
-  if not IsNan(Put^.Lengte) and (Put^.Lengte > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
-           FloatToOrox(Put^.Lengte, 3) + ' ] ;');
+  if not IsNan(Put^.Lengte) and (Put^.Lengte > 0) then begin
+    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
+             FloatToOrox(Put^.Lengte, 3) + ' ] ;');
+    end
+    else
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteBouwwerk ; gwsw:hasValue ' +
+             FloatToOrox(Put^.Lengte, 0) + ' ] ;');  // Bij gemalen geen decimalen
 
-  if not IsNan(Put^.Hoogte) and (Put^.Hoogte > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
-           FloatToOrox(Put^.Hoogte, 3) + ' ] ;');
+  end;
 
-  if Put^.MateriaalURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalPut ; ' +
-           'gwsw:hasReference ' + Put^.MateriaalURI + ' ] ;');
+  if not IsNan(Put^.Hoogte) and (Put^.Hoogte > 0) then begin
+    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
+             FloatToOrox(Put^.Hoogte, 3) + ' ] ;');
+    end
+    else
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteBouwwerk ; gwsw:hasValue ' +
+             FloatToOrox(Put^.Hoogte, 0) + ' ] ;');  // Bij gemalen geen decimalen
+  end;
 
-  if Put^.VormURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormPut ; ' +
+  if not IsNan(Put^.Diameter) and (Put^.Diameter > 0) then begin
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterPut ; gwsw:hasValue ' +
+           FloatToOrox(Put^.Diameter, 0) + ' ] ;');
+  end;
+
+  if Put^.MateriaalURI <> '' then begin
+    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalPut ; ' +
+             'gwsw:hasReference ' + Put^.MateriaalURI + ' ] ;');
+    end
+    else
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalBouwwerk ; ' +
+             'gwsw:hasReference ' + Put^.MateriaalURI + ' ] ;');
+  end;
+
+  if Put^.VormURI <> '' then begin
+    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormPut ; ' +
+             'gwsw:hasReference ' + Put^.VormURI + ' ] ;');
+    end
+    else
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormBouwwerk ; ' +
            'gwsw:hasReference ' + Put^.VormURI + ' ] ;');
+  end;
+
+  // Fundering
+
+
+  if Put^.FunderingUri <> '' then
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Fundering ; ' +
+           'gwsw:hasReference ' + Put^.FunderingUri + ' ] ;');
 
   if Put^.Begindatum > 0 then
-  SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
-         'gwsw:hasValue "' + DateToOroxFormat(Put^.Begindatum) + '"^^xsd:date ] ;');
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Put^.Begindatum) + '"^^xsd:date ] ;');
 
-  SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:WijzeVanInwinning ; ' +
-         'gwsw:hasReference ' + WijzeInwinningToGWSW(Put^.WijzeInwinning) + ' ] ;');
+  if Put^.Einddatum > 0 then
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Put^.Einddatum) + '"^^xsd:date ] ;');
 end;
 
 procedure TOroxExport.AddPutOrientatie(SL : TStringList; const Put : PGWSWPut);
@@ -1844,37 +2211,38 @@ begin
 
   SL.Add('  ] ;');
 
-  // NIEUW: Voeg maaiveldorientatie toe als maaiveldhoogte bekend is
-  if not IsNaN(Put^.Maaiveldhoogte) and (Put^.Maaiveldhoogte <> 0) then begin
-    SL.Add('  gwsw:hasConnection  _:' + Put^.GUID + '_maaiveld_ori ;');
-  end;
-
-  SL.Add('.');
-  SL.Add('');
-
-  // Voeg maaiveldorientatie toe
-  if not IsNaN(Put^.Maaiveldhoogte) then begin  // and (Put^.Maaiveldhoogte <> 0)
-    SL.Add('_:' + Put^.GUID + '_maaiveld_ori');
-    SL.Add('  rdf:type                      gwsw:Maaiveldorientatie ;');
-    SL.Add('  gwsw:hasAspect                [');
-    SL.Add('    rdf:type                      gwsw:Maaiveldhoogte ;');
-    SL.Add('    gwsw:hasValue                 "' + FloatToOrox(Put^.Maaiveldhoogte, 2) + '"^^xsd:decimal ;');
-
-    // Optioneel: voeg inwinning toe als die beschikbaar is
-    { #todo : Nog verder bekijken. }
-    if Put^.WijzeInwinning <> wiOnbekend then begin
-      SL.Add('    gwsw:hasAspect                [');
-      SL.Add('      rdf:type                      gwsw:WijzeVanInwinning ;');
-      SL.Add('      gwsw:hasReference             ' + WijzeInwinningToGWSW(Put^.WijzeInwinning));
-      SL.Add('    ]');
+  if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+    if not IsNaN(Put^.Maaiveldhoogte) and (Put^.Maaiveldhoogte <> 0) then begin
+      SL.Add('  gwsw:hasConnection  _:' + Put^.GUID + '_maaiveld_ori ');
     end;
 
-    SL.Add('  ] .');
+    SL.Add('.');
+    SL.Add('');
+
+    if not IsNaN(Put^.Maaiveldhoogte) then begin  // and (Put^.Maaiveldhoogte <> 0)
+      SL.Add('_:' + Put^.GUID + '_maaiveld_ori');
+      SL.Add('  rdf:type                      gwsw:Maaiveldorientatie ;');
+      SL.Add('  gwsw:hasAspect                [');
+      SL.Add('    rdf:type                      gwsw:Maaiveldhoogte ;');
+      SL.Add('    gwsw:hasValue                 "' + FloatToOrox(Put^.Maaiveldhoogte, 2) + '"^^xsd:decimal ;');
+
+      SL.Add('  ] .');
+      SL.Add('');
+    end;
+  end
+  else begin
+    SL.Add('.');
     SL.Add('');
   end;
+
+  { #todo : Moet anders bij de gemalen !!! }
+  // Voeg maaiveldorientatie toe
+
 end;
 
 procedure TOroxExport.AddLeidingKenmerken(SL : TStringList; const Leiding : PGWSWLeiding);
+var
+  tmp: String;
 begin
   if Leiding^.Lengte > 0 then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteLeiding ; gwsw:hasValue ' +
@@ -1882,23 +2250,33 @@ begin
 
   if Leiding^.Diameter > 0 then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterLeiding ; gwsw:hasValue ' +
-           IntToStr(Leiding^.Diameter) + ' ] ;');
+           FloatToOrox(Leiding^.Diameter, 0) + ' ] ;');
 
   if Leiding^.Breedte > 0 then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteLeiding ; gwsw:hasValue ' +
-           IntToStr(Leiding^.Breedte) + ' ] ;');
+           FloatToOrox(Leiding^.Breedte, 0) + ' ] ;');
 
   if Leiding^.Hoogte > 0 then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteLeiding ; gwsw:hasValue ' +
            FloatToOrox(Leiding^.Hoogte, 0) + ' ] ;');  // GWSW schrijft 0 decimalen voor. Moet een heel getal in mm zijn.
 
-  if Leiding^.MateriaalURI <> '' then ;
+  if Leiding^.MateriaalURI <> '' then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalLeiding ; ' +
          'gwsw:hasReference ' + Leiding^.MateriaalURI + ' ] ;');
 
   if Leiding^.VormURI <> '' then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormLeiding ; ' +
          'gwsw:hasReference ' + Leiding^.VormURI + ' ] ;');
+
+  // Funndering
+  if Leiding^.FunderingUri <> '' then
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Fundering ; ' +
+           'gwsw:hasReference ' + Leiding^.FunderingUri + ' ] ;');
+
+  // Wibon thema { #todo : WIBONThema: geeft geen fout maar wordt ook niet verwerkt? }
+  if Leiding^.WibonUri <> '' then
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:WIBONThema ; ' +
+           'gwsw:hasReference ' + Leiding^.WibonUri + ' ] ;');
 
   if Leiding^.StatusFunctionerenURI <> '' then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:StatusFunctioneren ; ' +
@@ -1907,6 +2285,10 @@ begin
   if Leiding^.Begindatum <> 0 then
   SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
          'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Begindatum) + '"^^xsd:date ] ;'); // OROX/RDF heeft datum alstijd in formaat: YYYY-MM-DD
+
+  if Leiding^.Einddatum > 0 then
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Einddatum) + '"^^xsd:date ] ;');
 end;
 
 procedure TOroxExport.AddPersleidingKenmerken(SL : TStringList; const Persleiding : PGWSWPersleiding);
@@ -1917,7 +2299,7 @@ begin
 
   if Persleiding^.Diameter > 0 then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterLeiding ; gwsw:hasValue ' +
-           IntToStr(Persleiding^.Diameter) + ' ] ;');
+           FloatToOrox(Persleiding^.Diameter, 0) + ' ] ;');
 
   if Persleiding^.MateriaalURI <> '' then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalLeiding ; ' +
@@ -1949,14 +2331,14 @@ begin
 
   // Beginpunt met BOB waarde
   SL.Add('  gwsw:hasPart    [ rdf:type gwsw:BeginpuntLeiding ;');
-  if not IsNaN(Persleiding^.BobBegin) and (Persleiding^.BobBegin <> 0) then
+  if not IsNaN(Persleiding^.BobBegin)  then
     SL.Add('    gwsw:hasAspect  [ rdf:type gwsw:BobBeginpuntLeiding ; gwsw:hasValue ' +
            FloatToOrox(Persleiding^.BobBegin, 2) + ' ] ;');
   SL.Add('    gwsw:hasConnection  :' + Persleiding^.BeginPutID + '_ori ] ;');
 
   // Eindpunt met BOB waarde
   SL.Add('  gwsw:hasPart    [ rdf:type gwsw:EindpuntLeiding ;');
-  if not IsNaN(Persleiding^.BobEind) and (Persleiding^.BobEind <> 0) then
+  if not IsNaN(Persleiding^.BobEind) then
     SL.Add('    gwsw:hasAspect  [ rdf:type gwsw:BobEindpuntLeiding ; gwsw:hasValue ' +
            FloatToOrox(Persleiding^.BobEind, 2) + ' ] ;');
   SL.Add('    gwsw:hasConnection  :' + Persleiding^.EindPutID + '_ori ] ;');
@@ -2035,7 +2417,7 @@ begin
   SL.Add('    rdf:type      gwsw:Punt ;');
 
   if Kolk^.HasWKTGeometry and (Kolk^.WKTGeometry <> '') then begin
-    GMLString := ConvertWKTToGML(Kolk^.WKTGeometry);
+    GMLString:= ConvertWKTToGML(Kolk^.WKTGeometry);
     SL.Add('    gwsw:hasValue "' + GMLString + '"^^geo:gmlLiteral');
   end
   else begin
@@ -2077,19 +2459,18 @@ begin
   Result:= StringReplace(Result, DefaultFormatSettings.DecimalSeparator, '.', [rfReplaceAll]);
 end;
 
-function TOroxExport.FloatToOrox(Value : Double; Decimals : Integer
-  ) : String;
+function TOroxExport.FloatToOrox(Value : Double; Decimals : Integer) : String;
 var
   FormatStr: string;
 begin
   // Bouw formatstring zoals %.2f, %.3f, etc.
-  FormatStr := '%.' + IntToStr(Decimals) + 'f';
+  FormatStr:= '%.' + IntToStr(Decimals) + 'f';
 
-  Result := Format(FormatStr, [Value]);
+  Result:= Format(FormatStr, [Value]);
 
   // Verwijder duizendtallen
   if DefaultFormatSettings.ThousandSeparator <> #0 then
-    Result := StringReplace(
+    Result:= StringReplace(
       Result,
       DefaultFormatSettings.ThousandSeparator,
       '',
@@ -2097,7 +2478,7 @@ begin
     );
 
   // Zet decimaal naar punt
-  Result := StringReplace(
+  Result:= StringReplace(
     Result,
     DefaultFormatSettings.DecimalSeparator,
     '.',
@@ -2112,7 +2493,6 @@ var
   Leiding: PGWSWLeiding;
   HasParts: Boolean;
   PartsList: TStringList;
-  Kolk: PGWSWKolk;
   Persleiding: PGWSWPersleiding;
 begin
   // Stelsel definitie
@@ -2124,10 +2504,6 @@ begin
     SL.Add('  rdfs:label    "' + Stelsel^.aLabel + '" ;')
   else
     SL.Add('  rdfs:label    "Onbekend stelsel" ;');
-
-  // Voeg stelsel specifieke kenmerken toe
-  SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:WijzeVanInwinning ; ' +
-         'gwsw:hasReference ' + WijzeInwinningToGWSW(wiGemeten) + ' ] ;');
 
   // Zoek onderdelen van dit stelsel
   HasParts:= False;
@@ -2158,19 +2534,6 @@ begin
         HasParts:= True;
       end;
     end;
-
-    // Kolken aan dummy stelsel toekennen
-    // test.....
-    // zou de validatie foutmelding moeten oplossen    (Knooppunt (orientatie van Put, Bouwwerk, Compartiment, Hulpstuk, Aansluitpunt) heeft geen verbinding)
-    // ttl lijkt er goed uit te zien maar de validatie geeft nog steeds de knooppunt foutmelding
-{    if Stelsel^.GUID = 'DUMMY_STELSEL' then begin
-      for i:= 0 to FKolkList.Count - 1 do begin
-        Kolk:= PGWSWKolk(FKolkList[i]);
-        // Voeg ALLE kolken toe aan DUMMY_STELSEL
-        PartsList.Add('    :' + Kolk^.GUID);
-        HasParts:= True;
-      end;
-    end;}
 
     // Voeg hasPart relaties toe indien er onderdelen zijn
     if HasParts and (PartsList.Count > 0) then begin
@@ -2204,7 +2567,7 @@ begin
   SL.Add('  rdf:type      ' + Put^.PutTypeUri + ' ;');
   SL.Add('  rdfs:label    "' + Put^.aLabel + '" ;');
 
-  // EERSTE ORIENTATIE TOEVOEGING =  Voegt de relatie toe van de put naar zijn oriëntatie
+  // Voeg de relatie toe van de put naar zijn oriëntatie
   if Put^.HasOrientation or Put^.HasWKTGeometry then
     SL.Add('  gwsw:hasAspect  :' + Put^.GUID + '_ori ;');
 
@@ -2336,10 +2699,6 @@ begin
   SL.Add('  rdf:type      ' + Kolk^.KolkTypeUri + ' ;');
   SL.Add('  rdfs:label    "' + Kolk^.aLabel + '" ;');
 
-  // test met Dummy. (kijken of de melding: "Knooppunt (orientatie van Put, Bouwwerk, Compartiment, Hulpstuk, Aansluitpunt) heeft geen verbinding" voorkomen kan worden
-//  SL.Add('  gwsw:isPartOf   :DUMMY_STELSEL ;');  // Fallback naar dummy
-
-
   // Oriëntatie toevoegen
   if Kolk^.HasOrientation or Kolk^.HasWKTGeometry then
     SL.Add('  gwsw:hasAspect  :' + Kolk^.GUID + '_ori ;');
@@ -2349,9 +2708,9 @@ begin
   // Verwijder laatste ; en vervang door .
   if SL.Count > 0 then begin
     if Copy(SL[SL.Count - 1], Length(SL[SL.Count - 1]), 1) = ';' then
-      SL[SL.Count - 1] := Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
+      SL[SL.Count - 1]:= Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
     else
-      SL[SL.Count - 1] := SL[SL.Count - 1] + ' .';
+      SL[SL.Count - 1]:= SL[SL.Count - 1] + ' .';
   end;
 
   SL.Add('');
@@ -2361,33 +2720,84 @@ begin
     AddKolkOrientatie(SL, Kolk);
 end;
 
-function TOroxExport.WijzeInwinningToGWSW(Wijze : TGWSWWijzeInwinning) : string;
+function TOroxExport.TryDifferentDateFormats(const ValueStr: string; out DateVal: TDateTime): Boolean;
+var
+  FmtSettings: TFormatSettings;
 begin
+  Result:= False;
 
-  case Wijze of
-    wiGemeten: Result:= 'gwsw:Ingemeten';
-    wiBerekend: Result:= 'gwsw:Berekend';
-    wiGeschat: Result:= 'gwsw:Geschat';
-    wiOntwerp: Result:= 'gwsw:Ontwerp';
-  else
-    Result:= 'gwsw:Onbekend';
+  // Maak format settings voor Europese formaten
+  FmtSettings:= DefaultFormatSettings;
+
+  // Probeer verschillende Europese datumformaten
+
+  // Formaat: DD-MM-YYYY (of DD-MM-YYYY HH:MM:SS)
+  FmtSettings.ShortDateFormat:= 'DD-MM-YYYY';
+  FmtSettings.DateSeparator:= '-';
+  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then
+  begin
+    Result:= True;
+    Exit;
+  end;
+
+  // Formaat: DD/MM/YYYY
+  FmtSettings.ShortDateFormat:= 'DD/MM/YYYY';
+  FmtSettings.DateSeparator:= '/';
+  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then
+  begin
+    Result:= True;
+    Exit;
+  end;
+
+  // Formaat: YYYY-MM-DD (ISO)
+  FmtSettings.ShortDateFormat:= 'YYYY-MM-DD';
+  FmtSettings.DateSeparator:= '-';
+  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then
+  begin
+    Result:= True;
+    Exit;
+  end;
+
+  // Probeer ook zonder tijd component
+  FmtSettings.ShortDateFormat:= 'DD-MM-YYYY';
+  FmtSettings.DateSeparator:= '-';
+  if TryStrToDate(ValueStr, DateVal, FmtSettings) then
+  begin
+    Result:= True;
+    Exit;
   end;
 end;
 
 procedure TOroxExport.ReportProgress(const Msg : string);
 begin
   if Assigned(fProgressReporter) then
-    fProgressReporter.ReportProgress(Msg);
+  begin
+    fProgressReporter.ReportProgressMsg(Msg);
+    // Als we bezig zijn met records verwerken, stuur ook de progress count
+    if fTotalRecords > 0 then
+      fProgressReporter.ReportProgressCount(fCurrentRecord, fTotalRecords);
+  end;
+
+{  if Assigned(fProgressReporter) then
+    fProgressReporter.ReportProgressMsg(Msg);}
 end;
 
-procedure TOroxExport.ReportError(const ErrMsg : string);
+procedure TOroxExport.ReportError(const ErrMsg: string; const ErrorType: Integer; const Guid: string);
+begin
+  if Assigned(fProgressReporter) then begin
+    fProgressReporter.ReportError(ErrMsg, ErrorType, Guid);
+  end;
+end;
+
+procedure TOroxExport.UpdateProgressCount(Current, Total : Integer);
 begin
   if Assigned(fProgressReporter) then
-    fProgressReporter.ReportError(ErrMsg);
+    fProgressReporter.ReportProgressCount(Current, Total);
 end;
 
-constructor TOroxExport.Create(ADataProvider : IGWSWDataProvider; const FileName, OrganizationName, MappingsFile : String;
-         AProgressReporter: IExportProgressReporter);
+constructor TOroxExport.Create(ADataProvider : IGWSWDataProvider;
+  const FileName, OrganizationName, MappingsFile : String;
+  AProgressReporter : IExportProgressReporter);
 begin
   inherited Create;
 
@@ -2418,21 +2828,25 @@ begin
   inherited Destroy;
 end;
 
-procedure TOroxExport.ExportToOrox(DisableErrorReport : Boolean);
+procedure TOroxExport.ExportToOrox(const GWSWversion : String);
 var
   TotalRecords: Integer;
 begin
   ReportProgress('Export gestart...');
-  fDisableErrorReport:= DisableErrorReport;
+  // Retrieve validation data
+  LoadGWSWConfig(GWSW_versie_16, GWSWversion);  // get the GWSW version. Used with validation
+  InitValidationConfig;  // Initialize global config in validation unit
+
   fDataProvider.Open;
   try
-    fDataProvider.Last;
+    TotalRecords:= fDataProvider.GetAccurateRecordCount; // Determine the number of records. Needed to show progress
     fDataProvider.First;
-    TotalRecords:= fDataProvider.GetRecordCount;
     ReportProgress(Format('%d records gevonden', [TotalRecords]));
+    UpdateProgressCount(0, TotalRecords); // Initialize progress
 
     // Mapping the BOR domain value to the GWSW domain value
     ReportProgress('Mapping data naar GWSW model...');
+
     if not MapDatabaseToGWSW(fDataProvider, TotalRecords) then begin
       ReportError('Fout bij mapping data naar GWSW model');
       Exit;
@@ -2448,11 +2862,17 @@ begin
 
     // Prepare and save TTL file
     ReportProgress('Genereren Turtle bestand...');
-    if not GenerateOroxTurtle(fFileName) then begin
+
+    // Reset voor generatie fase
+    fTotalRecords:= 0;
+    fCurrentRecord:= 0;
+
+    if not GenerateOroxTurtle(fFileName, GWSWversion) then begin
       ReportError('Fout bij genereren Orox Turtle bestand');
       Exit;
     end;
     ReportProgress('Export succesvol voltooid!');
+    UpdateProgressCount(TotalRecords, TotalRecords);
   except
       on E: Exception do
       begin

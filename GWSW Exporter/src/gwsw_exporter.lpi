@@ -11,12 +11,14 @@
       <UseXPManifest Value="True"/>
       <XPManifest>
         <DpiAware Value="True"/>
+        <LongPathAware Value="True"/>
+        <AnsiUTF8 Value="True"/>
       </XPManifest>
       <Icon Value="0"/>
     </General>
     <VersionInfo>
       <UseVersionInfo Value="True"/>
-      <MinorVersionNr Value="3"/>
+      <MinorVersionNr Value="4"/>
       <StringTable Comments="GWSW OroX export naar ttl bestand." CompanyName="Hans van Buggenum" FileDescription="GWSW OroX export naar ttl bestand." InternalName="GWSW-Bridge" LegalCopyright="Hans van Buggenum" OriginalFilename="GWSW-OroX-Exporter" ProductName="GWSW Exporter" ProductVersion="1.0.0"/>
     </VersionInfo>
     <BuildModes>
@@ -221,6 +223,16 @@
       <Unit>
         <Filename Value="common\exportprogressreporter.intf.pas"/>
         <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\gwswvalidation.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GWSWValidation"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\gwswvalidationconfig.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GWSWValidationConfig"/>
       </Unit>
     </Units>
   </ProjectOptions>

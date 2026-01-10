@@ -8,6 +8,7 @@ object frmMain: TfrmMain
   ClientWidth = 1236
   DesignTimePPI = 144
   Menu = MainMenu1
+  LCLVersion = '4.4.0.0'
   object stbInfo: TStatusBar
     Left = 0
     Height = 36
@@ -81,10 +82,10 @@ object frmMain: TfrmMain
       Height = 588
       Top = 5
       Width = 1226
-      ActivePage = tsPrepare
+      ActivePage = tsQuery
       Align = alClient
       BorderSpacing.Around = 5
-      TabIndex = 0
+      TabIndex = 2
       TabOrder = 0
       OnChange = PageControl1Change
       object tsPrepare: TTabSheet
@@ -104,20 +105,21 @@ object frmMain: TfrmMain
           ParentBackground = False
           ParentColor = False
           TabOrder = 0
-          object Panel1: TPanel
+          object pnlDataSettings: TPanel
             Left = 1
             Height = 548
             Top = 1
             Width = 360
             Align = alLeft
             BevelOuter = bvNone
-            Caption = 'Panel1'
+            Caption = 'pnlDataSettings'
             ClientHeight = 548
             ClientWidth = 360
             Color = clSkyBlue
             ParentBackground = False
             ParentColor = False
             TabOrder = 0
+            OnResize = pnlDataSettingsResize
             object gbConnection: TGroupBox
               Left = 8
               Height = 223
@@ -129,32 +131,8 @@ object frmMain: TfrmMain
               ClientWidth = 341
               ParentBackground = False
               TabOrder = 0
-              object edtDatabaseName: TEdit
-                AnchorSideLeft.Side = asrBottom
-                Left = 136
-                Height = 33
-                Top = 8
-                Width = 200
-                BorderSpacing.Left = 10
-                TabOrder = 0
-                Text = 'edtDatabaseName'
-              end
-              object edtUserName: TEdit
-                AnchorSideLeft.Side = asrBottom
-                AnchorSideTop.Control = edtDatabaseName
-                AnchorSideTop.Side = asrBottom
-                Left = 136
-                Height = 33
-                Top = 48
-                Width = 200
-                BorderSpacing.Left = 10
-                BorderSpacing.Top = 7
-                TabOrder = 1
-                Text = 'edtUserName'
-              end
               object edtPassword: TEdit
                 AnchorSideLeft.Side = asrBottom
-                AnchorSideTop.Control = edtUserName
                 AnchorSideTop.Side = asrBottom
                 Left = 136
                 Height = 33
@@ -165,7 +143,6 @@ object frmMain: TfrmMain
                 EchoMode = emPassword
                 PasswordChar = '*'
                 TabOrder = 2
-                Text = 'edtPassword'
               end
               object lblDatabaseName: TLabel
                 Left = 8
@@ -197,35 +174,70 @@ object frmMain: TfrmMain
                 TabOrder = 3
                 OnClick = btnConnectClick
               end
+              object cbDatabaseName: TComboBox
+                Left = 136
+                Height = 33
+                Top = 8
+                Width = 200
+                AutoComplete = True
+                AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+                ItemHeight = 25
+                TabOrder = 0
+                OnExit = cbDatabaseNameExit
+              end
+              object cbUserName: TComboBox
+                Left = 136
+                Height = 33
+                Top = 48
+                Width = 200
+                AutoComplete = True
+                AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+                ItemHeight = 25
+                TabOrder = 1
+                OnExit = cbUserNameExit
+              end
             end
             object gbGetData: TGroupBox
               Left = 8
-              Height = 128
-              Top = 264
+              Height = 80
+              Top = 232
               Width = 345
               Anchors = [akTop, akLeft, akRight]
               Caption = 'gbGetData'
-              ClientHeight = 98
+              ClientHeight = 50
               ClientWidth = 341
               ParentBackground = False
               TabOrder = 1
               object btnGetData: TButton
                 Left = 8
                 Height = 38
-                Top = 56
+                Top = 8
                 Width = 328
                 Caption = 'btnGetData'
                 Enabled = False
                 TabOrder = 0
                 OnClick = btnGetDataClick
               end
-              object edtOrganizationName: TEdit
-                Left = 136
-                Height = 33
-                Top = 8
-                Width = 200
-                TabOrder = 1
-                Text = 'edtOrganizationName'
+            end
+            object gbExport: TGroupBox
+              Left = 8
+              Height = 136
+              Top = 320
+              Width = 345
+              Anchors = [akTop, akLeft, akRight]
+              Caption = 'gbExport'
+              ClientHeight = 106
+              ClientWidth = 341
+              ParentBackground = False
+              TabOrder = 2
+              object btnExportToFile: TButton
+                Left = 8
+                Height = 38
+                Top = 56
+                Width = 328
+                Caption = 'btnExportToFile'
+                TabOrder = 0
+                OnClick = btnExportToFileClick
               end
               object lblOrganizationName: TLabel
                 Left = 8
@@ -234,34 +246,27 @@ object frmMain: TfrmMain
                 Width = 168
                 Caption = 'lblOrganizationName'
               end
-            end
-            object gbExport: TGroupBox
-              Left = 8
-              Height = 121
-              Top = 408
-              Width = 345
-              Anchors = [akTop, akLeft, akRight]
-              Caption = 'gbExport'
-              ClientHeight = 91
-              ClientWidth = 341
-              ParentBackground = False
-              TabOrder = 2
-              object btnExportToFile: TButton
-                Left = 8
-                Height = 38
+              object cbOrganizationName: TComboBox
+                Left = 136
+                Height = 33
                 Top = 8
-                Width = 328
-                Caption = 'btnExportToFile'
-                TabOrder = 0
-                OnClick = btnExportToFileClick
-              end
-              object ProgressBar: TProgressBar
-                Left = 8
-                Height = 30
-                Top = 56
-                Width = 328
+                Width = 200
+                Anchors = [akLeft, akBottom]
+                AutoComplete = True
+                AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+                ItemHeight = 25
                 TabOrder = 1
+                OnExit = cbOrganizationNameExit
               end
+            end
+            object ProgressBar: TProgressBar
+              Left = 8
+              Height = 22
+              Top = 512
+              Width = 345
+              Anchors = [akLeft, akRight, akBottom]
+              Smooth = True
+              TabOrder = 3
             end
           end
           object pnlPrepareData: TPanel
@@ -278,15 +283,16 @@ object frmMain: TfrmMain
             ParentBackground = False
             ParentColor = False
             TabOrder = 1
+            OnResize = pnlPrepareDataResize
             object pnlDataGrid: TPanel
               Left = 0
-              Height = 344
+              Height = 400
               Top = 0
               Width = 846
               Align = alTop
               BevelOuter = bvNone
               Caption = 'pnlDataGrid'
-              ClientHeight = 344
+              ClientHeight = 400
               ClientWidth = 846
               Color = clSkyBlue
               ParentBackground = False
@@ -294,58 +300,79 @@ object frmMain: TfrmMain
               TabOrder = 0
               object dbgSewerData: TDBGrid
                 Left = 8
-                Height = 270
+                Height = 326
                 Top = 16
                 Width = 834
                 Anchors = [akTop, akLeft, akRight, akBottom]
                 Color = clWindow
                 Columns = <>
-                Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgHeaderHotTracking, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert, dgDblClickAutoSize, dgDisplayMemoText]
+                Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgHeaderHotTracking, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert, dgThumbTracking, dgDblClickAutoSize, dgDisplayMemoText]
                 TabOrder = 0
               end
               object btnExportDbgridToCsv: TButton
                 Left = 729
                 Height = 38
-                Top = 296
+                Top = 352
                 Width = 113
                 Anchors = [akRight, akBottom]
                 Caption = 'btnExportDbgridToCsv'
                 TabOrder = 1
                 OnClick = btnExportDbgridToCsvClick
               end
+              object DBNavigator: TDBNavigator
+                Left = 8
+                Height = 38
+                Top = 352
+                Width = 362
+                Anchors = [akLeft, akBottom]
+                BevelOuter = bvNone
+                ChildSizing.EnlargeHorizontal = crsScaleChilds
+                ChildSizing.EnlargeVertical = crsScaleChilds
+                ChildSizing.ShrinkHorizontal = crsScaleChilds
+                ChildSizing.ShrinkVertical = crsScaleChilds
+                ChildSizing.Layout = cclLeftToRightThenTopToBottom
+                ChildSizing.ControlsPerLine = 100
+                ClientHeight = 38
+                ClientWidth = 362
+                Options = []
+                TabOrder = 2
+                VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast]
+              end
             end
-            object Splitter2: TSplitter
+            object SplitterdataGrid: TSplitter
               Cursor = crVSplit
               Left = 0
               Height = 10
-              Top = 344
+              Top = 400
               Width = 846
               Align = alTop
               ResizeAnchor = akTop
+              OnMoved = SplitterdataGridMoved
             end
-            object pnlProgress: TPanel
+            object pnlProgressExport: TPanel
               Left = 0
-              Height = 194
-              Top = 354
+              Height = 138
+              Top = 410
               Width = 846
               Align = alClient
               BevelOuter = bvNone
-              Caption = 'pnlProgress'
-              ClientHeight = 194
+              Caption = 'pnlProgressExport'
+              ClientHeight = 138
               ClientWidth = 846
               Color = 13006080
               ParentBackground = False
               ParentColor = False
               TabOrder = 2
-              object Panel2: TPanel
+              OnResize = pnlProgressExportResize
+              object pnlProgress: TPanel
                 Left = 0
-                Height = 194
+                Height = 138
                 Top = 0
                 Width = 500
                 Align = alLeft
                 BevelOuter = bvNone
-                Caption = 'Panel2'
-                ClientHeight = 194
+                Caption = 'pnlProgress'
+                ClientHeight = 138
                 ClientWidth = 500
                 Color = clSkyBlue
                 ParentBackground = False
@@ -353,7 +380,7 @@ object frmMain: TfrmMain
                 TabOrder = 0
                 object memReportProgress: TMemo
                   Left = 8
-                  Height = 144
+                  Height = 64
                   Top = 40
                   Width = 485
                   Anchors = [akTop, akLeft, akRight, akBottom]
@@ -364,29 +391,38 @@ object frmMain: TfrmMain
                   ScrollBars = ssAutoBoth
                   TabOrder = 0
                 end
-                object lblProgress: TLabel
+                object lblProgressTitle: TLabel
                   Left = 8
                   Height = 25
                   Top = 8
+                  Width = 120
+                  Caption = 'lblProgressTitle'
+                end
+                object lblProgress: TLabel
+                  Left = 8
+                  Height = 25
+                  Top = 108
                   Width = 88
+                  Anchors = [akLeft, akBottom]
                   Caption = 'lblProgress'
                 end
               end
-              object Splitter3: TSplitter
+              object SplitterMemos: TSplitter
                 Left = 500
-                Height = 194
+                Height = 138
                 Top = 0
                 Width = 10
+                OnMoved = SplitterMemosMoved
               end
-              object Panel3: TPanel
+              object pnlError: TPanel
                 Left = 510
-                Height = 194
+                Height = 138
                 Top = 0
                 Width = 336
                 Align = alClient
                 BevelOuter = bvNone
-                Caption = 'Panel3'
-                ClientHeight = 194
+                Caption = 'pnlError'
+                ClientHeight = 138
                 ClientWidth = 336
                 Color = clSkyBlue
                 ParentBackground = False
@@ -394,7 +430,7 @@ object frmMain: TfrmMain
                 TabOrder = 2
                 object memReportError: TMemo
                   Left = 8
-                  Height = 144
+                  Height = 64
                   Top = 40
                   Width = 323
                   Anchors = [akTop, akLeft, akRight, akBottom]
@@ -414,11 +450,12 @@ object frmMain: TfrmMain
               end
             end
           end
-          object Splitter1: TSplitter
+          object SplitterDataSettings: TSplitter
             Left = 361
             Height = 548
             Top = 1
             Width = 10
+            OnMoved = SplitterDataSettingsMoved
           end
         end
       end
@@ -464,7 +501,6 @@ object frmMain: TfrmMain
               Top = 8
               Width = 840
               TabOrder = 0
-              Text = 'edtMappingsFile'
             end
             object BitBtnSelectMappingsFile: TBitBtn
               AnchorSideLeft.Control = edtMappingsFile
@@ -491,12 +527,8 @@ object frmMain: TfrmMain
               Top = 51
               Width = 177
               ItemHeight = 25
-              Items.Strings = (
-                'GWSW versie 1.6'
-              )
               ReadOnly = True
               TabOrder = 2
-              Text = 'cbGWSWVersion'
             end
           end
         end
@@ -970,6 +1002,9 @@ object frmMain: TfrmMain
               MouseTextActions = <>
               MouseSelActions = <>
               Lines.Strings = (
+                '-- Dit is een voorbeeld.'
+                '-- Maak eerst een goede query en sla die op. Daarna werkt het ophalen van de data.'
+                ''
                 'Select'
                 '    ''LEIDING'' as OBJECT_TYPE,'
                 '    l.id, -- gebruikt bij debug, worder verder niets mee gedaan.'
@@ -993,13 +1028,13 @@ object frmMain: TfrmMain
                 '    NULL as MAAIVELD,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
                 '    l.aanlegjaar as BEGINDATUM,'#9#9#9#9#9#9#9#9'--> aanlegjaar, wordt omgezet naar een datum.'
                 '    NULL as EINDDATUM,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                '    ''GEMETEN'' as WIJZE_INWINNING,'#9#9#9#9#9#9#9'--> type = string / varchar.  --> is (nog) niet geïmplementeerd.'
                 '    l.bob_begin_actueel as BOB_BEGIN,'#9#9#9#9#9#9'--> type = double.'
                 '    l.bob_eind_actueel as BOB_EIND,'#9#9#9#9#9#9#9'--> type = double.'
                 '    NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> Nog niet ingebouwd'
                 '    NULL as TYPE_REINIGING,                                 --> n.v.t. (velden gelijk houden voor union)'
                 '    NULL as VERBINDINGSTYPE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 '    NULL as FUNDERING,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'WION_THEMA as WIBON_THEMA,'
                 '    NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 '    NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 '    NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
@@ -1018,7 +1053,6 @@ object frmMain: TfrmMain
                 '--AND l.id = 69719'
                 ''
                 'UNION ALL'
-                ''
                 ''
                 'SELECT'
                 '    ''PUT'' as OBJECT_TYPE,'
@@ -1039,17 +1073,17 @@ object frmMain: TfrmMain
                 '    p.vorm_gwsw as VORM,'
                 '    null as STATUS_FUNCTIONEREN,'
                 '    COALESCE(p.std_rioolputtype, p.RIOOLPUTSUBTYPE_GWSW,  p.RIOOLPUTTYPE_GWSW)  as PUT_TYPE,'
-                #9'NULL as KOLK_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'#9
+                #9'NULL as KOLK_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
                 '    p.maaiveldhoogte_actueel as MAAIVELD,'
                 '    p.aanlegjaar as BEGINDATUM,'
                 #9'NULL as EINDDATUM,'
-                '    ''GEMETEN'' as WIJZE_INWINNING,'
                 '    NULL as BOB_BEGIN,'
                 '    NULL as BOB_EIND,'
                 #9'NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as TYPE_REINIGING,                                 --> N.v.t., niet geïmplenteerd'
                 #9'NULL as VERBINDINGSTYPE,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as FUNDERING,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
@@ -1092,16 +1126,16 @@ object frmMain: TfrmMain
                 '    NULL as MAAIVELD,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
                 '    pl.aanlegjaar as BEGINDATUM,'#9#9#9#9#9#9#9#9'--> aanlegjaar, wordt omgezet naar een datum.'
                 #9'NULL as EINDDATUM,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                '    NULL as WIJZE_INWINNING,'#9#9#9#9#9#9#9#9'--> type = string / varchar.  --> is (nog) niet geïmplementeerd.'
                 '    NULL as BOB_BEGIN,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
                 '    NULL as BOB_EIND,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
                 #9'NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> Nog niet ingebouwd'
                 '    NULL as TYPE_REINIGING,                                 --> n.v.t. (velden gelijk houden voor union)'
                 #9'NULL as VERBINDINGSTYPE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as FUNDERING,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as AANTAL_WONINGEN,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
@@ -1146,13 +1180,13 @@ object frmMain: TfrmMain
                 '    NULL as MAAIVELD,'
                 '    NULL as BEGINDATUM,'
                 '    NULL as EINDDATUM,'
-                '    ''GEMETEN'' as WIJZE_INWINNING,'
                 '    NULL as BOB_BEGIN,'
                 '    NULL as BOB_EIND,'
                 '    k.wanddikte as WANDDIKTE,'
                 '    k.TYPE_REINIGING as TYPE_REINIGING, -- zit niet in de ttl'
                 '    NULL as VERBINDINGSTYPE,'
                 '    NULL as FUNDERING,'
+                #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as DATUM_INSPECTIE,'
                 '    NULL as DATUM_REINIGING,  -- TYPE_REINIGING overslaan, is geen datum'
                 '    NULL as WIONTHEMA,'
@@ -1188,27 +1222,27 @@ object frmMain: TfrmMain
                 '    NULL as VORM,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as STATUS_FUNCTIONEREN,'#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as PUT_TYPE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as KOLK_TYPE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as KOLK_TYPE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as MAAIVELD,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as BEGINDATUM,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as EINDDATUM,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                '    NULL as WIJZE_INWINNING,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as EINDDATUM,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as BOB_BEGIN,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as BOB_EIND,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as WANDDIKTE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as WANDDIKTE,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as TYPE_REINIGING,                 --> N.v.t., niet geïmplenteerd'
-                #9'NULL as VERBINDINGSTYPE,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as FUNDERING,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as DATUM_INSPECTIE,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as DATUM_REINIGING,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as WIONTHEMA,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as AANTAL_WONINGEN,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as AFVOEREND_OPPERVLAK,'#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as LATERAALDEBIET_DWA,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as LATERAALDEBIET_HWA,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as VERBINDINGSTYPE,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as FUNDERING,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as DATUM_INSPECTIE,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as DATUM_REINIGING,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as WIONTHEMA,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as AANTAL_WONINGEN,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as AANTAL_IE_RECREATIE,'#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as AFVOEREND_OPPERVLAK,'#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as LATERAALDEBIET_DWA,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as LATERAALDEBIET_HWA,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
+                '    NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as WKT_GEOMETRY,'#9#9#9#9#9'--> type = string / varchar.'
                 '    s.OBJECT_GUID as STELSEL_ID'#9#9#9#9'--> type = string / varchar.'
                 'FROM gv_stelsel s'
@@ -1240,6 +1274,8 @@ object frmMain: TfrmMain
                   MouseActions = <>
                   MaxExtraMarksColums = 0
                   Options = [sgmoDeDuplicateMarksOnOverflow]
+                  MarkupInfo.Background = clBtnFace
+                  MarkupInfo.Foreground = clNone
                 end
                 object SynGutterLineNumber1: TSynGutterLineNumber
                   Width = 31
@@ -1256,6 +1292,9 @@ object frmMain: TfrmMain
                   MouseActions = <>
                   ModifiedColor = 59900
                   SavedColor = clGreen
+                  MarkupInfo.Background = clNone
+                  MarkupInfo.Foreground = clGreen
+                  MarkupInfo.FrameColor = 59900
                 end
                 object SynGutterSeparator1: TSynGutterSeparator
                   Width = 3
@@ -1293,6 +1332,14 @@ object frmMain: TfrmMain
               TabOrder = 2
               OnClick = btnOpenQueryClick
             end
+            object lblSQLFileLocation: TLabel
+              Left = 136
+              Height = 25
+              Top = 487
+              Width = 144
+              Anchors = [akLeft, akBottom]
+              Caption = 'lblSQLFileLocation'
+            end
           end
         end
       end
@@ -1329,6 +1376,10 @@ object frmMain: TfrmMain
   object SynSQLSyn1: TSynSQLSyn
     DefaultFilter = 'SQL Files (*.sql)|*.sql'
     Enabled = False
+    CommentAttri.Foreground = clGreen
+    KeyAttri.Foreground = clBlue
+    NumberAttri.Foreground = clPurple
+    StringAttri.Foreground = clMaroon
     SQLDialect = sqlSybase
     Left = 1072
     Top = 168

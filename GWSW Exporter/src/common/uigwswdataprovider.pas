@@ -23,7 +23,8 @@ type
     function GetObjectType: string;
 
     // Metadata
-    function GetRecordCount: Integer;
+    function GetAccurateRecordCount: Integer;
+    function GetRecordCount: Integer;  // alleen nog als falback voor GetAccurateRecordCount (kan weg)
     function GetProviderType: string;
   end;
 

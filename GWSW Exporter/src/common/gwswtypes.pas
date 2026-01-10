@@ -1,12 +1,12 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit GWSWTypes;
+
+{$mode objfpc}
+{$modeswitch advancedrecords}
 
 interface
 
 type
-  // Wijze van inwinning ==> Nog opzoeken en implementeren  EN in extern bestand zetten
-  TGWSWWijzeInwinning = (wiGemeten, wiBerekend, wiGeschat, wiOntwerp, wiOnbekend);
-
   // Pointer types voor TList per object
   PGWSWPut = ^TGWSWPut;
   PGWSWLeiding = ^TGWSWLeiding;
@@ -16,55 +16,59 @@ type
 
   // Rioolput
   TGWSWPut = record
-    GUID: string;  // OBJECT_GUID
-    aLabel: string;
+    GUID: String;  // OBJECT_GUID
+    aLabel: String;
     PutTypeUri: String;
     Breedte: Integer;  // in mm
     Lengte: Integer;   // in mm
     Hoogte: Integer;   // in mm
     Diameter: Integer;
-    MateriaalURI: string;
-    VormURI: string;
+    MateriaalURI: String;
+    VormURI: String;
+    FunderingUri: String;
     Maaiveldhoogte: Double;
     Begindatum: TDateTime;
-    WijzeInwinning: TGWSWWijzeInwinning;
-    StelselID: string;  //
-    StelselURI: string;
-    Stelselnaam: string;
+    Einddatum: TDateTime;
+    StelselID: String;  //
+    StelselURI: String;
+    Stelselnaam: String;
     // Topologie
     X: Double;
     Y: Double;
     Z: Double;
     HasOrientation: Boolean;
-    WKTGeometry: string;  // Bewaar de originele WKT
+    WKTGeometry: String;  // Bewaar de originele WKT
     HasWKTGeometry: Boolean; // Flag om aan te geven of WKT beschikbaar is
   end;
 
   // Rioolstreng / vrijvervalleiding
   TGWSWLeiding = record
-  GUID: string;  // OBJECT_GUID
-  aLabel: string;
+  GUID: String;  // OBJECT_GUID
+  aLabel: String;
   LeidingTypeURI: String;
-  BeginPutID: string;
-  EindPutID: string;
+  BeginPutID: String;
+  EindPutID: String;
   Lengte: Double;
   Breedte: Integer;
   Hoogte: Integer;
   Diameter: Integer;
-  MateriaalURI: string;
-  VormURI: string;
-  StatusFunctionerenURI: string;
+  MateriaalURI: String;
+  VormURI: String;
+  FunderingUri: String;
+  StatusFunctionerenURI: String;
+  WibonUri: String;
   Begindatum: TDate;  // Let op dit is aanleg jaar en dan omgezet naar 1 januari.
+  Einddatum: TDateTime;
   BobBegin: Double;
   BobEind: Double;
-  WijzeInwinning: TGWSWWijzeInwinning;
   HasMultipleVertices: Boolean;
   Vertices: array of array[0..2] of Double;
-  StelselID: string;  //
-  StelselURI: string;
-  Stelselnaam: string;  // Naam van het stelsel voor rdfs:label
+  StelselID: String;  //
+  StelselURI: String;
+  Stelselnaam: String;  // Naam van het stelsel voor rdfs:label
+
   // Topologie
-  WKTGeometry: string;
+  WKTGeometry: String;
   HasWKTGeometry: Boolean;
   BeginPutX, BeginPutY, BeginPutZ: Double;
   EindPutX, EindPutY, EindPutZ: Double;
@@ -72,57 +76,56 @@ end;
 
   // Stelsel type
   TGWSWStelsel = record
-    GUID: string;           // OBJECT_GUID
-    aLabel: string;         // STELSELCODE
+    GUID: String;           // OBJECT_GUID
+    aLabel: String;         // STELSELCODE
     StelselNaam: String;    // STELSELNAAM
-    StelselTypeUri: string;
+    StelselTypeUri: String;
     HasParts: Boolean;
   end;
 
   // Kolk
   TGWSWKolk = record
-     GUID: string;
-     aLabel: string;
+     GUID: String;
+     aLabel: String;
      KolkTypeUri: String;
      Breedte: Integer;
      Lengte: Integer;
      Hoogte: Integer;
      Diameter: Integer;
-     MateriaalURI: string;
-     VormURI: string;
+     MateriaalURI: String;
+     VormURI: String;
      Wanddikte: Integer;
      // Topologie
      X: Double;
      Y: Double;
      Z: Double;
      HasOrientation: Boolean;
-     WKTGeometry: string;
+     WKTGeometry: String;
      HasWKTGeometry: Boolean;
    end;
 
   // Persleiding
   TGWSWPersleiding = record
-      GUID: string;  // OBJECT_GUID
-      aLabel: string;
+      GUID: String;  // OBJECT_GUID
+      aLabel: String;
       PersleidingTypeURI: String;
       VormURI: String;
-      BeginPutID: string;
-      EindPutID: string;
+      BeginPutID: String;
+      EindPutID: String;
       Lengte: Double;
       Diameter: Integer;
       Breedte: Integer;
       Hoogte: Integer;
-      MateriaalURI: string;
-      StatusFunctionerenURI: string;
+      MateriaalURI: String;
+      StatusFunctionerenURI: String;
       Begindatum: TDate;
       BobBegin: Double;
       BobEind: Double;
-      WijzeInwinning: TGWSWWijzeInwinning;
 
       // Geometrie specifiek voor persleiding (kan meerdere vertices hebben)
       HasMultipleVertices: Boolean;
       Vertices: array of array[0..2] of Double;  // X, Y, Z voor elk vertex
-      WKTGeometry: string;
+      WKTGeometry: String;
       HasWKTGeometry: Boolean;
 
       // Topologie coördinaten
@@ -130,11 +133,18 @@ end;
       EindPutX, EindPutY, EindPutZ: Double;
 
       // Stelsel relatie
-      StelselID: string;
-      StelselURI: string;
-      Stelselnaam: string;
+      StelselID: String;
+      StelselURI: String;
+      Stelselnaam: String;
     end;
 
+  // Validate
+  TGWSWConfig = record
+    PutMinBreedte: Integer;
+    PutMaxBreedte: Integer;
+  end;
+
 implementation
+
 
 end.

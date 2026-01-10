@@ -1,9 +1,9 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit model.base;
 {$mode ObjFPC}{$H+}
 {$ModeSwitch advancedrecords}
 interface
-uses classes,sysutils,obs_prosu,common.consts;
+uses classes,sysutils,{obs_prosu,}common.consts;
 
 type
 {$interfaces corba}
@@ -79,8 +79,19 @@ type
       setReadFormState: Boolean;
       setMessage: String;
       setMappingFile: String;
-      setDisableErrorReport: Boolean;
       setSqlFileLocation: String;
+      setSplitterDataSettings,
+      setSplitterdataGrid,
+      setSplitterMemos: Integer;
+      setDbGridRowHighlight,
+      setAskToOpenExportFile,
+      setKeepLastOrganization: Boolean;
+      setLastUsedOrganization: String;
+      setRapportMappingError,
+      setRapportFatalError,
+      setRapportFieldIsEmpty,
+      setRapportFieldIsMissing,
+      setRapportOutOfRange: Boolean;
     end;
 
     PSingleSettingRec = ^TSingleSettingRec;
@@ -122,12 +133,23 @@ type
     TExportToOroxTtlFileRec = record
       FileName,
       MappingFile,
-      OrganizationName: String;
+      OrganizationName,
+      Version: String;
       Success: Boolean;
       Message: String;
     end;
 
+    PUniqueStringlistRec = ^TUniqueStringlistRec;
+    TUniqueStringlistRec = record
+      ListItems: TStrings;
+      NewString: String;
+    end;
 
+    PExportInProgressRec = ^TExportInProgressRec;
+    TExportInProgressRec = record
+      IsInProgress: Boolean;
+      aParent: TObject;
+    end;
 
 { ---------------------------------------------------------------------------- }
   { TTransaction is our container vessel for changes }

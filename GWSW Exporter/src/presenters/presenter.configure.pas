@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit presenter.configure;
 {$mode ObjFPC}{$H+}
 {$define dbg}

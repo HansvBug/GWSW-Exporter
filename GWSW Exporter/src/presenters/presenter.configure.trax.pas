@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit presenter.configure.trax;
 {$mode objfpc}{$H+}
 {.$define dbg}
@@ -20,7 +20,9 @@ type
     private
       fActivateLogging: Boolean;
       fAppendLogging: Boolean;
-      fDisableErrorReport : Boolean;
+      fAskToOpenExportFile : Boolean;
+      fDbGridRowHighlight : Boolean;
+      fKeepLastOrganization: Boolean;
       fLanguage: String;
 
       fAppName: string;
@@ -36,6 +38,11 @@ type
       fFrmRestoredLeft,
       fFrmRestoredTop,
       fFrmRestoredWidth: Integer;
+      fRapportFatalError: Boolean;
+      fRapportFieldIsEmpty: Boolean;
+      fRapportFieldIsMissing: Boolean;
+      fRapportMappingError: Boolean;
+      fRapportOutOfRange: Boolean;
       fRead: Boolean;
       fReadFrmState: Boolean;
       fSettingsFile: String;
@@ -71,8 +78,16 @@ type
       property FormRestoredHeight: Integer read fFrmRestoredHeight write fFrmRestoredHeight;
       property FormRestoredWidth: Integer read fFrmRestoredWidth write fFrmRestoredWidth;
 
-      property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
       property SqlFileLocation: String read fSqlFileLocation write fSqlFileLocation;
+      property DbGridRowHighlight: Boolean read fDbGridRowHighlight write fDbGridRowHighlight;
+      property AskToOpenExportFile: Boolean read fAskToOpenExportFile write fAskToOpenExportFile;
+      property KeepLastOrganization: Boolean read fKeepLastOrganization write fKeepLastOrganization;
+
+      property RapportMappingError: Boolean read fRapportMappingError write fRapportMappingError;
+      property RapportFatalError: Boolean read fRapportFatalError write fRapportFatalError;
+      property RapportFieldIsEmpty: Boolean read fRapportFieldIsEmpty write fRapportFieldIsEmpty;
+      property RapportFieldIsMissing: Boolean read fRapportFieldIsMissing write fRapportFieldIsMissing;
+      property RapportOutOfRange: Boolean read fRapportOutOfRange write fRapportOutOfRange;
     end;
 
 
@@ -126,7 +141,6 @@ begin
         lRec:= aMgr.OwnerConfig.Model.ReadSettings(@lRec);
         lRec.setFrmName:= FormName;
 
-
         aMgr.OwnerConfig.Provider.NotifySubscribers(prAppSettingsConfig, Self, @lRec);
       end;
     end
@@ -158,9 +172,18 @@ begin
         lRec.setApplicationName:= ApplicationName;
         lRec.setApplicationVersion:= Application_version;
         lRec.setApplicationBuildDate:= Application_build_date;
-
-        lRec.setDisableErrorReport:= DisableErrorReport;
         lRec.setSqlFileLocation:= SqlFileLocation;
+        lRec.setDbGridRowHighlight:= DbGridRowHighlight;
+        lRec.setAskToOpenExportFile:= AskToOpenExportFile;
+        lRec.setKeepLastOrganization:= KeepLastOrganization;
+
+        lRec.setRapportMappingError:= RapportMappingError;
+        lRec.setRapportFatalError:= RapportFatalError;
+        lRec.setRapportFieldIsEmpty:= RapportFieldIsEmpty;
+        lRec.setRapportFieldIsMissing:= RapportFieldIsMissing;
+        lRec.setRapportOutOfRange:= RapportOutOfRange;
+
+        // new settings...
 
         lRec:= aMgr.OwnerConfig.Model.WriteSettings(@lRec);
         aMgr.OwnerConfig.Provider.NotifySubscribers(prAppSettingsConfig, Self, @lRec);

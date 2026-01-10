@@ -143,7 +143,6 @@ type
   end;
 
   { TExportToOroxTtlFileTrx }
-
   TExportToOroxTtlFileTrx = class(TTransaction, ITrxExec)
     private
       fDisableErrorReport : Boolean;
@@ -152,6 +151,7 @@ type
       fMessage : String;
       fOrganizationName : String;
       fSuccess : Boolean;
+      fVersion : String;
     public
       function Execute(aMgr: ITransactionManager): boolean;
 
@@ -159,10 +159,28 @@ type
       property MappingFile: String read fMappingFile write fMappingFile;
       property OrganizationName: String read fOrganizationName write fOrganizationName;
       property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
+      property Version: String read fVersion write fVersion;
       property Success: Boolean read fSuccess write fSuccess;
       property Message: String read fMessage write fMessage;
   end;
 
+  { TUniqueStringlistTrx }
+
+  TUniqueStringlistTrx = class(TTransaction, ITrxExecNoRes)
+    private
+      faComponent : TObject;
+      fListItems : TStrings;
+      fNewString : String;
+
+    public
+      constructor {%H-}Create(aModReason: word);
+      destructor Destroy; override;
+      procedure Execute(aMgr: ITransactionManager);
+
+      property ListItems: TStrings read fListItems write fListItems;
+      property NewString: String read fNewString write fNewString;
+      property aComponent: TObject read faComponent write faComponent;
+  end;
 
 implementation
 // uses StrUtils; { for: 'IndexText' etc... }
@@ -278,7 +296,6 @@ begin
         lRec.setApplicationBuildDate:= AppBuildDate;
         lRec.setWriteSettings:= WriteSettings;
 
-
         lRec:= aMgr.OwnerMain.Model.ReadSettings(@lRec);
 
         aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
@@ -303,6 +320,9 @@ begin
         aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
       end
       else begin // Write the regular settings.
+        lRec.setApplicationName:= Application_build_date;
+        lRec.setApplicationVersion:= Application_version;
+        lRec.setApplicationBuildDate:= Application_build_date;
         lRec.setActivateLogging:= ActivateLogging;
         lRec.setAppendLogging:= AppendLogging;
         lRec.setLanguage:= Language;
@@ -362,7 +382,7 @@ begin
   else begin
     Result:= False;
     lRec.DataSource:= Nil;
-    lRec.Message:= 'SQL file not found.';
+    lRec.Message:= 'QueryFileNotLoaded';
   end;
 
   if Result then begin
@@ -382,10 +402,50 @@ begin
   lRec.OrganizationName:= OrganizationName;
   lRec.FileName:= FileName;
   lRec.MappingFile:= MappingFile;
+  lRec.Version:= Version;
 
   lRec:= aMgr.OwnerMain.Model.ExportToOroxTtlFile(@lRec);
 
   aMgr.OwnerMain.Provider.NotifySubscribers(prExportToOroxTtlFile, Nil, @lRec);
+end;
+
+{ TUniqueStringlistTrx }
+
+constructor TUniqueStringlistTrx.Create(aModReason : word);
+begin
+  fModReason:= aModReason;
+  fListItems:= Nil; //TStringList.Create;
+ // fListItems.SkipLastLineBreak:= True;
+end;
+
+destructor TUniqueStringlistTrx.Destroy;
+begin
+  //fListItems.Free;
+  inherited Destroy;
+end;
+
+procedure TUniqueStringlistTrx.Execute(aMgr : ITransactionManager);
+var
+  lRec: TUniqueStringlistRec;
+  tempList: TStringList;
+begin
+  tempList:= TStringList.Create;
+  try
+    tempList.Text:= fListItems.Text;
+
+    if (NewString <> '') and (tempList.IndexOf(NewString) = -1) then
+      tempList.Add(NewString);
+
+    lRec.ListItems:= tempList;
+    //lRec:= aMgr.OwnerMain.Model.AddToStringListUnique(NewString, fListItems.Text);
+    aMgr.OwnerMain.Provider.NotifySubscribers(prUniqueStringlist, aComponent, @lRec);
+  finally
+    tempList.Free;
+  end;
+
+
+
+
 end;
 
 procedure InitTrax;

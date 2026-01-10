@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 {
   Settings.pas - Application Configuration Manager
 
@@ -40,14 +40,25 @@ type
   private
     { Configuration fields. }
     fAppendLogFile: Boolean;
-    fDisableErrorReport : Boolean;
+    fAskToOpenExportFile : Boolean;
+    fDbGridRowHighlight : Boolean;
+    fKeepLastOrganization: Boolean;
     fLanguage: String;
+    fLastUsedOrganization: String;
     fMappingFile : String;
+    fRapportFatalError: Boolean;
+    fRapportFieldIsEmpty: Boolean;
+    fRapportFieldIsMissing: Boolean;
+    fRapportMappingError: Boolean;
+    fRapportOutOfRange: Boolean;
     fSettingsFile: String;
     fAppName: String;
     fAppVersion: String;
     fAppBuildDate: String;
     fActivateLogging: Boolean;
+    fSplitterDataSettings,
+    fSplitterdataGrid: Integer;
+    fSplitterMemos : Integer;
     fSqlFileLocation : String;
     fSucces: Boolean;
 
@@ -109,8 +120,20 @@ type
     property ActivateLogging: Boolean read fActivateLogging write fActivateLogging;
     property AppendLogFile: Boolean read fAppendLogFile write fAppendLogFile;
     property MappingFile: String read fMappingFile write fMappingFile;
-    property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
     property SqlFileLocation: String read fSqlFileLocation write fSqlFileLocation;
+    property SplitterDataSettings: Integer read fSplitterDataSettings write fSplitterDataSettings;
+    property SplitterDataGrid: Integer read fSplitterDataGrid write fSplitterDataGrid;
+    property SplitterMemos: Integer read fSplitterMemos write fSplitterMemos;
+    property DbGridRowHighlight: Boolean read fDbGridRowHighlight write fDbGridRowHighlight;
+    property AskToOpenExportFile: Boolean read fAskToOpenExportFile write fAskToOpenExportFile;
+    property KeepLastOrganization: Boolean read fKeepLastOrganization write fKeepLastOrganization;
+    property LastUsedOrganization: String read fLastUsedOrganization write fLastUsedOrganization;
+
+    property RapportMappingError: Boolean read fRapportMappingError write fRapportMappingError;
+    property RapportFatalError: Boolean read fRapportFatalError write fRapportFatalError;
+    property RapportFieldIsEmpty: Boolean read fRapportFieldIsEmpty write fRapportFieldIsEmpty;
+    property RapportFieldIsMissing: Boolean read fRapportFieldIsMissing write fRapportFieldIsMissing;
+    property RapportOutOfRange: Boolean read fRapportOutOfRange write fRapportOutOfRange;
 
     { Operation status. }
     property Succes: Boolean read fSucces write fSucces;
@@ -221,8 +244,21 @@ begin
       AppendLogFile:= ReadBool('Configure', 'AppendLogFile', True);
       Language:= ReadString('Configure', 'Language', 'en');
       MappingFile:= ReadString('Configure', 'MappingFile', '');
-      DisableErrorReport:= ReadBool('Configure', 'Disable_live_error_reporting', True);
       SqlFileLocation:= ReadString('Configure', 'SQLfileLocation', '');
+      SplitterDataSettings:= ReadInteger('Configure', 'SplitterDataSettings', 300);
+      SplitterDataGrid:= ReadInteger('Configure', 'SplitterdataGrid', 400);
+      SplitterMemos:= ReadInteger('Configure', 'SplitterMemos', 500);
+      DbGridRowHighlight:= ReadBool('Configure', 'DbGridRowHighlight', False);
+      AskToOpenExportFile:= ReadBool('Configure', 'AskToOpenExportFile', True);
+      KeepLastOrganization:= ReadBool('Configure', 'KeepLastOrganization', False);
+      LastUsedOrganization:= ReadString('Configure', 'LastUsedOrganization', '');
+
+      RapportMappingError:= ReadBool('Configure', 'RapportMappingError', True);
+      RapportFatalError:= ReadBool('Configure', 'RapportFatalError', True);
+      RapportFieldIsEmpty:= ReadBool('Configure', 'RapportFieldIsEmpty', False);
+      RapportFieldIsMissing:= ReadBool('Configure', 'RapportFieldIsMissing', True);
+      RapportOutOfRange:= ReadBool('Configure', 'RapportOutOfRange', True);
+
       // new setting...
 
       Succes:= True;
@@ -245,7 +281,6 @@ begin
   end;
 end;
 
-
 procedure TSettings.WriteSettings;
 begin
   Succes:= False;
@@ -263,9 +298,16 @@ begin
       WriteString('Configure', 'Language', Language);
 
     //... new settings
-    WriteBool('Configure', 'Disable_live_error_report', DisableErrorReport);
     WriteString('Configure', 'SQLfileLocation', SqlFileLocation);
+    WriteBool('Configure', 'DbGridRowHighlight', DbGridRowHighlight);
+    WriteBool('Configure', 'AskToOpenExportFile', AskToOpenExportFile);
+    WriteBool('Configure', 'KeepLastOrganization', KeepLastOrganization);
 
+    WriteBool('Configure', 'RapportMappingError', RapportMappingError);
+    WriteBool('Configure', 'RapportFatalError', RapportFatalError);
+    WriteBool('Configure', 'RapportFieldIsEmpty', RapportFieldIsEmpty);
+    WriteBool('Configure', 'RapportFieldIsMissing', RapportFieldIsMissing);
+    WriteBool('Configure', 'RapportOutOfRange', RapportOutOfRange);
 
     UpdateFile;
     Succes:= True;

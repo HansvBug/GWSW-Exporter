@@ -24,7 +24,8 @@ lblUserName=User
 lblPassword=Password
 lblOrganizationName=Organization
 lblGWSWVersion=GWSW version
-lblProgress=Progress log
+lblProgressTitle=Progress log
+lblProgress=-
 lblError=Error log
 btnConnect=Connect
 btnGetData=Retrieve data
@@ -32,16 +33,67 @@ btnExportDbgridToCsv=Save
 btnExportToFile=Export
 btnClose=Close
 SelectMapFile=Select a mapping file
-QueryNotActive=Query is not running. First, activate the query.
 MappingsFileIsMissing=Mapping is missing. Go to settings tab.
 SaveSqlFile=Save sql file.
 SaveCSVFile=Save CSV file.
 DlgSqlFilesFilter=SQL files|*.sql|All files|*.*
 DlgCSVFilesFilter=CSV Files (*.csv)|All files (*.*)|*.*
+DlgSaveTtlFile=GWSW-OroX Files (*.orox.ttl)|*.orox.ttl|Turtle Files (*.ttl)|*.ttl|All files (*.*)|*.*
 OpenSqlFile=Open sql file.
 chkPutGrondwaterstand=Grondwaterstand
+ExportFailed=Export failed: 
+MappingFileNotFound=Export failed, mapping file not found.
+TypeIsMissing=Type is missing from the source data. Is a mandatory part of GWSW. Check source.
+ReportError=Error: 
+ReportInfo=Info: 
+Warning=Warning
+Information=Information
+QueryNotActive=Query is not running. First, activate the query.
+MissingMappingFile=Missing mapping file.
+QueryFileNotLoaded=SQL file is not loaded.
+OrganizationNameIsBlank=Organization name can't be blank. 
+EnterDasetName=Enter the dataset name as it is known on the GWSW server.
+
+StelseltypeIsMissing=No "Stelseltype" found. Adjust source data. "Type" is mandatory, the validation on the gwsw server always expects a type.
+PuttypeIsMissing=No "Puttype" found. Adjust source data. "Type" is mandatory, the validation on the gwsw server always expects a type.
+LeidingtypeIsMissing=No "Leidingtype" found. Adjust source data. "Type" is mandatory, the validation on the gwsw server always expects a type.
+PersleidingtypeIsMissing=No "Persleidingtype" found. Adjust source data. "Type" is mandatory, the validation on the gwsw server always expects a type.
+KolktypeIsMissing=No "Kolktype" found. Adjust source data. "Type" is mandatory, the validation on the gwsw server always expects a type.
+
+MappingManhole=Mapping Manhole...
+MappingSewerSystem= Mapping Sewer system...
+MappingPipeline=Mapping Pipeline...
+MappingMechanicalPipeline=Mapping Mechanical pipeline...
+MappingGully=Mapping Gully...
+
+ManholeWidth=Manhole: Width must be between 
+ManholeLength=Manhole: Length must be between 
+ManholeHeight=Manhole: Height must be between 
+ManholeDiameter=Manhole: Diameter must be between 
+PipelineWidth=Pipe line: Width must be between 
+PipelineLength=Pipe line: Length must be between 
+PipelineHeight=Pipe line: Height must be between 
+PipelineDiameter=Pipe line: Diameter must be between 
+MechanicPipelineWidth=Mechanical pipe line: Width must be between 
+MechanicPipelineLength=Mechanical pipe line: Length must be between 
+MechanicPipelineHeight=Mechanical pipe line: Height must be between 
+MechanicPipelineDiameter=Mechanical pipe line: Diameter must be between 
+GullyWidth=Gully: Width must be between 
+GullyLength=Gully: Length must be between 
+GullyHeight=Gully: Height must be between 
+GullyDiameter=Gully: Diameter must be between 
+And= and 
+Millimeters= mm. 
+Found=Found: 
+Meters= m. 
 
 
+ExportIsCompleted=The export is complete.
+OpenFile=Open file?
+ExportIsCompleteOpenFile=Export complete. Open file?
+TotalCountRecordsExported=Export completed, %d records exported.
+ExportingNumberFromTotalCount=Exporting: %d from %d
+ExportStarted=Export started...
 
 [view.main.statusbartexts]
 Welcome=Welcome.
@@ -55,8 +107,21 @@ Connecting=Connecting...
 DbConnEstablished=Database connection established
 ErrorRetrieveData=(!) Unexpected error retrieving the data.
 RetrievingData=Retrieving data...
-fdataset=(!) Unexpected error creating the export file.
+ErrorExportToOroxTtlFile=(!) Unexpected error creating the export file.
+ErrorUniqueStringlist=(!) Unexpected error when creating the unique stringlist.
+DbConnNotInitialized=Database connection not initialized
 
+DbError=Database error
+CannotFindConnIdentifier=Cannot find the connection identifier. Check TNSNAMES.ORA.
+InvalidUserOrPwd=Invalid username/password.
+NoListener=No listener on the server.
+ListenerDoesNotKnowServer=Listener doesn''t know the service.
+SIDNotFound=SID not found.
+NUllPwd=Null password given; logon denied.
+
+ServerNotFound=Network error: Unable to find server.
+ServerNotResponding=Timeout: Server not responding.
+CheckConnection=Network Error: Check your connection.
 
 [view.main.hints]
 

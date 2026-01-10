@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 { AppLogging.pas - Advanced Logging Module
   This unit provides a thread-safe logging system with multiple log levels,
   file output, and configurable options.

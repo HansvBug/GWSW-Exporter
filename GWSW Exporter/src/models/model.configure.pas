@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit model.configure;
 {$mode ObjFPC}{$H+}
 {$WARN 6058 off : Call to subroutine "$1" marked as inline is not inlined}
@@ -184,21 +184,21 @@ begin
 
   with Result do begin
     try
-        setSettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
-        setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
-        setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
+      setSettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
+      setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
+      setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
 
-        setFrmName:= fSettings.FormName;
-        setFrmWindowState:= fSettings.FormWindowstate;
-        setFrmTop:= fSettings.FormTop;
-        setFrmLeft:= fSettings.FormLeft;
-        setFrmHeight:= fSettings.FormHeight;
-        setFrmWidth:= fSettings.FormWidth;
-        setFrmRestoredTop:= fSettings.FormRestoredTop;
-        setFrmRestoredLeft:= fSettings.FormRestoredLeft;
-        setFrmRestoredHeight:= fSettings.FormRestoredHeight;
-        setFrmRestoredWidth:= fSettings.FormRestoredWidth;
-        setSucces:= fSettings.Succes;
+      setFrmName:= fSettings.FormName;
+      setFrmWindowState:= fSettings.FormWindowstate;
+      setFrmTop:= fSettings.FormTop;
+      setFrmLeft:= fSettings.FormLeft;
+      setFrmHeight:= fSettings.FormHeight;
+      setFrmWidth:= fSettings.FormWidth;
+      setFrmRestoredTop:= fSettings.FormRestoredTop;
+      setFrmRestoredLeft:= fSettings.FormRestoredLeft;
+      setFrmRestoredHeight:= fSettings.FormRestoredHeight;
+      setFrmRestoredWidth:= fSettings.FormRestoredWidth;
+      setSucces:= fSettings.Succes;
     except on E:Exception do
       setSucces := False;
     end;
@@ -234,8 +234,15 @@ begin
     setActivateLogging := fSettings.ActivateLogging;
     setAppendLogging:= fSettings.AppendLogFile;
     setLanguage:= fSettings.Language;
-    setDisableErrorReport:= fSettings.DisableErrorReport;
     setSqlFileLocation:= fSettings.SqlFileLocation;
+    setDbGridRowHighlight:= fSettings.DbGridRowHighlight;
+    setAskToOpenExportFile:= fSettings.AskToOpenExportFile;
+    setKeepLastOrganization:= fSettings.KeepLastOrganization;
+    setRapportMappingError:= fSettings.RapportMappingError;
+    setRapportFatalError:= fSettings.RapportFatalError;
+    setRapportFieldIsEmpty:= fSettings.RapportFieldIsEmpty;
+    setRapportFieldIsMissing:= fSettings.RapportFieldIsMissing;
+    setRapportOutOfRange:= fSettings.RapportOutOfRange;
     //...
 
     setSucces:= fSettings.Succes;
@@ -274,14 +281,24 @@ function TModelConfigure.WriteSettings(Settingsdata : PSettingsRec) : TSettingsR
 begin
   if assigned(fSettings) then begin
     with PSettingsRec(Settingsdata)^ do begin
+      fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
+      fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
+      fSettings.AppBuildDate:= PSettingsRec(Settingsdata)^.setApplicationBuildDate;
       fSettings.FormName:= PSettingsRec(Settingsdata)^.setFrmName;
       fSettings.ActivateLogging:= setActivateLogging;
       fSettings.AppendLogFile:= setAppendLogging;
       if setLanguage <> '' then
         fSettings.Language:= setLanguage;
 
-      fSettings.DisableErrorReport:= setDisableErrorReport;
       fSettings.SqlFileLocation:= setSqlFileLocation;
+      fSettings.DbGridRowHighlight:= setDbGridRowHighlight;
+      fSettings.AskToOpenExportFile:= setAskToOpenExportFile;
+      fSettings.KeepLastOrganization:= setKeepLastOrganization;
+      fSettings.RapportMappingError:= setRapportMappingError;
+      fSettings.RapportFatalError:= setRapportFatalError;
+      fSettings.RapportFieldIsEmpty:= setRapportFieldIsEmpty;
+      fSettings.RapportFieldIsMissing:= setRapportFieldIsMissing;
+      fSettings.RapportOutOfRange:= setRapportOutOfRange;
       //... add new settings
 
       fSettings.SettingsFile:= setSettingsFile;

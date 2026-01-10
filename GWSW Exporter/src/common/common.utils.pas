@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit common.utils;
 
 {$mode ObjFPC}{$H+}
@@ -6,11 +6,13 @@ unit common.utils;
 interface
 
 uses
-  Classes, SysUtils, Forms {$IFDEF MSWINDOWS}, Windows {$ENDIF};
+  Classes, SysUtils, Forms {$IFDEF MSWINDOWS}, Windows {$ENDIF}, StdCtrls, Controls, ExtCtrls;
 
 function CheckFormIsEntireVisible(Rect : TRect) : TRect;
 function SetStatusbarPnlWidth(stbWidth, lpWidth, rpWidth: Integer): Integer;
 function IsFileInUse(FileName: TFileName): Boolean;
+procedure DisableChildControls(Parent: TObject);
+procedure EnableChildControls(Parent: TObject);
 
 implementation
 
@@ -65,6 +67,56 @@ begin
   if not Result then
     CloseHandle(HFileRes);
 end;
+
+procedure DisableChildControls(Parent : TObject);
+var
+  i: Integer;
+  lParent: TWinControl;
+begin
+  if not (Parent is TWinControl) then
+    Exit;
+
+  lParent:= TWinControl(Parent);
+
+  for i:= 0 to lParent.ControlCount - 1 do
+  begin
+    if lParent.Controls[i] is TButton then
+      lParent.Controls[i].Enabled := False;
+
+    if lParent.Controls[i] is TSplitter then
+      lParent.Controls[i].Enabled := False;
+
+    // If it's a container, continue recursively
+    if lParent.Controls[i] is TWinControl then
+      DisableChildControls(lParent.Controls[i]);
+  end;
+end;
+
+procedure EnableChildControls(Parent : TObject);
+var
+  i: Integer;
+  lParent: TWinControl;
+begin
+  if not (Parent is TWinControl) then
+    Exit;
+
+  lParent:= TWinControl(Parent);
+
+  for i:= 0 to lParent.ControlCount - 1 do
+  begin
+
+    if lParent.Controls[i] is TButton then
+      lParent.Controls[i].Enabled:= True;
+
+    if lParent.Controls[i] is TSplitter then
+      lParent.Controls[i].Enabled:= True;
+
+    // // If it's a container, continue recursively
+    if lParent.Controls[i] is TWinControl then
+      EnableChildControls(lParent.Controls[i]);
+  end;
+end;
+
 {$ENDIF}
 {$IFDEF LINUX}
 { #note : Dit werkt ook voor Windows. }

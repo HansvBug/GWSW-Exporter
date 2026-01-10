@@ -9,6 +9,13 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+## [0.4.0] - 2025-01-10
+### Added
+- First workable version with some validation.
+- Initial validation framework for geometry and attribute constraints.
+- Option to toggle specific validation checks on/off.
+- New supported fields for manholes and conduits: end date and foundation.
+- Minor improvements.
 
 ## [0.3.0] - 2025-12-24
 ### Added

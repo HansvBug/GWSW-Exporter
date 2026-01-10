@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit view.configure;
 
 {$mode ObjFPC}{$H+}
@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-  Buttons, istrlist, model.intf, model.decl, presenter.configure,
+  Buttons, ExtCtrls, istrlist, model.intf, model.decl, presenter.configure,
   presenter.configure.trax, common.utils;
 
 type
@@ -15,17 +15,29 @@ type
   { TfrmConfigure }
 
   TfrmConfigure = class(TForm, IViewConfigure)
-    BitBtnQueryFileLocation : TBitBtn;
-    btnClose : TButton;
-    chkActiveLogging : TCheckBox;
-    chkAppendLogging : TCheckBox;
-    chkDisableErrorReport : TCheckBox;
-    edtSqlFileLocation : TEdit;
-    gbLogging : TGroupBox;
-    lblQueryFileLocation : TLabel;
-    pgcConfigure : TPageControl;
+    BitBtnQueryFileLocation: TBitBtn;
+    btnClose: TButton;
+    chkAskToOpenExportFile: TCheckBox;
+    chkBdGridRowhighligth: TCheckBox;
+    chkKeepLastOrganization: TCheckBox;
+    chkValueOutOfRange: TCheckBox;
+    chkFieldIsMissing: TCheckBox;
+    chkFieldIsEmpty: TCheckBox;
+    chkFatal: TCheckBox;
+    chkMapping: TCheckBox;
+    chkActiveLogging: TCheckBox;
+    chkAppendLogging: TCheckBox;
+    edtSqlFileLocation: TEdit;
+    gbLogging: TGroupBox;
+    gbErrorReporting: TGroupBox;
+    gbMiscelleneous: TGroupBox;
+    lblQueryFileLocation: TLabel;
+    pgcConfigure: TPageControl;
+    pnlMain: TPanel;
+    pnlBottom: TPanel;
+    pnlTop: TPanel;
     stbInfo : TStatusBar;
-    tbsMiscellaneous : TTabSheet;
+    tbsMiscellaneous: TTabSheet;
     procedure BitBtnQueryFileLocationClick(Sender : TObject);
     procedure chkActiveLoggingChange(Sender : TObject);
   private
@@ -104,10 +116,10 @@ var
   openDialog: TOpenDialog;
 begin
   openDialog:= TOpenDialog.Create(self);
-  openDialog.Title:= fPresenter.GetstaticText('view.configure', 'SelectQueryFile');
+  openDialog.Title:= fPresenter.GetstaticText(UnitName, 'SelectQueryFile');
   openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adQueries; { #todo : Make Linux proof }
   openDialog.Options:= [ofFileMustExist];
-  openDialog.Filter:= 'SQL files|*.sql';
+  openDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSqlFilesFilter');
   try
     if openDialog.Execute then begin
       edtSqlFileLocation.Text:= openDialog.FileName;
@@ -189,7 +201,7 @@ begin
   Result:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';
   {$ENDIF}
   {$IFDEF LINUX}
-  Result:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config' + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';  // lTrx.RootDir = '/home/hvb/.config'
+  Result:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config' + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';  // lTrx.RootDir = '/home/<username>/.config'
   {$ENDIF}
 end;
 
@@ -217,7 +229,7 @@ begin
   lTrx := fPresenter.TrxMan.StartTransaction(prAppSettingsConfig) as TSettingsConfigTrx;
   try
     lTrx.WriteSettings:= True;
-    lTrx.StoreFormState:= True; // <<---
+    lTrx.StoreFormState:= True;
     lTrx.FormName := UnitName;
     lTrx.FormWindowstate:= integer(Windowstate);
     lTrx.FormTop:= Top;
@@ -242,15 +254,22 @@ var
 begin
   lTrx:= fPresenter.TrxMan.StartTransaction(prAppSettingsConfig) as TSettingsConfigTrx;
   try
-    lTrx.WriteSettings:= True;  // <<---
+    lTrx.WriteSettings:= True;
     lTrx.ReadSettings:= False;
     lTrx.FormName := UnitName;
     lTrx.ActivateLogging:= chkActiveLogging.Checked;
     lTrx.AppendLogging:= chkAppendLogging.Checked;
     lTrx.Language:= Lang;
     lTrx.SettingsLocationAndFileName:= GetSettingsFile;
-    lTrx.DisableErrorReport:= chkDisableErrorReport.Checked;
+    lTrx.DbGridRowHighlight:= chkBdGridRowhighligth.Checked;
     lTrx.SqlFileLocation:= edtSqlFileLocation.Text;
+    lTrx.AskToOpenExportFile:= chkAskToOpenExportFile.Checked;
+    lTrx.KeepLastOrganization:= chkKeepLastOrganization.Checked;
+    lTrx.RapportMappingError:= chkMapping.Checked;
+    lTrx.RapportFatalError:= chkFatal.Checked;
+    lTrx.RapportFieldIsEmpty:= chkFieldIsEmpty.Checked;
+    lTrx.RapportFieldIsMissing:= chkFieldIsMissing.Checked;
+    lTrx.RapportOutOfRange:= chkValueOutOfRange.Checked;
 
     fPresenter.TrxMan.CommitTransaction;
   except
@@ -264,7 +283,7 @@ var
 begin
   lTrx:= fPresenter.TrxMan.StartTransaction(prAppSettingsConfig) as TSettingsConfigTrx;
   try
-    lTrx.ReadSettings:= True;  // <<---
+    lTrx.ReadSettings:= True;
     lTrx.WriteSettings:= False;
     lTrx.SettingsLocationAndFileName:= GetSettingsFile;
     lTrx.FormName:= UnitName;
@@ -306,7 +325,13 @@ begin
     else if (lc is TTabSheet) then
       TTabSheet(lc).Caption:= Texts.Values[TTabSheet(lc).Name]
     else if (lc is TGroupBox) then
-      TGroupBox(lc).Caption:= Texts.Values[TGroupBox(lc).Name];
+      TGroupBox(lc).Caption:= Texts.Values[TGroupBox(lc).Name]
+    else if (lc is TPanel) then
+      TPanel(lc).Caption:= Texts.Values[TPanel(lc).Name]
+    else if (lc is TLabel) then
+      TLabel(lc).Caption:= Texts.Values[TLabel(lc).Name]
+    else if (lc is TBitBtn) then
+      TBitBtn(lc).Caption:= Texts.Values[TBitBtn(lc).Name];
   end;
 end;
 
@@ -323,8 +348,15 @@ begin
       if (setReadSettings) and (setFrmName = UnitName) then begin
         chkActiveLogging.Checked:= setActivateLogging;
         chkAppendLogging.Checked:= setAppendLogging;
-        chkDisableErrorReport.Checked:= setDisableErrorReport;
+        chkBdGridRowhighligth.Checked:= setDbGridRowHighlight;
+        chkAskToOpenExportFile.Checked:= setAskToOpenExportFile;
+        chkKeepLastOrganization.Checked:= setKeepLastOrganization;
         edtSqlFileLocation.Text:= setSqlFileLocation;
+        chkMapping.Checked:= setRapportMappingError;
+        chkFatal.Checked:= setRapportFatalError;
+        chkFieldIsEmpty.Checked:= setRapportFieldIsEmpty;
+        chkFieldIsMissing.Checked:= setRapportFieldIsMissing;
+        chkValueOutOfRange.Checked:= setRapportOutOfRange;
       end
       else if (setWriteSettings) and (setFrmName = UnitName) then begin
         // ...
@@ -396,7 +428,7 @@ begin
   SetAppLanguage;
 
   fSubscriber:= CreateObsSubscriber(@HandleObsNotify); //bm: fPresenter.Provider
-  ///  Presenter gets set from the outside...! in the startup-function above  !!!!
+  // Presenter gets set from the outside...! in the startup-function above  !!!!
   // So here no fuctions which are in need of the presenter.  <<--------------!!!!
 
   self.Color:= clWindow;

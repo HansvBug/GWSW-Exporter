@@ -4,12 +4,22 @@ tbsMiscellaneous=Miscellaneous
 chkActiveLogging=Activate logging
 chkAppendLogging=Append logfile
 gbLogging=Logging
-btnClose=Sluiten
-chkDisableErrorReport=Turn off error reporting
+btnClose=Close
+
+gbErrorReporting=Reporting error(s)
+chkMapping=Unknown domain value
+chkFatal=Fatal error
+chkFieldIsEmpty=Empty field
+chkFieldIsMissing=Field missing
+chkValueOutOfRange=Value out of range
+
+chkBdGridRowhighligth=Row highlight datagrid
+chkAskToOpenExportFile=Ask to open export file
+chkKeepLastOrganization=Remember last applied organization
 lblQueryFileLocation=Locatie query bestand
 BitBtnQueryFileLocation=...
 SelectQueryFile=Select the query file.
-
+DlgSqlFilesFilter=SQL files|*.sql|All files|*.*
 
 
 [view.configure.statusbartexts]

@@ -11,13 +11,6 @@ const
   confTexts = '%sconfig_text.%s';  // <-- remember to change to your choice
   Lang: string = 'en'; //<- - - -^ i18n support ~ writable const / static var
 
-  { (a)pplication (d)irectories }
-  adSettings   = 'Settings';
-  adLogging    = 'Logging';
-  adDomainlist = 'Domainlist';
-  adExport     = 'Export';
-  adQueries    = 'Queries';
-
 type
   TTransaction = model.base.TTransaction;  { ancester alias }
   { TTransactionmanager governs alterations to datastore / model }
@@ -73,7 +66,10 @@ type
   PRetrieveDataRec          = model.base.PRetrieveDataRec;
   TExportToOroxTtlFileRec   = model.base.TExportToOroxTtlFileRec;
   PExportToOroxTtlFileRec   = model.base.PExportToOroxTtlFileRec;
-
+  TUniqueStringlistRec      = model.base.TUniqueStringlistRec;
+  PUniqueStringlistRec      = model.base.PUniqueStringlistRec;
+  TExportInProgressRec      = model.base.TExportInProgressRec;
+  PExportInProgressRec      = model.base.PExportInProgressRec;
 
 { utility functions, here we publicly export these functions, to be made available
   in other units, that can't /see/ us, for import :o) gotta love FPC \o/\ö/\o/ }
@@ -217,6 +213,7 @@ begin { first we check if the reason is in our TransactionFactory, if so then ge
       prAppSettingsConfig   : fTrx:= TSettingsConfigTrx.Create(aModReason);
       prRetrieveData        : fTrx:= TRetrieveDataTrx.Create(aModReason);
       prExportToOroxTtlFile : fTrx:= TExportToOroxTtlFileTrx.Create(aModReason);
+      prUniqueStringlist    : fTrx:= TUniqueStringlistTrx.Create(aModReason);
       /// etc...
 
       else fTrx:= TTransaction.Create(aModReason); // 0 or anything undefined by us

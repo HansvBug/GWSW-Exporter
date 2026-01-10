@@ -1,4 +1,4 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit MappingManager;
 
 interface
@@ -8,45 +8,45 @@ uses
 
 type
   TMappingType = (mtMateriaalPut, mtMateriaalLeiding, mtVormPut, mtVormLeiding, mtObjectType,
-    mtWijzeInwinning, mtStatusFunctioneren, mtStelseltype, mtPutType, mtLeidingType,
-    mtKolkType, mtPersleidingType);
+    mtStatusFunctioneren, mtStelseltype, mtPutType, mtLeidingType, mtKolkType,
+     mtPersleidingType, mtFundering, mtWibonThema);
 
   { TMappingManager }
-
   TMappingManager = class
   private
     fMappings: array[TMappingType] of TStringList;
     fMappingFile: string;
     procedure LoadMappingsFromODS(const AFileName: string);
-    function GetMappingFile: string;
-    procedure SetMappingFile(const Value: string);
+    function Get_MappingFile: string;
+    procedure Set_MappingFile(const Value: string);
   public
     constructor Create(const FileName: String);
     destructor Destroy; override;
 
     function GetGWSWURI(MappingType: TMappingType; const SourceValue: string): string;
 
-    property MappingFile: string read GetMappingFile write SetMappingFile;
+    property MappingFile: string read Get_MappingFile write Set_MappingFile;
   end;
 
 implementation
 
 uses
-  fpspreadsheet, {%H-}fpsallformats; // Zonder fpsallformats werkt de export niet.
+  fpspreadsheet, {%H-}fpsallformats; // Without fpsallformats, the export will not work.
 
 constructor TMappingManager.Create(const FileName : String);
 var
   mt: TMappingType;
-  DefaultMappingFile: string;
 begin
   inherited Create;
-  for mt:= Low(TMappingType) to High(TMappingType) do
-    fMappings[mt]:= TStringList.Create;
 
-  // Optioneel: probeer default mapping file te laden
-  DefaultMappingFile:= FileName;
-  if FileExists(DefaultMappingFile) then
-    MappingFile:= DefaultMappingFile;
+  if FileExists(FileName) then begin
+    for mt:= Low(TMappingType) to High(TMappingType) do
+      fMappings[mt]:= TStringList.Create;
+
+    MappingFile:= FileName
+  end
+  else
+    raise Exception.Create('MappingFileNotFound' + '| (' + FileName + ')' );
 end;
 
 destructor TMappingManager.Destroy;
@@ -58,7 +58,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TMappingManager.LoadMappingsFromODS(const AFileName: string); { #note : Rename to LoadMappingsFromFile }
+procedure TMappingManager.LoadMappingsFromODS(const AFileName: string);
 var
   Workbook: TsWorkbook;
   Worksheet: TsWorksheet;
@@ -68,7 +68,7 @@ var
   SheetName: string;
 begin
   if not FileExists(AFileName) then
-    raise Exception.Create('Mapping bestand niet gevonden: ' + AFileName);
+    raise Exception.Create('MappingFileNotFound');
 
   Workbook:= TsWorkbook.Create;
   try
@@ -77,21 +77,22 @@ begin
     for MappingType:= Low(TMappingType) to High(TMappingType) do begin
       case MappingType of
         { #note : De werkbladnamen moeten intstelbaar worden }
-        mtMateriaalPut      : SheetName := 'Materiaal_Put';      // wordt ook bij kolk gebruik. wellicht scheiden
-        mtMateriaalLeiding  : SheetName := 'Materiaal_leiding';
-        mtVormPut           : SheetName := 'Vorm_Put';           // wordt ook bij kolk gebruik. wellicht scheiden
-        mtVormLeiding       : SheetName := 'Vorm_Leiding';
-        mtStatusFunctioneren: SheetName := 'StatusFunctioneren';
-        mtStelseltype       : SheetName := 'Stelseltype';
-        mtObjectType        : SheetName := 'ObjectType';  //--->  Deze moet weg
-        mtPutType           : SheetName := 'PutType';
-        mtLeidingType       : SheetName := 'LeidingType';
-        mtKolkType          : SheetName := 'KolkType';
-        mtPersleidingType   : SheetName := 'LeidingType'; // LET OP. Voorlopig zo houden. Wellicht scheiden in het ods document.
-        mtWijzeInwinning    : SheetName := 'WijzeInwinning'; // Wordt nog niet gebuikt
+        mtMateriaalPut      : SheetName:= 'Materiaal_Put';      // Is also used at gully (kolk). Perhaps split.
+        mtMateriaalLeiding  : SheetName:= 'Materiaal_leiding';
+        mtVormPut           : SheetName:= 'Vorm_Put';           // Is also used at gully (kolk). Perhaps split.
+        mtVormLeiding       : SheetName:= 'Vorm_Leiding';
+        mtStatusFunctioneren: SheetName:= 'StatusFunctioneren';
+        mtStelseltype       : SheetName:= 'Stelseltype';
+        mtObjectType        : SheetName:= 'ObjectType';         // Is not (yet) used.
+        mtPutType           : SheetName:= 'PutType';
+        mtLeidingType       : SheetName:= 'LeidingType';
+        mtKolkType          : SheetName:= 'KolkType';
+        mtPersleidingType   : SheetName:= 'LeidingType';        // CAUTION. Keep it that way for the time being. Perhaps separate in the ods document.
+        mtFundering         : Sheetname:= 'Fundering';          // Used by manhole and pipe.
+        mtWibonThema        : Sheetname:= 'WibonThema';
       end;
 
-      fMappings[MappingType].Clear; // Bestaande mappings clearen
+      fMappings[MappingType].Clear; // Clear existing mappings
 
       Worksheet:= Workbook.GetWorksheetByName(SheetName);
       if Worksheet <> nil then begin
@@ -111,12 +112,12 @@ begin
   end;
 end;
 
-function TMappingManager.GetMappingFile: string;
+function TMappingManager.Get_MappingFile: string;
 begin
   Result:= fMappingFile;
 end;
 
-procedure TMappingManager.SetMappingFile(const Value: string);
+procedure TMappingManager.Set_MappingFile(const Value: string);
 var
   mt: TMappingType;
 begin
@@ -125,9 +126,10 @@ begin
     if FileExists(Value) then
       LoadMappingsFromODS(Value)
     else begin
-      // Log een waarschuwing maar ga niet crashen
       for mt:= Low(TMappingType) to High(TMappingType) do
         fMappings[mt].Clear;
+
+      raise Exception.Create('MappingFileNotFound');
     end;
   end;
 end;
@@ -136,19 +138,21 @@ function TMappingManager.GetGWSWURI(MappingType: TMappingType; const SourceValue
 var
   RawValue: string;
 begin
-  // Controleer of mappings geladen zijn
+  // Check if mappings are loaded
   if fMappings[MappingType].Count = 0 then begin
-    Result := 'gwsw:Onbekend';    { #todo : Melden in de view. Dan kan de bron eert worden nagekeken/aangepast. }
+    { #todo : Maapingstabel ontbreekt.  fouttype voor maken. }
+    Result := '';
     Exit;
   end;
 
   if SourceValue = '' then
-    Result:= 'gwsw:Onbekend'  { #todo : Melden in de view. Dan kan de bron eert worden nagekeken/aangepast. }
-  else begin
+    //Result:= 'gwsw:Onbekend'
+    Result:= ''
+  else begin // een waarde gevonden die opgezocht gaat worden in de mappingslist.
     RawValue:= fMappings[MappingType].Values[UpperCase(SourceValue)];
 
     if RawValue = '' then
-      Result:= 'gwsw:Onbekend' { #todo : Melden in de view. Dan kan de bron eert worden nagekeken/aangepast. }
+      Result:= 'Mapping_error'  // Value does not appear in the mapping list
     else if Pos(':', RawValue) > 0 then
       Result:= RawValue
     else

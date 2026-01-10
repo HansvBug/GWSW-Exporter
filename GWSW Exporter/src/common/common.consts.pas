@@ -1,13 +1,15 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit common.consts;
 {$mode objfpc}{$H+}
 interface (* this unit collects nearly all constants & is referenced in most units *)
 uses classes, sysutils, obs_prosu;
 const
   { Application constants }
-  Application_version            = '0.1.0.0';
+  Application_version            = '0.4.0.0';
   Application_initial_start_date = '12-12-2025';
-  Application_build_date         = '24-12-2025';
+  Application_build_date         = '10-01-2026';
+
+  DefaultOroXFileExt = 'orox.ttl';// Is prescribed in this way.
 
   { (a)pplication (m)essages }
   amSucces = 'Success';
@@ -37,6 +39,8 @@ const
   prExportToOroxTtlFile     = prUser + 12;
   prReportProgress          = prUser + 13;
   prReportError             = prUser + 14;
+  prReportProgressCount     = prUser + 15;
+  prUniqueStringlist        = prUser + 16;
 
   prDirDataNeeded = prUser + 100; { carries a TDirInfoTrx in aNotifyClass }
   prFetchDirData = prUser + 101; { carries a TDirInfoTrx in aNotifyClass & an 'IStrings' in UserData }
@@ -64,7 +68,25 @@ const
   SGUIDIViewConfigure = '{07D9D3BE-8426-4E7A-BC7F-5AC0BBD70803}';
 
   { targettexts below lets you use 1 handler in view, 1 result record and differentiate on target-id }
-  TargetTexts: TStringArray = ('Directories','Resources','Models','Presenters','Views'); // example
+  TargetTexts: TStringArray = ('Directories', 'Resources', 'Models', 'Presenters', 'Views'); // example
+
+  { (a)pplication (d)irectories }
+  adSettings   = 'Settings';
+  adLogging    = 'Logging';
+  adDomainlist = 'Domainlist';
+  adExport     = 'Export';
+  adQueries    = 'Queries';
+
+  // GWSW versies
+  GWSW_versie_16 = '1.6';
+
+  { (e)xport (e)rror (t)ypes }
+  eetInformation     = 0;  // Default
+  eetMapping         = 1;  // Mapping fout - bij het vertalen van velden
+  eetFatal           = 2;  // Voorlopig onbekende fouten hier onder zetten. Moet dan onderzocht worden
+  eetFieldIsEmpty    = 3;  // Veld is leeg.
+  eetFieldIsMissing  = 4;  // Veld ontbreekt
+  eetValueOutOfRange = 5;  // De aangetroffen waarde valt buiten het bereik dat gwsw opgeeft.
 
 implementation
 

@@ -43,7 +43,11 @@ type
     function RetrieveData(Data: PRetrieveDataRec): TRetrieveDataRec;
     function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
     function GetSQLfileLocation: String;
-
+    function GetKeepLastOrganization: Boolean;
+    function GetLastUsedOrganization: String;
+    // get a setting
+    function GetSetting_AskToOpenExportFile: Boolean;
+    procedure DisableChildControls(aData : TExportInProgressRec);
   end; { IModelMain }
 
   {--------------------------------------------------------------------------------------------------------}
@@ -115,6 +119,9 @@ type
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
     procedure MakeDbConnection(DbConnectionData: PDbConnectRec);
     function GetSQLfileLocation: String;
+    function GetKeepLastOrganization: Boolean;
+    function GetLastUsedOrganization: String;
+    procedure ExportInProgress(aData: TExportInProgressRec);
 
     property Model: IModelMain read get_Model; // TODO: write set_Model;
     property Provider: IobsProvider read get_Provider write set_Provider;

@@ -17,9 +17,10 @@ type
     fSettings: TSettings;
     fDatabaseModule: TDatabaseModule;
 
-    // IExportProgressReporter implementatie
-    procedure ReportProgress(const Message: string);
-    procedure ReportError(const ErrorMessage: string);
+    // (progress) reporting
+    procedure ReportProgressMsg(const Message: string);
+    procedure ReportError(const ErrMsg: string; const ErrorType: Integer = 0;const Guid: string = '');
+    procedure ReportProgressCount(const Current, Total: Integer);
 
   const Sects: TStringArray = ('[view.main]', '[view.main.statusbartexts]', '[view.main.hints]', '[view.main.logging]'); { very necessary, because we need it at idx 0 }
   var                                              
@@ -67,6 +68,11 @@ type
     function RetrieveData(data: PRetrieveDataRec): TRetrieveDataRec;
     function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
     function GetSQLfileLocation: String;
+    function GetKeepLastOrganization: Boolean;
+    function GetLastUsedOrganization: String;
+
+    function GetSetting_AskToOpenExportFile: Boolean;
+    procedure DisableChildControls(aData : TExportInProgressRec);
   end;
 
 {$EndRegion 'TModelMainH'}
@@ -93,15 +99,56 @@ end;
 
 {$Region 'TModelMain'}
 
-procedure TModelMain.ReportProgress(const Message : string);
+procedure TModelMain.ReportProgressMsg(const Message : string);
 begin
-  fPresenter.Provider.NotifySubscribers(prReportProgress, Self, Str2Pch('INFO: ' + Message));
+  fPresenter.Provider.NotifySubscribers(prReportProgress, Self, Str2Pch('ReportInfo' + '|' + Message));
 end;
 
-procedure TModelMain.ReportError(const ErrorMessage : string);
+procedure TModelMain.ReportError(const ErrMsg: string; const ErrorType: Integer; const Guid: string);
+var
+  UpdateView: Boolean;
+var
+  lMsg: String;
+  lErrorType: String;
 begin
-  fPresenter.Provider.NotifySubscribers(prReportError, Self, Str2Pch('ERROR: ' + ErrorMessage));
-  WriteToLog('Error', 'Export: ' + ErrorMessage);
+  UpdateView:= False;
+  case ErrorType of
+    0: begin
+         lErrorType:= 'Information: --> ';  { #note : De string moet in het taal bestand komen }
+         UpdateView:= True;  // Wordt nog niet gebruikt
+    end;
+    1: begin
+         lErrorType:= 'Mapping: --> ';
+         if fSettings.RapportMappingError then UpdateView:= True;
+    end;
+    2: begin
+         lErrorType:= 'Fatal: --> ';
+         if fSettings.RapportFatalError then UpdateView:= True;
+    end;
+    3: begin
+         lErrorType:= 'Empty Field: --> ';
+         if fSettings.RapportFieldIsEmpty then UpdateView:= True;
+    end;
+    4: begin
+         lErrorType:= 'Field is missing: --> ';
+         if fSettings.RapportFieldIsMissing then UpdateView:= True;
+    end;
+    5: begin
+         lErrorType:= 'Value out of range: --> ';
+         if fSettings.RapportOutOfRange then UpdateView:= True;
+    end;
+  end;
+
+  lMsg:= lErrorType + '|'+ ErrMsg + '|' + ' {'+ Guid + ').';
+
+  if UpdateView then
+    { #note : Let op moet aangepast worden!!!!!!!!!!!!!!!! }
+    fPresenter.Provider.NotifySubscribers(prReportError, Self, Str2Pch('ReportError' + '|' + lMsg)); // "ReportError=ERROR: "     is niet meer juist
+end;
+
+procedure TModelMain.ReportProgressCount(const Current, Total : Integer);
+begin
+  fPresenter.Provider.NotifySubscribers(prReportProgressCount, Self, Str2Pch(Format('%d|%d', [Current, Total])));
 end;
 
 { TModelMain }
@@ -164,7 +211,8 @@ end;
 function TModelMain.GetStaticTexts(const aSection: string; out aTarget: integer): IStringList;
 begin { we use the [] here, because it fits in with standard ini-file format, nifty huh?!? }
   if aSection = '' then exit(nil);
-  fSection:= '['+aSection+']'; fSecId:= IndexText(fSection,sects); { iterator-search }
+  fSection:= '['+aSection+']';
+  fSecId:= IndexText(fSection,sects); { iterator-search }
   fSectMaxIdx:= high(Sects); { iterator-search, sets up the section 'break-off' maxidx }
   if fTextCache.Count = 0 then begin
     fPresenter.Provider.NotifySubscribers(prStatus,nil,Str2Pch('(!) ERROR: Could NOT retrieve static texts!'));
@@ -356,7 +404,12 @@ begin
     setAppendLogging:= fSettings.AppendLogFile;
     setLanguage:= fSettings.Language;
     setMappingFile:= fSettings.MappingFile;
-    setDisableErrorReport:= fSettings.DisableErrorReport;
+    setSplitterDataSettings:= fSettings.SplitterDataSettings;
+    setSplitterdataGrid:= fSettings.SplitterdataGrid;
+    setSplitterMemos:= fSettings.SplitterMemos;
+    setDbGridRowHighlight:= fSettings.DbGridRowHighlight;
+    setAskToOpenExportFile:= fSettings.AskToOpenExportFile;
+    setLastUsedOrganization:= fSettings.LastUsedOrganization;
     //...
 
     setSucces:= fSettings.Succes;
@@ -417,7 +470,6 @@ begin
 
        fSettings.ActivateLogging:= True;
        fSettings.AppendLogFile:= True;
-       fSettings.DisableErrorReport:= True;
 
        fSettings.WriteSettings;
      end;
@@ -546,7 +598,7 @@ begin
         fPresenter.WriteToLog('view.main', ltInformation, 'DbConnEstablished')
       else begin
         fPresenter.WriteToLog('view.main', ltError, 'DbConnFailed');
-        WriteToLog(ltError, DbConnectionData^.Message);
+        WriteToLog(ltError, DbConnectionData^.Message);   // { #todo 1 : Dat kan niet meer. Moet via een getstatictext! }
       end;
     except
       on E: Exception do
@@ -557,7 +609,10 @@ begin
         WriteToLog(ltError, e.Message);
       end;
     end;
-  end; { #todo : Maybe something else if there is already a connection... }
+  end
+  else begin
+    lResult.Success:= DbConnectionData^.HasConnection;
+  end;
 end;
 
 function TModelMain.RetrieveData(data : PRetrieveDataRec) : TRetrieveDataRec;
@@ -565,6 +620,7 @@ var
   lResult: TDataSetResult;
 begin
   if Assigned(fDatabaseModule) then begin
+
     lResult:= fDatabaseModule.RetrieveData(data^.SqlText);
 
     Result.DataSource:= lResult.DataSet;
@@ -584,24 +640,24 @@ begin
 
   try
     // Create a data provider. This is the query that retrieved the data.
-    DataProvider:= TQueryDataProvider.Create(fDatabaseModule.CurrentQuery);  // No free/nil required
+    DataProvider:= TQueryDataProvider.Create(fDatabaseModule.CurrentQuery, True);  // No free/nil required
 
     OroxExport:= TOroxExport.Create(DataProvider, Data^.FileName, Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter);
     try
       fSettings.ReadFile; // Kan vervelend worden. leest het hele settingsbestand opnieuw terwijl maar 1 setting nodig is.
-      OroxExport.ExportToOrox(fSettings.DisableErrorReport);
+      OroxExport.ExportToOrox(Data^.Version);
+      Result.FileName:= Data^.FileName;
       Result.Success:= True;
-      Result.Message:= 'Export voltooid'; { #todo : Taalinstelling }
+      Result.Message:= 'ExportIsCompleted';
     finally
       OroxExport.Free;
     end;
 
   except
-    on E: Exception do
-    begin
-      ReportError('Export gefaald: ' + E.Message);  { #todo : Taalinstelling }
-      Result.Success := False;
-      Result.Message := E.Message;
+    on E: Exception do begin
+      ReportError(E.Message);
+      Result.Success:= False;
+      Result.Message:= E.Message;
     end;
   end;
 end;
@@ -611,7 +667,28 @@ begin
   Result:= fSettings.SqlFileLocation;
 end;
 
+function TModelMain.GetKeepLastOrganization: Boolean;
+begin
+  Result:= fSettings.KeepLastOrganization;
+end;
 
+function TModelMain.GetLastUsedOrganization: String;
+begin
+  Result:= fSettings.LastUsedOrganization;
+end;
+
+function TModelMain.GetSetting_AskToOpenExportFile : Boolean;
+begin
+  Result:= fSettings.AskToOpenExportFile;
+end;
+
+procedure TModelMain.DisableChildControls(aData : TExportInProgressRec);
+begin
+  if aData.IsInProgress then
+    common.utils.DisableChildControls(aData.aParent)
+  else
+    common.utils.EnableChildControls(aData.aParent)
+end;
 
 
 {$EndRegion 'TModelMain'}

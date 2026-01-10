@@ -1,9 +1,10 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum }
 unit view.main;
 {$mode objfpc}{$H+}
 interface
 uses Classes, SysUtils, Forms, StdCtrls, Controls, Graphics, Dialogs, ComCtrls,
-  ExtCtrls, Menus, DBGrids, Buttons, fpspreadsheetctrls, SynEdit,
+  ExtCtrls, Menus, DBGrids, Buttons, DBCtrls, fpspreadsheetctrls,
+  SynEdit, Windows, ShellAPI,  { #todo : Waarschijnlijk een probleen voor Linux straks..... }
   SynHighlighterSQL, istrlist, model.intf, model.decl, presenter.main,
   presenter.trax, DB, fpcsvexport;
 
@@ -20,23 +21,26 @@ type
     btnOpenQuery : TButton;
     btnClose : TButton;
     cbGWSWVersion : TComboBox;
+    cbOrganizationName : TComboBox;
+    cbDatabaseName : TComboBox;
+    cbUserName : TComboBox;
     dbgSewerData : TDBGrid;
+    DBNavigator : TDBNavigator;
     edtMappingsFile : TEdit;
-    edtOrganizationName : TEdit;
-    edtDatabaseName : TEdit;
-    edtUserName : TEdit;
     edtPassword : TEdit;
     gbConnection : TGroupBox;
     gbExport : TGroupBox;
     gbGetData : TGroupBox;
     gbQuery : TGroupBox;
     gbSettings : TGroupBox;
+    lblProgress: TLabel;
+    lblSQLFileLocation : TLabel;
     lblError : TLabel;
     lblGWSWVersion : TLabel;
     lblMappingsFile : TLabel;
-    lblOrganizationName : TLabel;
     lblDatabaseName : TLabel;
-    lblProgress : TLabel;
+    lblOrganizationName : TLabel;
+    lblProgressTitle : TLabel;
     lblUserName : TLabel;
     lblPassword : TLabel;
     MainMenu1 : TMainMenu;
@@ -51,10 +55,10 @@ type
     memReportError : TMemo;
     memReportProgress : TMemo;
     PageControl1 : TPageControl;
-    Panel1 : TPanel;
-    Panel2 : TPanel;
-    Panel3 : TPanel;
+    pnlDataSettings : TPanel;
     pnlProgress : TPanel;
+    pnlError : TPanel;
+    pnlProgressExport : TPanel;
     pnlDataGrid : TPanel;
     pnlSettings : TPanel;
     pnlQuery : TPanel;
@@ -63,10 +67,10 @@ type
     pnlMainTop : TPanel;
     pnlBottom : TPanel;
     pnlMainAllClient : TPanel;
-    ProgressBar : TProgressBar;
-    Splitter1 : TSplitter;
-    Splitter2 : TSplitter;
-    Splitter3 : TSplitter;
+    ProgressBar: TProgressBar;
+    SplitterDataSettings : TSplitter;
+    SplitterdataGrid : TSplitter;
+    SplitterMemos : TSplitter;
     stbInfo : TStatusBar;
     SynEditSqlQuery : TSynEdit;
     SynSQLSyn1 : TSynSQLSyn;
@@ -80,10 +84,17 @@ type
     procedure btnGetDataClick(Sender : TObject);
     procedure btnOpenQueryClick(Sender : TObject);
     procedure btnSaveQueryClick(Sender : TObject);
+    procedure cbDatabaseNameExit(Sender : TObject);
+    procedure cbOrganizationNameExit(Sender : TObject);
+    procedure cbUserNameExit(Sender : TObject);
     procedure PageControl1Change(Sender : TObject);
+    procedure pnlDataSettingsResize(Sender : TObject);
+    procedure pnlPrepareDataResize(Sender : TObject);
+    procedure pnlProgressExportResize(Sender : TObject);
+    procedure SplitterdataGridMoved(Sender : TObject);
+    procedure SplitterDataSettingsMoved(Sender : TObject);
+    procedure SplitterMemosMoved(Sender : TObject);
   private
-
-
     fPresenter: IPresenterMain;
     fSubscriber: IobsSubscriber;
 
@@ -104,6 +115,9 @@ type
     procedure StoreFormstate;
     procedure StartLogging;
     procedure WriteSingleSetting(Setting, aValue: String);
+    procedure AddCbListItem(sender: TObject);
+    procedure LoadComboBoxItems;
+    procedure ExportInProgress(IsInProgress: Boolean);
 
     { Event handlers }
     procedure miProgramCloseOnClick(Sender : TObject);
@@ -125,7 +139,9 @@ type
     procedure DoRetrieveData(anObj: TObject; aData: PRetrieveDataRec);
     procedure DoExportToOroxTtlFile(anObj: TObject; aData: PExportToOroxTtlFileRec);
     procedure DoExportProgress(anObj: TObject; aData: PExportToOroxTtlFileRec);
+    procedure DoReportProgressCount(anObj: TObject; aData: pointer);
     procedure DoExportError(anObj: TObject; aData: PExportToOroxTtlFileRec);
+    procedure DoUniqueStringlist(anObj: TObject; aData: PUniqueStringlistRec);
     procedure HandleObsNotify(aReason: ptrint; aNotifyObj: TObject; aData: pointer);
   public
     procedure AfterConstruction; override;
@@ -152,12 +168,12 @@ var
 begin
   { #todo : Eventhandler nog los koppelen }
   Screen.Cursor:= crHourGlass;
-  lRec.DatabaseName:= edtDatabaseName.Text;
-  lRec.UserName:= edtUserName.Text;
+  lRec.DatabaseName:= cbDatabaseName.Text;
+  lRec.UserName:= cbUserName.Text;
   lRec.SchemaPassword:= edtPassword.Text;
-  lRec.HasConnection:= False;
+  lRec.HasConnection:= btnConnect.Enabled;  // // If there is already a connection, the button must remain active. So pass True
 
-  fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.StatusbarTexts','Connecting'), 0);
+  fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.StatusbarTexts', 'Connecting'), 0);
   fPresenter.MakeDbConnection(@lRec);
 end;
 
@@ -182,6 +198,7 @@ begin
       Screen.Cursor:= crHourGlass;
       csvExporter.FileName:= saveDialog.FileName;
       csvExporter.Execute;
+
       Screen.Cursor:= crDefault;
     end;
 
@@ -200,23 +217,30 @@ var
 begin
   lCanContinue:= False;
   if dbgSewerData.DataSource = Nil then begin
-    ShowMessage(fPresenter.GetstaticText(UnitName, 'QueryNotActive'));  { #todo : create a msgdialog }
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'QueryNotActive'), mtWarning, [mbOK],0);
     Exit;
   end;
   if edtMappingsFile.Text = '' then begin
-    ShowMessage('Mappingsbestand ontbreekt');  { #todo : Taalinstelling }
-    Exit
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'MissingMappingFile'), mtWarning, [mbOK],0);
+    Exit;
   end;
   if SynEditSqlQuery.Lines.Count = 0 then begin
-    ShowMessage('Sql bestand is niet ingeladen');  { #todo : Taalinstelling }
-        Exit
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'QueryFileNotLoaded'), mtWarning, [mbOK],0);
+    Exit;
+  end;
+  if cbOrganizationName.Text = '' then begin
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'),
+               fPresenter.GetstaticText(UnitName, 'OrganizationNameIsBlank') + sLineBreak +
+               sLineBreak +
+               fPresenter.GetstaticText(UnitName, 'EnterDasetName')
+               , mtWarning, [mbOK],0);
+    cbOrganizationName.SetFocus;
+    Exit;
   end;
 
-
-
   saveDialog:= TSaveDialog.Create(Nil);
-  saveDialog.Filter := 'GWSW-OroX Bestanden (*.orox.ttl)|*.orox.ttl|Turtle Bestanden (*.ttl)|*.ttl|Alle bestanden (*.*)|*.*';
-  saveDialog.DefaultExt := 'orox.ttl';  // Is prescribed in this way.
+  saveDialog.Filter := fPresenter.GetstaticText(UnitName, 'DlgSaveTtlFile');
+  saveDialog.DefaultExt := DefaultOroXFileExt;  // Is prescribed in this way.
   saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adExport; { #todo : Make Linux proof };
   try
     if saveDialog.Execute then begin
@@ -228,21 +252,29 @@ begin
   end;
 
   if lCanContinue then begin
+    ExportInProgress(lCanContinue);
     try
       Screen.Cursor:= crHourGlass;
+      lblProgress.Caption:= fPresenter.GetstaticText(UnitName, 'ExportStarted');
       memReportProgress.Clear;
       memReportError.Clear;
 
       lTrx:= fPresenter.TrxMan.StartTransaction(prExportToOroxTtlFile) as TExportToOroxTtlFileTrx;
 
-      lTrx.OrganizationName:= edtOrganizationName.Text;
+      lTrx.OrganizationName:= cbOrganizationName.Text;
       lTrx.FileName:= lFileName;
       lTrx.MappingFile:= edtMappingsFile.Text;
-//      lTrx.DisableErrorReport:= chkDisableErrorReport.Checked;
+      lTrx.Success:= btnExportToFile.Enabled;
+      lTrx.Version:= cbGWSWVersion.Text;
+
+      ProgressBar.Visible:= True;
       fPresenter.TrxMan.CommitTransaction;
+      ProgressBar.Visible:= False;
+      ExportInProgress(False);
       Screen.Cursor:= crDefault;
     except
       fPresenter.TrxMan.RollbackTransaction;
+      ExportInProgress(False);
       fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'ErrorExportToOroxTtlFile'), 0);
     end;
   end;
@@ -274,8 +306,6 @@ procedure TfrmMain.btnGetDataClick(Sender : TObject);
 var
   lTrx: TRetrieveDataTrx;
 begin
-  { #todo : Eventhandler nog los koppelen }
-
   Screen.Cursor:= crHourGlass;
   fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'RetrievingData'), 0);
 
@@ -284,7 +314,7 @@ begin
     lTrx.DataGrid:= dbgSewerData;
     lTrx.DataSource:= Nil;
     lTrx.SqlText:= SynEditSqlQuery.Text;
-    lTrx.OrganizationName:= edtOrganizationName.Text;
+    lTrx.OrganizationName:= cbOrganizationName.Text;
 
     fPresenter.TrxMan.CommitTransaction;
     fPresenter.SetStatusbarText('', 0);
@@ -304,13 +334,16 @@ begin
   openDialog.Title:= fPresenter.GetstaticText(UnitName, 'OpenSqlFile');
   openDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSqlFilesFilter');
   openDialog.DefaultExt:= 'txt';
-  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName; { #todo : Make Linux proof }
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adQueries; { #todo : Make Linux proof }
   openDialog.Options:= openDialog.Options + [ofFileMustExist];
 
   try
     if openDialog.Execute then begin
       SynEditSqlQuery.Lines.LoadFromFile(openDialog.FileName);
       SynEditSqlQuery.Modified:= False;
+      WriteSingleSetting('SQLfileLocation', openDialog.FileName);  // Immediately put the open file in the ini.
+      ReadSettings;  /// and update model.main fSettings
+      lblSQLFileLocation.Caption:= openDialog.FileName;
     end;
   finally
     openDialog.Free;
@@ -327,16 +360,35 @@ begin
     saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveSqlFile');
     saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSqlFilesFilter');
     saveDialog.DefaultExt:= 'txt';
-    saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName; { #todo : Make Linux proof }
+    saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adQueries; { #todo : Make Linux proof }
     saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt];
 
     if saveDialog.Execute then begin
       SynEditSqlQuery.Lines.SaveToFile(saveDialog.FileName);
-      WriteSingleSetting('SQLfileLocation', saveDialog.FileName);  // De locatie meteen ook in het settings bestand opslaan.
+      WriteSingleSetting('SQLfileLocation', saveDialog.FileName);  // Save the location in the settings file as well.
+      ReadSettings;  // and update model.main fSettings
+      lblSQLFileLocation.Caption:= saveDialog.FileName;
     end;
   finally
     saveDialog.Free;
   end;
+end;
+
+procedure TfrmMain.cbDatabaseNameExit(Sender : TObject);
+begin
+  AddCbListItem(Sender);
+end;
+
+procedure TfrmMain.cbOrganizationNameExit(Sender : TObject);
+begin
+  AddCbListItem(Sender);
+  if cbOrganizationName.Text <> '' then
+    WriteSingleSetting('LastUsedOrganization', cbOrganizationName.Text);
+end;
+
+procedure TfrmMain.cbUserNameExit(Sender : TObject);
+begin
+  AddCbListItem(Sender);
 end;
 
 procedure TfrmMain.PageControl1Change(Sender : TObject);
@@ -344,6 +396,36 @@ begin
   if PageControl1.ActivePageIndex = 1 then begin
     edtMappingsFile.SelStart:= 0;
   end;
+end;
+
+procedure TfrmMain.pnlDataSettingsResize(Sender : TObject);
+begin
+  (sender as TPanel).Repaint;
+end;
+
+procedure TfrmMain.pnlPrepareDataResize(Sender : TObject);
+begin
+  (sender as TPanel).Repaint;
+end;
+
+procedure TfrmMain.pnlProgressExportResize(Sender : TObject);
+begin
+  (sender as TPanel).Repaint;
+end;
+
+procedure TfrmMain.SplitterdataGridMoved(Sender : TObject);
+begin
+  WriteSingleSetting('SplitterdataGrid', pnlDataGrid.Height.ToString);
+end;
+
+procedure TfrmMain.SplitterDataSettingsMoved(Sender : TObject);
+begin
+  WriteSingleSetting('SplitterDataSettings', pnlDataSettings.Width.ToString);
+end;
+
+procedure TfrmMain.SplitterMemosMoved(Sender : TObject);
+begin
+  WriteSingleSetting('SplitterMemos', pnlProgress.Width.ToString);
 end;
 
 function TfrmMain.get_Observer: IobsSubscriber;
@@ -418,17 +500,13 @@ begin
       TCheckBox(lc).Caption:= Texts.Values[TCheckBox(lc).Name]
     else if (lc is TMemo) then
       TMemo(lc).Caption:= Texts.Values[TMemo(lc).Name]
-    else if (lc is TComboBox) then
-      TComboBox(lc).Caption:= Texts.Values[TComboBox(lc).Name]
     else if (lc is TBitBtn) then
       TBitBtn(lc).Caption:= Texts.Values[TBitBtn(lc).Name]
-    // Clear the TEdit texts
-    else if (lc is TEdit) then
-      TEdit(lc).Text:= Texts.Values[TEdit(lc).Text]
     else if (lc is TGroupBox) then
       TGroupBox(lc).Caption:= Texts.Values[TGroupBox(lc).Name]
     else if (lc is TRadioButton) then
       TRadioButton(lc).Caption:= Texts.Values[TRadioButton(lc).Name]
+    {No Edit or combo boxes here. The text box will be emptied. This is inconvenient when changing languages.}
   end;
 end;
 
@@ -478,6 +556,14 @@ begin
           miOptionsLanguageNL.Checked:= True;
         end;
         edtMappingsFile.Text:= setMappingFile;
+        pnlDataSettings.Width:= setSplitterDataSettings;
+        pnlDataGrid.Height:= setSplitterdataGrid;
+        pnlProgress.Width:= setSplitterMemos;
+
+        if setDbGridRowHighlight then
+          dbgSewerData.Options:= dbgSewerData.Options + [dgRowHighlight]
+        else
+          dbgSewerData.Options:= dbgSewerData.Options - [dgRowHighlight];
       end;
     end;
   end;
@@ -522,6 +608,10 @@ begin
 end;
 
 procedure TfrmMain.DoDbConnection(anObj : TObject; aData : PDbConnectRec);
+var
+  lMsg: string;
+  Parts: TStringArray;
+  i: Integer;
 begin
   With aData^ do begin
     btnGetData.Enabled:= HasConnection;
@@ -530,7 +620,16 @@ begin
       fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'DbConnEstablished'), 0);
     end
     else begin
-      fPresenter.SetStatusbarText(Message, 0);
+      Parts:= aData^.Message.Split('|');
+      lMsg:='';
+
+      if Length(Parts) > 1 then begin  // Errors only (for now)
+        for i:= Low(Parts) to High(Parts) do begin
+          lMsg:= lMsg + fPresenter.GetstaticText('view.main.statusbartexts', Parts[i]);  // Build the string
+        end;
+        fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', lMsg), 0);
+      end;
+
     end;
   end;
   Screen.Cursor:= crDefault;
@@ -538,12 +637,15 @@ end;
 
 procedure TfrmMain.DoRetrieveData(anObj : TObject; aData : PRetrieveDataRec);
 begin
-  With aData^do begin
+  if (aData = Nil) or (anObj = Nil) then Exit;
+
+  With aData^ do begin
     if anObj <> Nil then begin
-      TDBGrid(anObj).DataSource := TDataSource(aData^.DataSource);
+      TDBGrid(anObj).DataSource:= TDataSource(aData^.DataSource);
+      DBNavigator.DataSource:= TDataSource(aData^.DataSource);
     end;
     if Message <> '' then
-      ShowMessage(Message);  { #note : Taalinstelling }
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, Message), mtWarning, [mbOK],0);
 
     btnExportToFile.Enabled:= Success;
     btnExportDbgridToCsv.Enabled:= Success;
@@ -552,53 +654,134 @@ begin
 end;
 
 procedure TfrmMain.DoExportToOroxTtlFile(anObj : TObject; aData : PExportToOroxTtlFileRec);
+var
+  OpenFile: Boolean;
 begin
+  if aData = Nil then Exit;
+
   With aData^ do begin
-    fPresenter.SetStatusbarText(aData^.Message, 0);  { #todo : Taalinstelling }
+    fPresenter.SetStatusbarText( fPresenter.GetstaticText('view.main', aData^.Message), 0);
+    memReportError.Lines.Add('');
+    if Success then begin
+      OpenFile:= FPresenter.Model.GetSetting_AskToOpenExportFile;  // Export is ready then aks to open file
+      if OpenFile then begin
+        if MessageDlg(fPresenter.GetstaticText(UnitName, 'OpenFile'), fPresenter.GetstaticText(UnitName, 'ExportIsCompleteOpenFile'), mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        begin
+          ShellExecute(Handle, 'open', PChar(FileName), nil, nil, SW_SHOWNORMAL);   // uses: ShellAPI
+        end;
+      end
+      else
+        messageDlg(fPresenter.GetstaticText(UnitName, 'Information'),
+                   fPresenter.GetstaticText(UnitName, 'ExportIsCompleted') +
+                   sLineBreak +
+                   '(' + FileName + ').'
+                   , mtInformation, [mbOK],0);
+    end;
   end;
 end;
 
 procedure TfrmMain.DoExportProgress(anObj : TObject; aData : PExportToOroxTtlFileRec);
 var
   Msg: string;
+  Parts: TStringArray;
+  i: Integer;
+  lMsg: string;
 begin
-  Msg := PChar(aData);
+  if adata = Nil then Exit;
 
-  // Toon in memo (moet je toevoegen aan je form)
-  if Assigned(memReportProgress) then
-  begin
-    memReportProgress.Lines.Add(FormatDateTime('dd-mm-yyyy hh:nn:ss', Now) + ' ' + Msg);
+  Msg:= PChar(aData);
+  Parts:= Msg.Split('|');
+  lMsg:= '';
 
-    // Auto-scroll
-    memReportProgress.SelStart := Length(memReportProgress.Text);
-    memReportProgress.SelLength := 0;
+  if Assigned(memReportProgress) then begin
+    for i:= Low(Parts) to High(Parts) do begin
+      lMsg:= lMsg + fPresenter.GetstaticText('view.main', Parts[i]); // Build the string
+    end;
+
+    memReportProgress.Lines.Add(FormatDateTime('dd-mm-yyyy hh:nn:ss', Now) + ' ' + lMsg);
+    // "Auto-scroll"
+    memReportProgress.SelStart:= Length(memReportProgress.Text);
+    memReportProgress.SelLength:= 0;
   end;
 
-  // Update statusbar
-  fPresenter.SetStatusbarText(Msg, 0);
+  fPresenter.SetStatusbarText(lMsg, 0);
 
   // Forceer UI update
-  Application.ProcessMessages;
+//  Application.ProcessMessages;
+end;
+
+procedure TfrmMain.DoReportProgressCount(anObj : TObject; aData : pointer);
+var
+  lMsg: string;
+  Parts: TStringArray;
+  Current, Total: Integer;
+begin
+  lMsg:= PChar(aData);
+
+  // Parse the message which should be "Current,Total"
+  Parts:= lMsg.Split('|');
+  if Length(Parts) = 2 then
+  begin
+    Current:= StrToIntDef(Parts[0], 0);
+    Total:= StrToIntDef(Parts[1], 0);
+
+    // Update progress bar
+    if Total > 0 then
+    begin
+      ProgressBar.Max:= Total;
+      ProgressBar.Position:= Current;
+      if Current= Total then
+        lblProgress.Caption:= Format(fPresenter.GetstaticText(UnitName, 'ExportIsCompleted'), [Total])
+      else
+        lblProgress.Caption:= Format(fPresenter.GetstaticText(UnitName, 'ExportingNumberFromTotalCount'), [Current, Total]);
+    end;
+  end;
+
+  Application.ProcessMessages;  // Force UI update
 end;
 
 procedure TfrmMain.DoExportError(anObj : TObject; aData : PExportToOroxTtlFileRec);
 var
   Msg: string;
+  Parts: TStringArray;
+  i: Integer;
+  lMsg: string;
 begin
-  Msg := PChar(aData);
+  if adata = Nil then Exit;
 
-  // Toon in memo (moet je toevoegen aan je form)
-  if Assigned(memReportError) then
-  begin
-    memReportError.Lines.Add(FormatDateTime('dd-mm-yyyy hh:nn:ss', Now) + ' ' + Msg);
+  Msg:= PChar(aData);
+  Parts:= Msg.Split('|');
+  lMsg:= '';
 
-    // Auto-scroll
+  // Add to the memo (line)
+  if Assigned(memReportError) then begin
+    for i:= Low(Parts) to High(Parts) do begin
+      lMsg:= lMsg + fPresenter.GetstaticText('view.main', Parts[i]);  // Build the string
+    end;
+
+    memReportError.Lines.Add(FormatDateTime('dd-mm-yyyy hh:nn:ss', Now) + ' ' + lMsg);
+    // "Auto-scroll"
     memReportError.SelStart := Length(memReportError.Text);
     memReportError.SelLength := 0;
   end;
 
-  // Forceer UI update
-  Application.ProcessMessages;
+//  Application.ProcessMessages;  // Force UI update
+end;
+
+procedure TfrmMain.DoUniqueStringlist(anObj : TObject; aData : PUniqueStringlistRec);
+var
+  combo: TComboBox;
+begin
+  if (aData = Nil) and (anObj = Nil) then
+    Exit;
+
+  combo:= TComboBox(anObj);
+
+  if TStringList(aData^.ListItems).Count > 0 then
+  begin
+    combo.Items.Clear;
+    combo.Items.Assign(TStringList(aData^.ListItems));
+  end;
 end;
 
 procedure TfrmMain.HandleObsNotify(aReason: ptrint; aNotifyObj: TObject; aData: pointer);
@@ -618,7 +801,9 @@ begin
     prRetrieveData            : DoRetrieveData(aNotifyObj,aData);
     prExportToOroxTtlFile     : DoExportToOroxTtlFile(aNotifyObj,aData);
     prReportProgress          : DoExportProgress(aNotifyObj, aData);
+    prReportProgressCount     : DoReportProgressCount(aNotifyObj, aData);
     prReportError             : DoExportError(aNotifyObj, aData);
+    prUniqueStringlist        : DoUniqueStringlist(aNotifyObj, aData);
   end;
 end;
 {$EndRegion 'subscriber-events'}
@@ -640,15 +825,34 @@ begin
   if fCanContinue then StartLogging;
 
   if fCanContinue then fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'Welcome'), 0);  // Just testing.
-  if fCanContinue then
-     if fPresenter.GetSQLfileLocation <> '' then
-       SynEditSqlQuery.Lines.LoadFromFile(fPresenter.GetSQLfileLocation);  // een beetje een afkorting
+  if fCanContinue then begin
+    // Voorlopig in het Nederlands opstarten. Dat moet eerst op orde zijn.
+    // Daarna twee talig maken
+    Lang:= 'nl';
+    fPresenter.SwitchLanguage(UnitName);
+    fPresenter.GetStaticTexts('view.main.StatusbarTexts');
+    WriteSingleSetting('Language', Lang);
+    //
+
+    if fPresenter.GetSQLfileLocation <> '' then begin
+      SynEditSqlQuery.Lines.LoadFromFile(fPresenter.GetSQLfileLocation);  // A bit of an abbreviation
+      lblSQLFileLocation.Caption:= fPresenter.GetSQLfileLocation;
+    end;
+
+    if fPresenter.GetKeepLastOrganization then begin
+      cbOrganizationName.Text:= fPresenter.GetLastUsedOrganization;
+    end
+    else
+      cbOrganizationName.Text:= '';
+
+    LoadComboBoxItems;  // Load the combobox items from a text file.
+  end;
 
   fPresenter.SetStatusbarPanelsWidth(stbInfo, stbInfo.Width, stbInfo.Panels[0].Width, stbInfo.Panels[2].Width);
 
   // Connect eventhandlers.
   miProgramClose.OnClick:= @miProgramCloseOnClick;
-  btnClose.OnClick      := @miProgramCloseOnClick;
+  btnClose.OnClick:= @miProgramCloseOnClick;
   miOptionsOptions.OnClick:= @miOptionsOptionsOnClick;
   miOptionsLanguageEN.OnClick:= @miOptionsLanguageENOnClick;
   miOptionsLanguageNL.OnClick:= @miOptionsLanguageNLOnClick;
@@ -659,14 +863,28 @@ begin
   btnGetData.Enabled:= False;
   btnExportToFile.Enabled:= False;
   btnExportDbgridToCsv.Enabled:= False;
+  ProgressBar.Visible:= False;
   PageControl1.ActivePageIndex:= 0;
   cbGWSWVersion.ItemIndex:= 0; { #note : There are no versions to choose from yet. Version 1.6 is still hard in the code }
 
+  // GWSW Versie
+  cbGWSWVersion.Items.Add(GWSW_versie_16);
+  cbGWSWVersion.ItemIndex:= 0;
 end;
 
 procedure TfrmMain.BeforeDestruction;
+var
+  UserName, Location: String;
 begin
-  if fCanContinue then StoreFormstate;  // Store form position and size.
+  if fCanContinue then begin
+    StoreFormstate;  // Store form position and size.
+
+    UserName:= StringReplace(SysUtils.GetEnvironmentVariable('USERNAME') , ' ', '_', [rfIgnoreCase, rfReplaceAll]) + '_';
+    Location:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings;
+    cbOrganizationName.Items.SaveToFile(Location + PathDelim + UserName+'_Organisation.txt');
+    cbDatabaseName.Items.SaveToFile(Location + PathDelim + UserName+'_DatabaseName.txt');
+    cbUserName.Items.SaveToFile(Location + PathDelim + UserName+'_UserName.txt');
+  end;
 
   if fSubscriber <> nil then begin
     if fPresenter <> nil then
@@ -739,10 +957,10 @@ begin
     lTrx.AppName:= ApplicationName;
     //  lTrx.RootDir should never be empty, because then no directory will be created.
     {$IFDEF MSWINDOWS}
-    lTrx.RootDir:= GetEnvironmentVariable('appdata'); // Win 11: lTrx.RootDir = 'C:\Users\Hans\AppData\Roaming'     // + ApplicationName;  // C:\Users\<username>\AppData\Roaming\<Application Name>
+    lTrx.RootDir:= SysUtils.GetEnvironmentVariable('appdata'); // Win 11: lTrx.RootDir = 'C:\Users\<username>\AppData\Roaming'     // + ApplicationName;  // C:\Users\<username>\AppData\Roaming\<Application Name>
     {$ENDIF}
     {$IFDEF LINUX}
-    lTrx.RootDir := IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config';  // Linux: lTrx.RootDir = '/home/hvb/.config'
+    lTrx.RootDir := IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config';  // Linux: lTrx.RootDir = '/home/<username>/.config'
     {$ENDIF}
 
     lTrx.AppName:= ApplicationName;
@@ -840,6 +1058,49 @@ begin
   end;
 end;
 
+procedure TfrmMain.AddCbListItem(sender : TObject);
+var
+  lTrx: TUniqueStringlistTrx;
+begin
+  lTrx:= fPresenter.TrxMan.StartTransaction(prUniqueStringlist) as TUniqueStringlistTrx;
+  try
+    lTrx.ListItems:= TComboBox(sender).Items;
+    lTrx.NewString:= TComboBox(sender).Text;
+    lTrx.aComponent:= Sender;
+    fPresenter.TrxMan.CommitTransaction;
+  except
+    fPresenter.TrxMan.RollbackTransaction;
+    fPresenter.SetStatusbarText(FPresenter.GetstaticText('view.main.statusbartexts', 'ErrorUniqueStringlist'), 0);
+  end;
+end;
+
+procedure TfrmMain.LoadComboBoxItems;
+var
+  UserName, Location: String;
+begin
+  UserName:= StringReplace(SysUtils.GetEnvironmentVariable('USERNAME') , ' ', '_', [rfIgnoreCase, rfReplaceAll]) + '_';
+  Location:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings;
+
+  if FileExists(Location + PathDelim + UserName+'_DatabaseName.txt') then
+    cbDatabaseName.Items.LoadFromFile(Location + PathDelim + UserName+'_DatabaseName.txt');
+
+  if FileExists(Location + PathDelim + UserName+'_UserName.txt') then
+    cbUserName.Items.LoadFromFile(Location + PathDelim + UserName+'_UserName.txt');
+
+  if FileExists(Location + PathDelim + UserName+'_Organisation.txt') then
+    cbOrganizationName.Items.LoadFromFile(Location + PathDelim + UserName+'_Organisation.txt');
+end;
+
+procedure TfrmMain.ExportInProgress(IsInProgress : Boolean);
+var
+  lRec: TExportInProgressRec;
+begin
+  lRec.IsInProgress:= IsInProgress;
+  lRec.aParent:= Self;
+
+  fPresenter.ExportInProgress(lRec);
+end;
+
 procedure TfrmMain.miProgramCloseOnClick(Sender : TObject);
 begin
   Close;
@@ -849,11 +1110,11 @@ procedure TfrmMain.OnFormShow(Sender : TObject);
 begin
   if fCanContinue then ReadFormState;
   if fCanContinue then ReadSettings;
-  edtDatabaseName.SetFocus;
+  cbDatabaseName.SetFocus;
 
   // Prevent the text from being selected and put cursor behind any text
-  edtDatabaseName.SelStart  := Length(edtDatabaseName.Text);
-  edtDatabaseName.SelLength := 0;
+  cbDatabaseName.SelStart  := Length(cbDatabaseName.Text);
+  cbDatabaseName.SelLength := 0;
 end;
 
 procedure TfrmMain.OnFormResize(Sender : TObject);
@@ -899,8 +1160,10 @@ end;
 
 procedure TfrmMain.edtMappingsFileOnChange(Sender : TObject);
 begin
-  WriteSingleSetting('MappingFile', edtMappingsFile.Text);
+  if edtMappingsFile.Text <> '' then
+    WriteSingleSetting('MappingFile', edtMappingsFile.Text);
 end;
+
 
 end.
 

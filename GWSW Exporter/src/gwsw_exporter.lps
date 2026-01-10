@@ -9,9 +9,9 @@
         <Filename Value="gwsw_exporter.lpr"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="4"/>
+        <TopLine Value="17"/>
         <CursorPos X="47" Y="36"/>
-        <UsageCount Value="147"/>
+        <UsageCount Value="203"/>
       </Unit>
       <Unit>
         <Filename Value="views\view.main.pas"/>
@@ -19,38 +19,38 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="646"/>
-        <CursorPos Y="664"/>
-        <FoldState Value=" T3kJ0D0D212 PiDpO01"/>
-        <UsageCount Value="147"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="853"/>
+        <CursorPos X="31" Y="872"/>
+        <FoldState Value=" T3q605B21211112E pkBwM0E041D"/>
+        <UsageCount Value="203"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="presenters\presenter.main.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="187"/>
-        <CursorPos Y="220"/>
-        <UsageCount Value="147"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="58"/>
+        <CursorPos Y="74"/>
+        <UsageCount Value="203"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="models\model.base.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="6"/>
-        <TopLine Value="268"/>
-        <CursorPos X="23" Y="117"/>
-        <UsageCount Value="147"/>
+        <TopLine Value="113"/>
+        <CursorPos X="23" Y="139"/>
+        <UsageCount Value="203"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="common\common.consts.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <CursorPos X="34" Y="9"/>
-        <UsageCount Value="147"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="50" Y="11"/>
+        <UsageCount Value="203"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -58,24 +58,27 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="AppLogging"/>
         <EditorIndex Value="-1"/>
-        <CursorPos X="40"/>
-        <UsageCount Value="146"/>
+        <CursorPos X="23"/>
+        <UsageCount Value="202"/>
       </Unit>
       <Unit>
         <Filename Value="common\settings.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="Settings"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="203"/>
-        <CursorPos Y="216"/>
-        <UsageCount Value="146"/>
+        <TopLine Value="275"/>
+        <CursorPos Y="292"/>
+        <FoldState Value=" T3kP04511 Pba0 T1lE02K"/>
+        <UsageCount Value="202"/>
       </Unit>
       <Unit>
         <Filename Value="common\common.utils.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="12" Y="16"/>
-        <UsageCount Value="146"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="23"/>
+        <FoldState Value=" T3J0P011 PHW0f"/>
+        <UsageCount Value="202"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="views\view.configure.pas"/>
@@ -83,76 +86,76 @@
         <ComponentName Value="frmConfigure"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="8"/>
-        <TopLine Value="392"/>
-        <CursorPos Y="393"/>
-        <UsageCount Value="146"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="244"/>
+        <CursorPos Y="252"/>
+        <FoldState Value=" T3qB0CK"/>
+        <UsageCount Value="202"/>
       </Unit>
       <Unit>
         <Filename Value="presenters\presenter.configure.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="5"/>
-        <TopLine Value="28"/>
-        <CursorPos X="15" Y="39"/>
-        <UsageCount Value="146"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="22"/>
+        <CursorPos Y="45"/>
+        <UsageCount Value="202"/>
       </Unit>
       <Unit>
         <Filename Value="presenters\presenter.configure.trax.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="110"/>
-        <CursorPos X="23" Y="126"/>
-        <UsageCount Value="146"/>
+        <TopLine Value="160"/>
+        <CursorPos X="13" Y="188"/>
+        <UsageCount Value="202"/>
       </Unit>
       <Unit>
         <Filename Value="models\model.configure.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="214"/>
-        <CursorPos X="51" Y="238"/>
-        <UsageCount Value="146"/>
+        <TopLine Value="252"/>
+        <CursorPos Y="307"/>
+        <FoldState Value=" T3md0N021 PBj60r"/>
+        <UsageCount Value="202"/>
       </Unit>
       <Unit>
         <Filename Value="common\databasemodule.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="DatabaseModule"/>
-        <EditorIndex Value="10"/>
-        <TopLine Value="149"/>
-        <CursorPos X="81" Y="162"/>
-        <UsageCount Value="144"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="129"/>
+        <CursorPos X="38" Y="146"/>
+        <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="common\querydataprovider.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="QueryDataProvider"/>
-        <EditorIndex Value="12"/>
-        <CursorPos X="3" Y="92"/>
-        <UsageCount Value="108"/>
+        <EditorIndex Value="13"/>
+        <CursorPos X="23"/>
+        <FoldState Value=" T3kN0551311 Pejc0_"/>
+        <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="common\oroxexport.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="OroxExport"/>
-        <EditorIndex Value="13"/>
-        <TopLine Value="1797"/>
-        <CursorPos Y="1822"/>
-        <FoldState Value=" T3jG0A47 pe/f0)012L pU,R0BY"/>
-        <UsageCount Value="108"/>
+        <EditorIndex Value="12"/>
+        <TopLine Value="2258"/>
+        <CursorPos X="47" Y="2278"/>
+        <FoldState Value=" T3%90}Q0L p0.S0!1 PTiW0M"/>
+        <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="common\gwswtypes.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="GWSWTypes"/>
-        <EditorIndex Value="11"/>
-        <TopLine Value="11"/>
-        <CursorPos Y="29"/>
-        <UsageCount Value="115"/>
+        <EditorIndex Value="10"/>
+        <TopLine Value="111"/>
+        <CursorPos X="26" Y="138"/>
+        <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -160,9 +163,10 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="MappingManager"/>
         <EditorIndex Value="14"/>
-        <TopLine Value="75"/>
+        <TopLine Value="69"/>
         <CursorPos Y="92"/>
-        <UsageCount Value="106"/>
+        <FoldState Value=" T3i807011o"/>
+        <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -170,92 +174,88 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uIGWSWDataProvider"/>
         <EditorIndex Value="-1"/>
-        <CursorPos X="27" Y="21"/>
-        <UsageCount Value="108"/>
+        <CursorPos X="3" Y="9"/>
+        <UsageCount Value="200"/>
       </Unit>
       <Unit>
         <Filename Value="common\exportprogressreporter.intf.pas"/>
         <IsPartOfProject Value="True"/>
+        <EditorIndex Value="15"/>
+        <CursorPos X="116" Y="15"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\gwswvalidation.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GWSWValidation"/>
+        <EditorIndex Value="11"/>
+        <TopLine Value="43"/>
+        <CursorPos X="29" Y="57"/>
+        <UsageCount Value="155"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\gwswvalidationconfig.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GWSWValidationConfig"/>
         <EditorIndex Value="-1"/>
-        <CursorPos X="15" Y="12"/>
-        <UsageCount Value="80"/>
+        <TopLine Value="61"/>
+        <CursorPos X="7" Y="155"/>
+        <UsageCount Value="154"/>
       </Unit>
       <Unit>
         <Filename Value="common\interfacewrapper.pas"/>
         <UnitName Value="InterfaceWrapper"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="5" Y="30"/>
-        <UsageCount Value="113"/>
+        <UsageCount Value="100"/>
       </Unit>
       <Unit>
         <Filename Value="presenters\presenter.trax.pas"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="319"/>
-        <CursorPos Y="387"/>
-        <UsageCount Value="70"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="466"/>
+        <CursorPos X="66" Y="409"/>
+        <FoldState Value=" T3nD0)1 PIic0X"/>
+        <UsageCount Value="100"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="models\model.decl.pas"/>
-        <EditorIndex Value="9"/>
-        <TopLine Value="59"/>
-        <CursorPos X="3" Y="73"/>
-        <UsageCount Value="70"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="47"/>
+        <CursorPos X="3" Y="67"/>
+        <UsageCount Value="100"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="models\model.intf.pas"/>
-        <EditorIndex Value="4"/>
-        <CursorPos X="32" Y="45"/>
-        <UsageCount Value="70"/>
+        <EditorIndex Value="5"/>
+        <UsageCount Value="100"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="models\model.main.pas"/>
         <EditorIndex Value="7"/>
-        <TopLine Value="563"/>
-        <CursorPos Y="576"/>
-        <FoldState Value=" T3j1040231114 PiAjL0S"/>
-        <UsageCount Value="70"/>
+        <TopLine Value="660"/>
+        <CursorPos Y="652"/>
+        <FoldState Value=" T3j70403A piXkS0?4 pj2l00N3]IZjN05511 Pi0j00/"/>
+        <UsageCount Value="100"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="common\exp.dirinfo.pas"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="44"/>
-        <CursorPos X="28" Y="59"/>
-        <UsageCount Value="6"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\Lazarus_4.0\Config\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcIntfs.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="4606"/>
-        <CursorPos Y="4624"/>
+        <TopLine Value="40"/>
+        <CursorPos X="33" Y="57"/>
         <UsageCount Value="3"/>
-        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="C:\Lazarus_4.0\Config\onlinepackagemanager\packages\zeosdbo\src\component\ZAbstractRODataset.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="2025"/>
         <CursorPos Y="2041"/>
-        <UsageCount Value="10"/>
-        <DefaultSyntaxHighlighter Value="Delphi"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\rtl\inc\objpash.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="186"/>
-        <CursorPos X="23" Y="206"/>
-        <UsageCount Value="1"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\packages\fcl-db\src\base\db.pas"/>
-        <UnitName Value="DB"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="1419"/>
-        <CursorPos X="3" Y="1439"/>
-        <UsageCount Value="1"/>
+        <UsageCount Value="7"/>
       </Unit>
       <Unit>
         <Filename Value="C:\Lazarus_4.0\components\lazutils\laz2_xmlread.pas"/>
@@ -263,14 +263,14 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1499"/>
         <CursorPos Y="1517"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="9"/>
       </Unit>
       <Unit>
         <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\rtl\objpas\classes\classesh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="740"/>
         <CursorPos X="15" Y="756"/>
-        <UsageCount Value="2"/>
+        <UsageCount Value="9"/>
       </Unit>
       <Unit>
         <Filename Value="C:\Lazarus_4.0\lcl\dialogs.pp"/>
@@ -278,14 +278,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="169"/>
         <CursorPos X="20" Y="198"/>
-        <UsageCount Value="9"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\Lazarus_4.0\fpc\3.2.2\source\rtl\objpas\sysutils\osutilsh.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="32"/>
-        <CursorPos X="10" Y="49"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="6"/>
       </Unit>
       <Unit>
         <Filename Value="C:\Lazarus_4.0\components\synedit\synedit.pp"/>
@@ -293,128 +286,219 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="4839"/>
         <CursorPos Y="4856"/>
+        <UsageCount Value="7"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\lcl\include\customcombobox.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="255"/>
+        <CursorPos X="8" Y="283"/>
         <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.0\lcl\interfaces\win32\win32callback.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2740"/>
+        <CursorPos Y="2755"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.4\lcl\dbgrids.pas"/>
+        <UnitName Value="DBGrids"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2215"/>
+        <CursorPos Y="2233"/>
+        <UsageCount Value="6"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.4\lcl\controls.pp"/>
+        <UnitName Value="Controls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2913"/>
+        <CursorPos Y="2930"/>
+        <UsageCount Value="6"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.4\lcl\include\menuitem.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="277"/>
+        <CursorPos Y="297"/>
+        <UsageCount Value="3"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.4\Configure\onlinepackagemanager\packages\zeosdbo\src\dbc\ZDbcOracle.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1380"/>
+        <CursorPos Y="1394"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\bulkdataprovider.pas"/>
+        <UnitName Value="BulkDataProvider"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="31"/>
+        <CursorPos X="31" Y="49"/>
+        <UsageCount Value="15"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\variantutils.pas"/>
+        <UnitName Value="VariantUtils"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="155"/>
+        <CursorPos X="104" Y="168"/>
+        <UsageCount Value="15"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.4\Configure\onlinepackagemanager\packages\zeosdbo\src\component\ZAbstractDataset.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1016"/>
+        <CursorPos Y="1030"/>
+        <UsageCount Value="7"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.4\Configure\onlinepackagemanager\packages\zeosdbo\src\component\ZAbstractConnection.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="670"/>
+        <CursorPos Y="685"/>
+        <UsageCount Value="6"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Lazarus_4.4\fpc\3.2.2\source\packages\rtl-objpas\src\inc\variants.pp"/>
+        <UnitName Value="Variants"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="56"/>
+        <CursorPos X="21" Y="87"/>
+        <UsageCount Value="7"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\obs_prosu.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="201"/>
+        <CursorPos X="44" Y="221"/>
+        <UsageCount Value="8"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
       <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="312" Column="22" TopLine="284"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="313" Column="22" TopLine="285"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="334" Column="22" TopLine="306"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="644" TopLine="620"/>
-      </Position>
-      <Position>
-        <Filename Value="presenters\presenter.main.pas"/>
-        <Caret Line="217" TopLine="193"/>
-      </Position>
-      <Position>
-        <Filename Value="presenters\presenter.main.pas"/>
-        <Caret Line="218" TopLine="194"/>
-      </Position>
-      <Position>
-        <Filename Value="presenters\presenter.main.pas"/>
-        <Caret Line="219" TopLine="195"/>
-      </Position>
-      <Position>
-        <Filename Value="presenters\presenter.main.pas"/>
-        <Caret Line="220" TopLine="196"/>
-      </Position>
-      <Position>
-        <Filename Value="models\model.main.pas"/>
-        <Caret Line="592" Column="30" TopLine="568"/>
-      </Position>
-      <Position>
-        <Filename Value="models\model.main.pas"/>
-      </Position>
-      <Position>
-        <Filename Value="models\model.main.pas"/>
-        <Caret Line="69" Column="32" TopLine="46"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="646" Column="8" TopLine="620"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="287" Column="42" TopLine="274"/>
-      </Position>
-      <Position>
-        <Filename Value="presenters\presenter.trax.pas"/>
-        <Caret Line="137" Column="50" TopLine="115"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="287" Column="42" TopLine="274"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="547" Column="40" TopLine="533"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="546" Column="14" TopLine="533"/>
-      </Position>
-      <Position>
-        <Filename Value="models\model.decl.pas"/>
-        <Caret Line="73" Column="3" TopLine="59"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="547" Column="24" TopLine="533"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="675" TopLine="654"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="179" Column="131" TopLine="164"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="308" Column="129" TopLine="294"/>
-      </Position>
-      <Position>
-        <Filename Value="models\model.main.pas"/>
-        <Caret Line="576" Column="54" TopLine="563"/>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="29" Column="32"/>
       </Position>
       <Position>
         <Filename Value="common\oroxexport.pas"/>
-        <Caret Line="537" Column="70" TopLine="511"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="23" Column="11" TopLine="5"/>
-      </Position>
-      <Position>
-        <Filename Value="views\view.main.pas"/>
-        <Caret Line="22" Column="31" TopLine="5"/>
+        <Caret Line="89" Column="102" TopLine="57"/>
       </Position>
       <Position>
         <Filename Value="common\oroxexport.pas"/>
-        <Caret Line="549" TopLine="533"/>
+        <Caret Line="194" Column="21" TopLine="162"/>
       </Position>
       <Position>
         <Filename Value="common\oroxexport.pas"/>
-        <Caret Line="1826" Column="47" TopLine="1809"/>
+        <Caret Line="202" Column="66" TopLine="170"/>
       </Position>
       <Position>
-        <Filename Value="common\gwswtypes.pas"/>
-        <Caret Line="29" TopLine="11"/>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="209" Column="61" TopLine="178"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="216" Column="40" TopLine="184"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="407" Column="53" TopLine="387"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="407" Column="53" TopLine="375"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="589" Column="47" TopLine="557"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="603" Column="42" TopLine="571"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="619" Column="47" TopLine="587"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="635" Column="45" TopLine="603"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="713" Column="45" TopLine="681"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="899" Column="51" TopLine="867"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="913" Column="46" TopLine="881"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="927" Column="51" TopLine="895"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="941" Column="60" TopLine="909"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="956" Column="49" TopLine="924"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="983" Column="53" TopLine="951"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="998" Column="47" TopLine="966"/>
       </Position>
       <Position>
         <Filename Value="views\view.main.pas"/>
-        <Caret Line="11" Column="10" TopLine="5"/>
+        <Caret Line="747" Column="60" TopLine="667"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="972" Column="101" TopLine="966"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="994" Column="5" TopLine="971"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="995" Column="8" TopLine="971"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="998" Column="13" TopLine="971"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="999" Column="7" TopLine="971"/>
+      </Position>
+      <Position>
+        <Filename Value="common\oroxexport.pas"/>
+        <Caret Line="1107" Column="3" TopLine="1088"/>
+      </Position>
+      <Position>
+        <Filename Value="views\view.main.pas"/>
+        <Caret Line="18" Column="24"/>
       </Position>
     </JumpHistory>
     <RunParams>
@@ -422,11 +506,9 @@
       <Modes ActiveMode=""/>
     </RunParams>
     <HistoryLists>
-      <List Name="WorkingDirectory" Type="File" Count="1"/>
       <List Name="LaunchingApplication" Type="File" Count="1">
         <Item1 Value="C:\WINDOWS\system32\cmd.exe /C ${TargetCmdLine}"/>
       </List>
-      <List Name="CommandLineParameters" Count="1"/>
     </HistoryLists>
   </ProjectSession>
   <Debugging>
@@ -435,25 +517,22 @@
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
-        <Source Value="common\oroxexport.pas"/>
-        <Line Value="1123"/>
+        <Source Value="models\model.main.pas"/>
+        <Line Value="454"/>
       </Item>
     </BreakPoints>
     <Watches>
       <Item>
-        <Expression Value="Put^"/>
+        <Expression Value="tmp"/>
       </Item>
       <Item>
-        <Expression Value="Z"/>
+        <Expression Value="lMsg"/>
       </Item>
       <Item>
         <Expression Value="Stelsel^.StelselTypeUri"/>
       </Item>
       <Item>
-        <Expression Value="FStelselList"/>
-      </Item>
-      <Item>
-        <Expression Value="lDouble"/>
+        <Expression Value="Msg"/>
       </Item>
     </Watches>
   </Debugging>
