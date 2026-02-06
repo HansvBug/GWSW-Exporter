@@ -4,14 +4,14 @@ unit QueryDataProvider;
 interface
 
 uses
-  SysUtils, Classes, ZDataset, variants, uIGWSWDataProvider;
+  SysUtils, Classes, SQLDB, variants, uIGWSWDataProvider;
 
 type
 
   { TQueryDataProvider }
   TQueryDataProvider = class(TInterfacedObject, IGWSWDataProvider)
   private
-    fQuery: TZQuery;
+    fQuery: TSQLQuery;
     fCurrentRecord: Integer;
 
     function RemoveSQLComments(const SQL: string): string;
@@ -32,7 +32,7 @@ type
     function FieldExists(const FieldName: string): Boolean;
     function GetObjectType: string;
 
-    function GetRecordCount: Integer;  // deprecated, is te langzaam op het netwerk. hiervoor moeten alle records eerst worden opgehaald.
+    function GetRecordCount: Integer;
     function GetAccurateRecordCount: Integer;
     function GetProviderType: string;
   end;
@@ -131,7 +131,7 @@ end;
 constructor TQueryDataProvider.Create(AQuery: TObject; DisableControles: Boolean);
 begin
   inherited Create;
-  fQuery:= TZQuery(AQuery);
+  fQuery:= TSQLQuery(AQuery);
 
   if DisableControles then
     fQuery.DisableControls
@@ -225,7 +225,7 @@ end;
 
 function TQueryDataProvider.GetAccurateRecordCount: Integer;
 var
-  CountQuery: TZQuery;
+  CountQuery: TSQLQuery;
   MainSQL, CleanSQL: string;
 begin
   Result:= 0;
@@ -248,9 +248,11 @@ begin
       Exit;
 
     // Build COUNT query
-    CountQuery:= TZQuery.Create(nil);
+    CountQuery:= TSQLQuery.Create(nil);
     try
-      CountQuery.Connection:= fQuery.Connection;
+      CountQuery.DataBase:= fQuery.DataBase;
+      CountQuery.Transaction:= fQuery.Transaction;
+
       CountQuery.ReadOnly:= True;
       CountQuery.SQL.Text:= 'SELECT COUNT(*) as CNT FROM (' + CleanSQL + ')';
 

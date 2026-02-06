@@ -6,7 +6,8 @@ unit common.utils;
 interface
 
 uses
-  Classes, SysUtils, Forms {$IFDEF MSWINDOWS}, Windows {$ENDIF}, StdCtrls, Controls, ExtCtrls;
+  Classes, SysUtils, Forms, StdCtrls, Controls, ExtCtrls
+  {$IFDEF WINDOWS}, Windows {$ENDIF};
 
 function CheckFormIsEntireVisible(Rect : TRect) : TRect;
 function SetStatusbarPnlWidth(stbWidth, lpWidth, rpWidth: Integer): Integer;
@@ -15,7 +16,6 @@ procedure DisableChildControls(Parent: TObject);
 procedure EnableChildControls(Parent: TObject);
 
 implementation
-
 
 function CheckFormIsEntireVisible(Rect : TRect) : TRect;
 var
@@ -50,13 +50,13 @@ begin
 end;
 
 function IsFileInUse(FileName : TFileName) : Boolean;
-{$IFDEF MSWINDOWS}
+{$IFDEF WINDOWS}
 var
   HFileRes: HFILE;
 begin
   Result:= False;
   if not FileExists(FileName) then Exit;
-  HFileRes := CreateFile(PChar(FileName),
+  HFileRes:= CreateFile(PChar(FileName),
                          GENERIC_READ or GENERIC_WRITE,
                          0,
                          nil,
@@ -67,6 +67,30 @@ begin
   if not Result then
     CloseHandle(HFileRes);
 end;
+{$ELSE}
+var
+  FileHandle: THandle;
+begin
+  Result:= False;
+  if not FileExists(FileName) then
+    Exit;
+
+  // Probeer het bestand exclusief te openen voor lezen/schrijven
+  FileHandle:= FileOpen(FileName, fmOpenReadWrite or fmShareExclusive);
+
+  if FileHandle = THandle(-1) then
+  begin
+    // Bestand is in gebruik of kan niet worden geopend
+    Result:= True;
+  end
+  else
+  begin
+    // Bestand is niet in gebruik, sluit het handle
+    FileClose(FileHandle);
+    Result:= False;
+  end;
+end;
+{$ENDIF}
 
 procedure DisableChildControls(Parent : TObject);
 var
@@ -81,10 +105,10 @@ begin
   for i:= 0 to lParent.ControlCount - 1 do
   begin
     if lParent.Controls[i] is TButton then
-      lParent.Controls[i].Enabled := False;
+      lParent.Controls[i].Enabled:= False;
 
     if lParent.Controls[i] is TSplitter then
-      lParent.Controls[i].Enabled := False;
+      lParent.Controls[i].Enabled:= False;
 
     // If it's a container, continue recursively
     if lParent.Controls[i] is TWinControl then
@@ -104,7 +128,6 @@ begin
 
   for i:= 0 to lParent.ControlCount - 1 do
   begin
-
     if lParent.Controls[i] is TButton then
       lParent.Controls[i].Enabled:= True;
 
@@ -117,26 +140,4 @@ begin
   end;
 end;
 
-{$ENDIF}
-{$IFDEF LINUX}
-{ #note : Dit werkt ook voor Windows. }
-var
-  FS: TFileStream;
-begin
-  Result:= False;
-  if not FileExists(FileName) then Exit;
-
-  try
-    FS:= TFileStream.Create(
-      FileName,
-      fmOpenReadWrite or fmShareExclusive
-    );
-    FS.Free;
-  except
-    Result := True;
-  end;
-end;
-{$ENDIF}
-
 end.
-

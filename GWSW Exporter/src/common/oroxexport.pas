@@ -8,7 +8,7 @@ interface
 uses
   SysUtils, Classes, TypInfo, Variants, Math, DateUtils, StrUtils,
   model.intf, uIGWSWDataProvider, GWSWTypes, MappingManager,
-  exportprogressreporter.intf, GWSWValidationConfig, GWSWValidation;
+  exportprogressreporter.intf, GWSWValidationConfig, GWSWValidation, ExportConfig;
 
 type
   { TOroxExport }
@@ -27,6 +27,7 @@ type
       fKolkList: TList;
       fPersleidingList: TList;
       fMappingManager: TMappingManager;
+      fExportConfig: TExportConfig;  // Export settings
 
       procedure ClearAllLists;
       procedure ClearPutList;
@@ -86,7 +87,8 @@ type
 
 
     public
-      constructor Create(ADataProvider : IGWSWDataProvider; const FileName, OrganizationName, MappingsFile : String; AProgressReporter: IExportProgressReporter);
+      constructor Create(ADataProvider : IGWSWDataProvider; const FileName, OrganizationName, MappingsFile : String; AProgressReporter: IExportProgressReporter;
+                         const ExportConfig: TExportConfig);
       destructor Destroy; override;
       procedure ExportToOrox(const GWSWversion: String);
 
@@ -115,7 +117,8 @@ var
 begin
   for i:= 0 to fPutList.Count - 1 do begin
     Put:= PGWSWPut(fPutList[i]);
-    Dispose(Put);
+    if Put <> Nil then
+      Dispose(Put);
   end;
   fPutList.Clear;
 end;
@@ -127,7 +130,8 @@ var
 begin
   for i:= 0 to fLeidingList.Count - 1 do begin
     Leiding:= PGWSWLeiding(fLeidingList[i]);
-    Dispose(Leiding);
+    if Leiding <> Nil then
+      Dispose(Leiding);
   end;
   fLeidingList.Clear;
 end;
@@ -139,7 +143,8 @@ var
 begin
   for i:= 0 to fStelselList.Count - 1 do begin
     Stelsel:= PGWSWStelsel(fStelselList[i]);
-    Dispose(Stelsel);
+    if Stelsel <> Nil then
+      Dispose(Stelsel);
   end;
   fStelselList.Clear;
 end;
@@ -151,7 +156,8 @@ var
 begin
   for i:= 0 to fKolkList.Count - 1 do begin
     Kolk:= PGWSWKolk(fKolkList[i]);
-    Dispose(Kolk);
+    if Kolk <> Nil
+      then Dispose(Kolk);
   end;
   fKolkList.Clear;
 end;
@@ -163,7 +169,8 @@ var
 begin
   for i:= 0 to fPersleidingList.Count - 1 do begin
     Persleiding:= PGWSWPersleiding(fPersleidingList[i]);
-    Dispose(Persleiding);
+    if Persleiding <> Nil then
+      Dispose(Persleiding);
   end;
   fPersleidingList.Clear;
 end;
@@ -171,6 +178,11 @@ end;
 function TOroxExport.MapDatabaseToGWSW(DataProvider : IGWSWDataProvider; TotalRecords : Integer) : Boolean;
 var
   Stelsel, Put, Leiding, Persleiding, Kolk: Boolean;
+  StelselObj: PGWSWStelsel;
+  PutObj: PGWSWPut;
+  LeidingObj: PGWSWLeiding;
+  PersleidingObj: PGWSWPersleiding;
+  KolkObj: PGWSWKolk;
 begin
   Result:= False;
   Stelsel:= False;
@@ -178,6 +190,7 @@ begin
   Leiding:= False;
   Persleiding:= False;
   Kolk:= False;
+
   // Initialiseer progress tracking
   fTotalRecords:= TotalRecords;
   fCurrentRecord:= 0;
@@ -191,48 +204,57 @@ begin
           Inc(fCurrentRecord);
 
           // Update progress every 100 records or at milestones
-          // Mapping is time-consuming. So update the gui less and update the progress bar per 100 records
           if (fCurrentRecord mod 100 = 0) or (fCurrentRecord = 1) or (fCurrentRecord = TotalRecords) then
             UpdateProgressCount(fCurrentRecord, TotalRecords);
 
           case UpperCase(DataProvider.GetObjectType) of
             'STELSEL': begin
               if not Stelsel then begin
-                Stelsel:= True;  // Show only once.
-                ReportProgress('MappingSewerSystem');  // Mapping Stelsel...
+                Stelsel:= True;
+                ReportProgress('MappingSewerSystem');
               end;
-              FStelselList.Add(MapStelselFromProvider(DataProvider));
+              StelselObj:= MapStelselFromProvider(DataProvider);
+              if StelselObj <> nil then
+                FStelselList.Add(StelselObj);
             end;
             'PUT': begin
               if not Put then begin
                 Put:= True;
-                ReportProgress('MappingManhole'); // Mapping Put...
+                ReportProgress('MappingManhole');
               end;
-              FPutList.Add(MapPutFromProvider(DataProvider));
+              PutObj:= MapPutFromProvider(DataProvider);
+              if PutObj <> nil then
+                FPutList.Add(PutObj);
             end;
             'LEIDING': begin
               if not Leiding then begin
                 Leiding:= True;
-                ReportProgress('MappingPipeline');  // Mapping Leiding...
+                ReportProgress('MappingPipeline');
               end;
-              FLeidingList.Add(MapLeidingFromProvider(DataProvider));
+              LeidingObj:= MapLeidingFromProvider(DataProvider);
+              if LeidingObj <> nil then
+                FLeidingList.Add(LeidingObj);
             end;
             'PERSLEIDING': begin
               if not Persleiding then begin
                 Persleiding:= True;
                 ReportProgress('MappingMechanicalPipeline');
               end;
-              FPersLeidingList.Add(MapPersleidingFromProvider(DataProvider));
+              PersleidingObj:= MapPersleidingFromProvider(DataProvider);
+              if PersleidingObj <> nil then
+                FPersLeidingList.Add(PersleidingObj);
             end;
             'KOLK': begin
               if not Kolk then begin
                 Kolk:= True;
                 ReportProgress('MappingGully');
               end;
-              FKolkList.Add(MapKolkFromProvider(DataProvider));
+              KolkObj:= MapKolkFromProvider(DataProvider);
+              if KolkObj <> nil then
+                FKolkList.Add(KolkObj);
             end
             else begin
-              ReportError('Onbekend Object type aangetroffen.');   { #todo : Taalinstelling }
+              ReportError('Onbekend Object type aangetroffen.');
               ReportError('Dit is: ' + UpperCase(DataProvider.GetObjectType));
             end;
           end;
@@ -246,7 +268,7 @@ begin
     Result:= True;
   except
     on E: Exception do
-      raise Exception.Create('Mapping fout: ' + E.Message);   { #todo : Moet naar de view. } { #todo : Taalinstelling }
+      raise Exception.Create('Mapping fout: ' + E.Message);
   end;
 end;
 
@@ -265,7 +287,6 @@ begin
 
   SL:= TStringList.Create;  // de specificaties schrijven utf 8 voor. (nodig voor é ë etc.)
   try
-
     SL.WriteBOM:= False; { #todo : Uitzoeken. }
 
     // Prefixes conform GWSW-OroX specificatie.
@@ -438,7 +459,6 @@ var
   GeoX, GeoY, GeoZ: Double;
   lValue: Variant;
   lDate: TDateTime;
-  tmp: String;
 begin
   // Misschien ... optie die aangeeft dat als er ook maar 1 mapping fout is dan wordt de put niet meegenomen
   // dan wordt het iets van
@@ -1110,6 +1130,7 @@ begin
   Leiding^.BobBegin:= Nan;
   Leiding^.BobEind:= Nan;
   Leiding^.Begindatum:= 0;
+  Leiding^.Einddatum:= 0;
 
   // Boolean/Enum velden
   Leiding^.HasWKTGeometry:= False;
@@ -1206,6 +1227,22 @@ begin
   end
   else
     ReportError('Persleiding: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
+
+{
+if DataProvider.FieldExists('LENGTE') then begin
+  lValue:= DataProvider.GetFieldValue('LENGTE');
+  if not VarIsNull(lValue) then begin
+    Persleiding^.Lengte:= VarAsType(lValue, varInteger);
+
+    lVal:= ValidatePersleidingLength(Persleiding);  // Validate
+    if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Persleiding^.GUID);
+  end
+  else
+    ReportError('Persleiding: "Lengte" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
+end
+else
+  ReportError('Persleiding: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
+}
 
   // Diameter
   if DataProvider.FieldExists('DIAMETER') then
@@ -1354,6 +1391,41 @@ begin
   else
     ReportError('Persleiding: "Begindatum" veld ontbreekt.', eetFieldIsMissing, '');
 
+  if DataProvider.FieldExists('EINDDATUM') then begin
+    lDate:= GetDateFromYearField(DataProvider, 'EINDDATUM');
+    if lDate <> 0 then
+      Persleiding^.Einddatum:= lDate
+    else begin
+      Persleiding^.Einddatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
+      ReportError('Persleiding: "Einddatum" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
+    end
+  end
+  else
+    ReportError('Persleiding: "Einddatum" veld ontbreekt.', eetFieldIsMissing, '');
+
+
+  // BOB waarden   (Diepte begin en diepte eind)
+  if DataProvider.FieldExists('BOB_BEGIN') then begin
+    lValue:= DataProvider.GetFieldValue('BOB_BEGIN');
+    if not VarIsNull(lValue) then
+      Persleiding^.BobBegin:= lValue
+    else
+      ReportError('Persleiding: "Bob begin" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
+  end
+  else
+    ReportError('Persleiding: "Bob begin" veld ontbreekt.', eetFieldIsMissing, '');
+
+  if DataProvider.FieldExists('BOB_EIND') then begin
+    lValue:= DataProvider.GetFieldValue('BOB_EIND');
+    if not VarIsNull(lValue) then
+      Persleiding^.BobEind:= lValue
+    else
+      ReportError('Persleiding: "Bob eind" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
+  end
+  else
+    ReportError('Persleiding: "Bob eind" veld ontbreekt.', eetFieldIsMissing, '');
+
+
 
   Persleiding^.WKTGeometry:= '';
   Persleiding^.HasWKTGeometry:= False;
@@ -1418,6 +1490,7 @@ begin
 
   Persleiding^.Lengte:= NaN;
   Persleiding^.Begindatum:= NaN;
+  Persleiding^.Einddatum:= NaN;
 
   // Boolean velden
   Persleiding^.HasWKTGeometry:= False;
@@ -2115,85 +2188,98 @@ begin
 end;
 
 procedure TOroxExport.AddPutKenmerken(SL : TStringList; const Put : PGWSWPut);
-var
-  tmp: String;
 begin
   // Als puttype contains gemaal dan een aantal velden anders in de ttl zetten
-  if not IsNan(Put^.Breedte) and (Put^.Breedte > 0) then begin
-    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
-             FloatToOrox(Put^.Breedte, 3) + ' ] ;');
-    end
-    else
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteBouwwerk ; gwsw:hasValue ' +
-             FloatToOrox(Put^.Breedte, 0) + ' ] ;'); // Bij gemalen geen decimalen
+  if fExportConfig.IncludePutBreedte then begin
+    if not IsNan(Put^.Breedte) and (Put^.Breedte > 0) then begin
+      if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
+               FloatToOrox(Put^.Breedte, 3) + ' ] ;');
+      end
+      else
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteBouwwerk ; gwsw:hasValue ' +
+               FloatToOrox(Put^.Breedte, 0) + ' ] ;'); // Bij gemalen geen decimalen
+    end;
   end;
 
-  if not IsNan(Put^.Lengte) and (Put^.Lengte > 0) then begin
-    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
-             FloatToOrox(Put^.Lengte, 3) + ' ] ;');
-    end
-    else
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteBouwwerk ; gwsw:hasValue ' +
-             FloatToOrox(Put^.Lengte, 0) + ' ] ;');  // Bij gemalen geen decimalen
-
+  if fExportConfig.IncludePutLengte then begin
+    if not IsNan(Put^.Lengte) and (Put^.Lengte > 0) then begin
+      if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
+               FloatToOrox(Put^.Lengte, 3) + ' ] ;');
+      end
+      else
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteBouwwerk ; gwsw:hasValue ' +
+               FloatToOrox(Put^.Lengte, 0) + ' ] ;');  // Bij gemalen geen decimalen
+    end;
   end;
 
-  if not IsNan(Put^.Hoogte) and (Put^.Hoogte > 0) then begin
-    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
-             FloatToOrox(Put^.Hoogte, 3) + ' ] ;');
-    end
-    else
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteBouwwerk ; gwsw:hasValue ' +
-             FloatToOrox(Put^.Hoogte, 0) + ' ] ;');  // Bij gemalen geen decimalen
+  if fExportConfig.IncludePutHoogte then begin
+    if not IsNan(Put^.Hoogte) and (Put^.Hoogte > 0) then begin
+      if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
+               FloatToOrox(Put^.Hoogte, 3) + ' ] ;');
+      end
+      else
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteBouwwerk ; gwsw:hasValue ' +
+               FloatToOrox(Put^.Hoogte, 0) + ' ] ;');  // Bij gemalen geen decimalen
+    end;
   end;
 
-  if not IsNan(Put^.Diameter) and (Put^.Diameter > 0) then begin
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterPut ; gwsw:hasValue ' +
-           FloatToOrox(Put^.Diameter, 0) + ' ] ;');
+  if fExportConfig.IncludePutDiameter then begin
+    if not IsNan(Put^.Diameter) and (Put^.Diameter > 0) then begin
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterPut ; gwsw:hasValue ' +
+             FloatToOrox(Put^.Diameter, 0) + ' ] ;');
+    end;
   end;
 
-  if Put^.MateriaalURI <> '' then begin
-    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalPut ; ' +
-             'gwsw:hasReference ' + Put^.MateriaalURI + ' ] ;');
-    end
-    else
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalBouwwerk ; ' +
-             'gwsw:hasReference ' + Put^.MateriaalURI + ' ] ;');
+  if fExportConfig.IncludePutMateriaal then begin
+    if Put^.MateriaalURI <> '' then begin
+      if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalPut ; ' +
+               'gwsw:hasReference ' + Put^.MateriaalURI + ' ] ;');
+      end
+      else
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalBouwwerk ; ' +
+               'gwsw:hasReference ' + Put^.MateriaalURI + ' ] ;');
+    end;
   end;
 
-  if Put^.VormURI <> '' then begin
-    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
-      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormPut ; ' +
+  if fExportConfig.IncludePutVorm then begin
+    if Put^.VormURI <> '' then begin
+      if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+        SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormPut ; ' +
+               'gwsw:hasReference ' + Put^.VormURI + ' ] ;');
+      end
+      else
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormBouwwerk ; ' +
              'gwsw:hasReference ' + Put^.VormURI + ' ] ;');
-    end
-    else
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormBouwwerk ; ' +
-           'gwsw:hasReference ' + Put^.VormURI + ' ] ;');
+    end;
   end;
 
-  // Fundering
+  if fExportConfig.IncludePutFundering then begin
+    if Put^.FunderingUri <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Fundering ; ' +
+             'gwsw:hasReference ' + Put^.FunderingUri + ' ] ;');
+  end;
 
+  if fExportConfig.IncludePutBegindatum then begin
+    if Put^.Begindatum > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+             'gwsw:hasValue "' + DateToOroxFormat(Put^.Begindatum) + '"^^xsd:date ] ;');
+  end;
 
-  if Put^.FunderingUri <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Fundering ; ' +
-           'gwsw:hasReference ' + Put^.FunderingUri + ' ] ;');
-
-  if Put^.Begindatum > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
-           'gwsw:hasValue "' + DateToOroxFormat(Put^.Begindatum) + '"^^xsd:date ] ;');
-
-  if Put^.Einddatum > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
-           'gwsw:hasValue "' + DateToOroxFormat(Put^.Einddatum) + '"^^xsd:date ] ;');
+  if fExportConfig.IncludePutEinddatum then begin
+    if Put^.Einddatum > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+             'gwsw:hasValue "' + DateToOroxFormat(Put^.Einddatum) + '"^^xsd:date ] ;');
+    end;
 end;
 
-procedure TOroxExport.AddPutOrientatie(SL : TStringList; const Put : PGWSWPut);
+procedure TOroxExport.AddPutOrientatie(SL: TStringList; const Put: PGWSWPut);
 var
   GMLString: string;
+  HasMaaiveldhoogte: Boolean;
 begin
   SL.Add(':' + Put^.GUID + '_ori');
   SL.Add('  rdf:type      gwsw:Putorientatie ;');
@@ -2211,136 +2297,189 @@ begin
 
   SL.Add('  ] ;');
 
-  if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
-    if not IsNaN(Put^.Maaiveldhoogte) and (Put^.Maaiveldhoogte <> 0) then begin
-      SL.Add('  gwsw:hasConnection  _:' + Put^.GUID + '_maaiveld_ori ');
+  HasMaaiveldhoogte:= not IsNaN(Put^.Maaiveldhoogte);
+
+  // Controleer of maaiveldhoogte geëxporteerd moet worden (zoals in AddPutKenmerken)
+  if fExportConfig.IncludePutMaaiveldhoogte then
+  begin
+    if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
+      // Alleen maaiveldorientatie toevoegen als we een waarde hebben ...
+      if HasMaaiveldhoogte then begin
+        SL.Add('  gwsw:hasConnection  _:' + Put^.GUID + '_maaiveld_ori ');
+      end;
     end;
-
-    SL.Add('.');
-    SL.Add('');
-
-    if not IsNaN(Put^.Maaiveldhoogte) then begin  // and (Put^.Maaiveldhoogte <> 0)
-      SL.Add('_:' + Put^.GUID + '_maaiveld_ori');
-      SL.Add('  rdf:type                      gwsw:Maaiveldorientatie ;');
-      SL.Add('  gwsw:hasAspect                [');
-      SL.Add('    rdf:type                      gwsw:Maaiveldhoogte ;');
-      SL.Add('    gwsw:hasValue                 "' + FloatToOrox(Put^.Maaiveldhoogte, 2) + '"^^xsd:decimal ;');
-
-      SL.Add('  ] .');
-      SL.Add('');
-    end;
-  end
-  else begin
-    SL.Add('.');
-    SL.Add('');
   end;
 
-  { #todo : Moet anders bij de gemalen !!! }
-  // Voeg maaiveldorientatie toe
+  SL.Add('.');
+  SL.Add('');
 
+  // Alleen maaiveldorientatie blok toevoegen als we een waarde hebben EN het geëxporteerd moet worden
+  if fExportConfig.IncludePutMaaiveldhoogte and HasMaaiveldhoogte and
+     (not AnsiContainsText(Put^.PutTypeUri, 'gemaal')) then
+  begin
+    SL.Add('_:' + Put^.GUID + '_maaiveld_ori');
+    SL.Add('  rdf:type                      gwsw:Maaiveldorientatie ;');
+    SL.Add('  gwsw:hasAspect                [');
+    SL.Add('    rdf:type                      gwsw:Maaiveldhoogte ;');
+
+    if not IsNan(Put^.Maaiveldhoogte) then
+      SL.Add('    gwsw:hasValue                 "' + FloatToOrox(Put^.Maaiveldhoogte, 2) + '"^^xsd:decimal ;')
+    else
+      SL.Add('    gwsw:hasValue                 "0.00"^^xsd:decimal ;');
+
+    SL.Add('  ] .');
+    SL.Add('');
+  end;
 end;
 
 procedure TOroxExport.AddLeidingKenmerken(SL : TStringList; const Leiding : PGWSWLeiding);
-var
-  tmp: String;
 begin
-  if Leiding^.Lengte > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteLeiding ; gwsw:hasValue ' +
-           FloatToOrox(Leiding^.Lengte, 2) + ' ] ;');
+  if fExportConfig.IncludeLeidingLengte then begin
+    if Leiding^.Lengte > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteLeiding ; gwsw:hasValue ' +
+             FloatToOrox(Leiding^.Lengte, 2) + ' ] ;');
+  end;
 
-  if Leiding^.Diameter > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterLeiding ; gwsw:hasValue ' +
-           FloatToOrox(Leiding^.Diameter, 0) + ' ] ;');
+  if fExportConfig.IncludeLeidingBreedte then begin
+    if Leiding^.Breedte > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteLeiding ; gwsw:hasValue ' +
+             FloatToOrox(Leiding^.Breedte, 0) + ' ] ;');
+  end;
 
-  if Leiding^.Breedte > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteLeiding ; gwsw:hasValue ' +
-           FloatToOrox(Leiding^.Breedte, 0) + ' ] ;');
+  if fExportConfig.IncludeLeidingHoogte then begin
+    if Leiding^.Hoogte > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteLeiding ; gwsw:hasValue ' +
+             FloatToOrox(Leiding^.Hoogte, 0) + ' ] ;');  // GWSW schrijft 0 decimalen voor. Moet een heel getal in mm zijn.
+  end;
 
-  if Leiding^.Hoogte > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteLeiding ; gwsw:hasValue ' +
-           FloatToOrox(Leiding^.Hoogte, 0) + ' ] ;');  // GWSW schrijft 0 decimalen voor. Moet een heel getal in mm zijn.
+  if fExportConfig.IncludeLeidingDiameter then begin
+    if Leiding^.Diameter > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterLeiding ; gwsw:hasValue ' +
+             FloatToOrox(Leiding^.Diameter, 0) + ' ] ;');
+  end;
 
-  if Leiding^.MateriaalURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalLeiding ; ' +
-         'gwsw:hasReference ' + Leiding^.MateriaalURI + ' ] ;');
+  if fExportConfig.IncludeLeidingVorm then begin
+    if Leiding^.VormURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormLeiding ; ' +
+           'gwsw:hasReference ' + Leiding^.VormURI + ' ] ;');
+  end;
 
-  if Leiding^.VormURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormLeiding ; ' +
-         'gwsw:hasReference ' + Leiding^.VormURI + ' ] ;');
+  if fExportConfig.IncludeLeidingMateriaal then begin
+    if Leiding^.MateriaalURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalLeiding ; ' +
+           'gwsw:hasReference ' + Leiding^.MateriaalURI + ' ] ;');
+  end;
 
   // Funndering
-  if Leiding^.FunderingUri <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Fundering ; ' +
-           'gwsw:hasReference ' + Leiding^.FunderingUri + ' ] ;');
+  if fExportConfig.IncludeLeidingFundering then begin
+    if Leiding^.FunderingUri <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Fundering ; ' +
+             'gwsw:hasReference ' + Leiding^.FunderingUri + ' ] ;');
+  end;
+
+  if fExportConfig.IncludeLeidingStatusFunctioneren then begin
+    if Leiding^.StatusFunctionerenURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:StatusFunctioneren ; ' +
+           'gwsw:hasReference ' + Leiding^.StatusFunctionerenURI + ' ] ;');
+  end;
 
   // Wibon thema { #todo : WIBONThema: geeft geen fout maar wordt ook niet verwerkt? }
-  if Leiding^.WibonUri <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:WIBONThema ; ' +
-           'gwsw:hasReference ' + Leiding^.WibonUri + ' ] ;');
+  if fExportConfig.IncludeLeidingWIBONThema then begin
+    if Leiding^.WibonUri <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:WIBONThema ; ' +
+             'gwsw:hasReference ' + Leiding^.WibonUri + ' ] ;');
+  end;
 
-  if Leiding^.StatusFunctionerenURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:StatusFunctioneren ; ' +
-         'gwsw:hasReference ' + Leiding^.StatusFunctionerenURI + ' ] ;');
+  if fExportConfig.IncludeLeidingBegindatum then begin
+    if Leiding^.Begindatum <> 0 then
+    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Begindatum) + '"^^xsd:date ] ;'); // OROX/RDF heeft datum alstijd in formaat: YYYY-MM-DD
+  end;
 
-  if Leiding^.Begindatum <> 0 then
-  SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
-         'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Begindatum) + '"^^xsd:date ] ;'); // OROX/RDF heeft datum alstijd in formaat: YYYY-MM-DD
-
-  if Leiding^.Einddatum > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
-           'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Einddatum) + '"^^xsd:date ] ;');
+  if fExportConfig.IncludeLeidingEinddatum then begin
+    if Leiding^.Einddatum > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+             'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Einddatum) + '"^^xsd:date ] ;');
+  end;
 end;
 
 procedure TOroxExport.AddPersleidingKenmerken(SL : TStringList; const Persleiding : PGWSWPersleiding);
 begin
-  if Persleiding^.Lengte > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteLeiding ; gwsw:hasValue ' +
-           FloatToOrox(Persleiding^.Lengte, 2) + ' ] ;');
+  if fExportConfig.IncludePersleidingLengte then begin
+    if Persleiding^.Lengte > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteLeiding ; gwsw:hasValue ' +
+             FloatToOrox(Persleiding^.Lengte, 2) + ' ] ;');
+  end;
 
-  if Persleiding^.Diameter > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterLeiding ; gwsw:hasValue ' +
-           FloatToOrox(Persleiding^.Diameter, 0) + ' ] ;');
+  if fExportConfig.IncludePersleidingHoogte then begin
+    if Persleiding^.Hoogte > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteLeiding ; gwsw:hasValue ' +
+           FloatToOrox(Persleiding^.Hoogte, 0) + ' ] ;');  // GWSW schrijft 0 decimalen voor. Moet een heel getal in mm zijn.
+  end;
 
-  if Persleiding^.MateriaalURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalLeiding ; ' +
-         'gwsw:hasReference ' + Persleiding^.MateriaalURI + ' ] ;');
+  if fExportConfig.IncludePersleidingDiameter then begin
+    if Persleiding^.Diameter > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterLeiding ; gwsw:hasValue ' +
+             FloatToOrox(Persleiding^.Diameter, 0) + ' ] ;');
+  end;
 
-  if Persleiding^.StatusFunctionerenURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:StatusFunctioneren ; ' +
-         'gwsw:hasReference ' + Persleiding^.StatusFunctionerenURI + ' ] ;');
+  if fExportConfig.IncludePersleidingVorm then begin
+    if Persleiding^.VormURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormLeiding ; ' +
+           'gwsw:hasReference ' + Persleiding^.VormURI + ' ] ;');
+  end;
 
-  if Persleiding^.VormURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormLeiding ; ' +
-         'gwsw:hasReference ' + Persleiding^.VormURI + ' ] ;');
+  if fExportConfig.IncludePersleidingMateriaal then begin
+    if Persleiding^.MateriaalURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalLeiding ; ' +
+           'gwsw:hasReference ' + Persleiding^.MateriaalURI + ' ] ;');
+  end;
 
-  if Persleiding^.Hoogte > 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteLeiding ; gwsw:hasValue ' +
-         FloatToOrox(Persleiding^.Hoogte, 0) + ' ] ;');  // GWSW schrijft 0 decimalen voor. Moet een heel getal in mm zijn.
+  if fExportConfig.IncludePersleidingStatusFunctioneren then begin
+    if Persleiding^.StatusFunctionerenURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:StatusFunctioneren ; ' +
+           'gwsw:hasReference ' + Persleiding^.StatusFunctionerenURI + ' ] ;');
+  end;
 
-  if Persleiding^.Begindatum <> 0 then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
-         'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Begindatum) + '"^^xsd:date ] ;');
+  if fExportConfig.IncludePersleidingBegindatum then begin
+    if Persleiding^.Begindatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Begindatum) + '"^^xsd:date ] ;');
+  end;
+
+  if fExportConfig.IncludePersleidingEinddatum then begin
+    if Persleiding^.Einddatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Einddatum) + '"^^xsd:date ] ;');
+  end;
 end;
 
 procedure TOroxExport.ExportPersleidingOrientatie(SL : TStringList; const Persleiding : PGWSWPersleiding);
 var
   GMLString: string;
+  HasBobBegin, HasBobEind: Boolean;
 begin
   SL.Add(':' + Persleiding^.GUID + '_ori');
   SL.Add('  rdf:type        gwsw:Leidingorientatie ;');
 
-  // Beginpunt met BOB waarde
+  // Controleer of BOB waarden beschikbaar zijn
+  HasBobBegin:= not IsNaN(Persleiding^.BobBegin);
+  HasBobEind:= not IsNaN(Persleiding^.BobEind);
+
+  // Beginpunt met BOB waarde (dieptebegin)
   SL.Add('  gwsw:hasPart    [ rdf:type gwsw:BeginpuntLeiding ;');
-  if not IsNaN(Persleiding^.BobBegin)  then
+  if fExportConfig.IncludePersleidingBobBegin and HasBobBegin then
     SL.Add('    gwsw:hasAspect  [ rdf:type gwsw:BobBeginpuntLeiding ; gwsw:hasValue ' +
            FloatToOrox(Persleiding^.BobBegin, 2) + ' ] ;');
+
   SL.Add('    gwsw:hasConnection  :' + Persleiding^.BeginPutID + '_ori ] ;');
 
-  // Eindpunt met BOB waarde
+  // Eindpunt met BOB waarde (diepte eind)
   SL.Add('  gwsw:hasPart    [ rdf:type gwsw:EindpuntLeiding ;');
-  if not IsNaN(Persleiding^.BobEind) then
+  if fExportConfig.IncludePersleidingBobEind and HasBobEind then
     SL.Add('    gwsw:hasAspect  [ rdf:type gwsw:BobEindpuntLeiding ; gwsw:hasValue ' +
            FloatToOrox(Persleiding^.BobEind, 2) + ' ] ;');
+
   SL.Add('    gwsw:hasConnection  :' + Persleiding^.EindPutID + '_ori ] ;');
 
   // Geometrie - speciaal voor persleiding met meerdere vertices
@@ -2373,38 +2512,68 @@ end;
 
 procedure TOroxExport.AddKolkKenmerken(SL : TStringList; const Kolk : PGWSWKolk);
 begin
-  // Afmetingen
-  if not IsNan(Kolk^.Breedte) and (Kolk^.Breedte > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
-           FloatToOrox(Kolk^.Breedte, 3) + ' ] ;');
+  // Lengte
+  if fExportConfig.IncludeKolkLengte then begin
+    if not IsNan(Kolk^.Lengte) and (Kolk^.Lengte > 0) then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
+             FloatToOrox(Kolk^.Lengte, 3) + ' ] ;');
+  end;
 
-  if not IsNan(Kolk^.Lengte) and (Kolk^.Lengte > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
-           FloatToOrox(Kolk^.Lengte, 3) + ' ] ;');
+  // Breedte
+  if fExportConfig.IncludeKolkBreedte then begin
+    if not IsNan(Kolk^.Breedte) and (Kolk^.Breedte > 0) then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
+             FloatToOrox(Kolk^.Breedte, 3) + ' ] ;');
+  end;
 
-  if not IsNan(Kolk^.Hoogte) and (Kolk^.Hoogte > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
-           FloatToOrox(Kolk^.Hoogte, 3) + ' ] ;');
+  // Hoogte
+  if fExportConfig.IncludeKolkHoogte then begin
+    if not IsNan(Kolk^.Hoogte) and (Kolk^.Hoogte > 0) then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
+             FloatToOrox(Kolk^.Hoogte, 3) + ' ] ;');
+  end;
 
-  // Diameter voor ronde kolken
-  if not IsNan(Kolk^.Diameter) and (Kolk^.Diameter > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterPut ; gwsw:hasValue ' +
-           IntToStr(Kolk^.Diameter) + ' ] ;');
-
-  // Materiaal
-  if Kolk^.MateriaalURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalPut ; ' +
-          'gwsw:hasReference ' + Kolk^.MateriaalURI + ' ] ;');   // =  MateriaalPut volgens de ontologie ?
+  // Diameter
+  if fExportConfig.IncludeKolkDiameter then begin
+    if not IsNan(Kolk^.Diameter) and (Kolk^.Diameter > 0) then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:DiameterPut ; gwsw:hasValue ' +
+             IntToStr(Kolk^.Diameter) + ' ] ;');
+  end;
 
   // Vorm
-  if Kolk^.VormURI <> '' then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormPut ; ' +
-         'gwsw:hasReference ' + Kolk^.VormURI + ' ] ;');
+  if fExportConfig.IncludeKolkVorm then begin
+    if Kolk^.VormURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:VormPut ; ' +
+           'gwsw:hasReference ' + Kolk^.VormURI + ' ] ;');
+  end;
 
-  // Kolk-specifieke kenmerken
-  if not IsNan(Kolk^.Wanddikte) and (Kolk^.Wanddikte > 0) then
-    SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:WanddiktePut ; gwsw:hasValue ' +
-           IntToStr(Kolk^.Wanddikte) + ' ] ;');
+  // Materiaal
+  if fExportConfig.IncludeKolkMateriaal then begin
+    if Kolk^.MateriaalURI <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:MateriaalPut ; ' +
+            'gwsw:hasReference ' + Kolk^.MateriaalURI + ' ] ;');   // =  MateriaalPut volgens de ontologie ?
+  end;
+
+  // Wanddikte
+  if fExportConfig.IncludeKolkWanddikte then begin
+    if not IsNan(Kolk^.Wanddikte) and (Kolk^.Wanddikte > 0) then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:WanddiktePut ; gwsw:hasValue ' +
+             IntToStr(Kolk^.Wanddikte) + ' ] ;');
+  end;
+
+  // Begindatum
+  if fExportConfig.IncludeKolkBegindatum then begin
+    if Kolk^.Begindatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Begindatum) + '"^^xsd:date ] ;');
+  end;
+
+  // einddatum
+  if fExportConfig.IncludeKolkEinddatum then begin
+    if Kolk^.Einddatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Einddatum) + '"^^xsd:date ] ;');
+  end;
 end;
 
 procedure TOroxExport.AddKolkOrientatie(SL : TStringList; const Kolk : PGWSWKolk);
@@ -2437,9 +2606,9 @@ begin
   SL.Add('_:' + Kolk^.GUID + '_maaiveld_ori');
   SL.Add('  rdf:type                      gwsw:Maaiveldorientatie ;');
   SL.Add('  gwsw:hasAspect                [');
-  SL.Add('    rdf:type                      gwsw:Maaiveldhoogte ;');
+  SL.Add('    rdf:type                      gwsw:Maaiveldhoogte ;');       { #note : Let op dit gebruiken we niet!!! }
   // Gebruik de Z-coördinaat als maaiveldhoogte, of een standaardwaarde
-  if not IsNaN(Kolk^.Z) and (Kolk^.Z <> 0) then
+  if not IsNaN(Kolk^.Z) then
     SL.Add('    gwsw:hasValue                 "' + FloatToOrox(Kolk^.Z, 2) + '"^^xsd:decimal')
   else
     SL.Add('    gwsw:hasValue                 "0.00"^^xsd:decimal');
@@ -2495,6 +2664,11 @@ var
   PartsList: TStringList;
   Persleiding: PGWSWPersleiding;
 begin
+  if Stelsel = Nil then begin
+    ReportError('Leeg Stelsel object aangetroffen in functie: ExportStelselToTurtle');
+    exit;
+  end;
+
   // Stelsel definitie
   SL.Add(':' + Stelsel^.GUID);
   SL.Add('  rdf:type      ' + Stelsel^.StelselTypeUri + ' ;');
@@ -2563,6 +2737,11 @@ end;
 
 procedure TOroxExport.ExportPutToTurtle(SL : TStringList; const Put : PGWSWPut);
 begin
+  if Put = Nil then begin
+    ReportError('Leeg Put object aangetroffen in functie: ExportPutToTurtle');
+    exit;
+  end;
+
   SL.Add(':' + Put^.GUID);
   SL.Add('  rdf:type      ' + Put^.PutTypeUri + ' ;');
   SL.Add('  rdfs:label    "' + Put^.aLabel + '" ;');
@@ -2596,7 +2775,13 @@ procedure TOroxExport.ExportLeidingToTurtle(SL : TStringList; const Leiding : PG
 var
   GMLString: string;
   Points: array of Double = Nil;
+  HasBobBegin, HasBobEind: Boolean;
 begin
+  if Leiding = Nil then begin
+    ReportError('Leeg Leiding object aangetroffen in functie: ExportLeidingToTurtle');   { #todo : Taalinstelling }
+    exit;
+  end;
+
   SL.Add(':' + Leiding^.GUID);
   SL.Add('  rdf:type      ' + Leiding^.LeidingTypeUri + ' ;');
   SL.Add('  rdfs:label    "' + Leiding^.aLabel + '" ;');
@@ -2623,16 +2808,22 @@ begin
   SL.Add(':' + Leiding^.GUID + '_ori');
   SL.Add('  rdf:type        gwsw:Leidingorientatie ;');
 
+  // Controleer of BOB waarden beschikbaar zijn
+  HasBobBegin:= not IsNaN(Leiding^.BobBegin);
+  HasBobEind:= not IsNaN(Leiding^.BobEind);
+
   // Beginpunt met BOB waarde
   SL.Add('  gwsw:hasPart    [ rdf:type gwsw:BeginpuntLeiding ;');
-  if not IsNaN(Leiding^.BobBegin) and (Leiding^.BobBegin <> 0) then
+  if fExportConfig.IncludeLeidingBobBegin and HasBobBegin then
     SL.Add('    gwsw:hasAspect  [ rdf:type gwsw:BobBeginpuntLeiding ; gwsw:hasValue ' + FloatToOrox(Leiding^.BobBegin, 2) + ' ] ;');
+
   SL.Add('    gwsw:hasConnection  :' + Leiding^.BeginPutID + '_ori ] ;');
 
   // Eindpunt met BOB waarde
   SL.Add('  gwsw:hasPart    [ rdf:type gwsw:EindpuntLeiding ;');
-  if not IsNaN(Leiding^.BobEind) and (Leiding^.BobEind <> 0) then
+  if fExportConfig.IncludeLeidingBobEind and HasBobEind then
     SL.Add('    gwsw:hasAspect  [ rdf:type gwsw:BobEindpuntLeiding ; gwsw:hasValue ' + FloatToOrox(Leiding^.BobEind, 2) + ' ] ;');
+
   SL.Add('    gwsw:hasConnection  :' + Leiding^.EindPutID + '_ori ] ;');
 
   // Geometrie
@@ -2667,6 +2858,11 @@ end;
 
 procedure TOroxExport.ExportPersleidingToTurtle(SL : TStringList; const Persleiding : PGWSWPersleiding);
 begin
+  if Persleiding = Nil then begin
+    ReportError('Leeg Persleiding object aangetroffen in functie: ExportPersleidingToTurtle');
+    exit;
+  end;
+
   SL.Add(':' + Persleiding^.GUID);
   SL.Add('  rdf:type      ' + Persleiding^.PersleidingTypeURI + ' ;');
   SL.Add('  rdfs:label    "' + Persleiding^.aLabel + '" ;');
@@ -2695,6 +2891,11 @@ end;
 
 procedure TOroxExport.ExportKolkToTurtle(SL : TStringList; const Kolk : PGWSWKolk);
 begin
+  if Kolk = Nil then begin
+    ReportError('Leeg kolk object aangetroffen in functie: ExportKolkToTurtle');
+    exit;
+  end;
+
   SL.Add(':' + Kolk^.GUID);
   SL.Add('  rdf:type      ' + Kolk^.KolkTypeUri + ' ;');
   SL.Add('  rdfs:label    "' + Kolk^.aLabel + '" ;');
@@ -2795,9 +2996,9 @@ begin
     fProgressReporter.ReportProgressCount(Current, Total);
 end;
 
-constructor TOroxExport.Create(ADataProvider : IGWSWDataProvider;
-  const FileName, OrganizationName, MappingsFile : String;
-  AProgressReporter : IExportProgressReporter);
+constructor TOroxExport.Create(ADataProvider: IGWSWDataProvider;
+  const FileName, OrganizationName, MappingsFile: String;
+  AProgressReporter: IExportProgressReporter; const ExportConfig: TExportConfig);
 begin
   inherited Create;
 
@@ -2813,6 +3014,7 @@ begin
   fPersleidingList:= TList.Create;
 
   fMappingManager:= TMappingManager.Create(MappingsFile);
+  fExportConfig:= ExportConfig;
 end;
 
 destructor TOroxExport.Destroy;
@@ -2831,10 +3033,16 @@ end;
 procedure TOroxExport.ExportToOrox(const GWSWversion : String);
 var
   TotalRecords: Integer;
+  lVersion: String;
 begin
   ReportProgress('Export gestart...');
   // Retrieve validation data
-  LoadGWSWConfig(GWSW_versie_16, GWSWversion);  // get the GWSW version. Used with validation
+//  LoadGWSWConfig(GWSW_versie_16, GWSWversion);  // get the GWSW version. Used with validation
+  case GWSWversion of
+    'GWSW_versie_16': lVersion:= '1.6';
+  end;
+
+  LoadGWSWConfig(lVersion, GWSWversion);  // get the GWSW version. Used with validation
   InitValidationConfig;  // Initialize global config in validation unit
 
   fDataProvider.Open;
@@ -2867,7 +3075,7 @@ begin
     fTotalRecords:= 0;
     fCurrentRecord:= 0;
 
-    if not GenerateOroxTurtle(fFileName, GWSWversion) then begin
+    if not GenerateOroxTurtle(fFileName, lVersion) then begin
       ReportError('Fout bij genereren Orox Turtle bestand');
       Exit;
     end;

@@ -5,11 +5,11 @@ interface (* this unit collects nearly all constants & is referenced in most uni
 uses classes, sysutils, obs_prosu;
 const
   { Application constants }
-  Application_version            = '0.4.0.0';
+  Application_version            = '0.5.0.0';
   Application_initial_start_date = '12-12-2025';
   Application_build_date         = '10-01-2026';
 
-  DefaultOroXFileExt = 'orox.ttl';// Is prescribed in this way.
+  DefaultOroXFileExt = 'orox.ttl'; // Is prescribed in this way.
 
   { (a)pplication (m)essages }
   amSucces = 'Success';
@@ -20,6 +20,12 @@ const
   ltWarning     = 'Warning';
   ltError       = 'Error';
   ltDebug       = 'Debug';
+
+  { (d)ata(t)ype }
+  dtORA = 'ORA';
+  dtCSV = 'CSV';
+
+  ExtraColumnWidthForImage = 20; // Make room for sorting arrow
 
   (* from model.base *)
   SGUIDITransaction = '{AFE2A986-7D3C-46AB-A4BF-2A0BDA1DECDF}';
@@ -41,6 +47,8 @@ const
   prReportError             = prUser + 14;
   prReportProgressCount     = prUser + 15;
   prUniqueStringlist        = prUser + 16;
+  prSortDbGrid              = prUser + 17;
+  prRetrieveCSVData         = prUser + 18;
 
   prDirDataNeeded = prUser + 100; { carries a TDirInfoTrx in aNotifyClass }
   prFetchDirData = prUser + 101; { carries a TDirInfoTrx in aNotifyClass & an 'IStrings' in UserData }
@@ -48,10 +56,10 @@ const
   //etc...
 
   // View.configure
-  prConfigStaticTexts    = prUser + 1000;
-  prFormStateConfig      = prUser + 1001;
-  prAppSettingsConfig    = prUser + 1002;
-  prStaticHintsConfig    = prUser + 1003;
+  prConfigStaticTexts      = prUser + 1000;
+  prFormStateConfig        = prUser + 1001;
+  prAppSettingsConfig      = prUser + 1002;
+  prStaticHintsConfig      = prUser + 1003;
   prAppSingleSettingConfig = prUser + 1004;
 
   (* from model.decl *)

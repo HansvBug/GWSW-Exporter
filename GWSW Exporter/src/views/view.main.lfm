@@ -1,28 +1,29 @@
 object frmMain: TfrmMain
   Left = 283
-  Height = 784
+  Height = 884
   Top = 131
-  Width = 1236
+  Width = 1429
   Caption = 'dummy'
-  ClientHeight = 784
-  ClientWidth = 1236
+  ClientHeight = 884
+  ClientWidth = 1429
   DesignTimePPI = 144
   Menu = MainMenu1
   LCLVersion = '4.4.0.0'
+  OnCreate = FormCreate
   object stbInfo: TStatusBar
     Left = 0
     Height = 36
-    Top = 748
-    Width = 1236
+    Top = 848
+    Width = 1429
     Panels = <    
       item
-        Width = 600
+        Width = 1000
       end    
       item
-        Width = 75
+        Width = 50
       end    
       item
-        Width = 200
+        Width = 300
       end>
     SimplePanel = False
   end
@@ -30,7 +31,7 @@ object frmMain: TfrmMain
     Left = 0
     Height = 75
     Top = 0
-    Width = 1236
+    Width = 1429
     Align = alTop
     BevelOuter = bvNone
     Caption = 'pnlMainTop'
@@ -42,19 +43,19 @@ object frmMain: TfrmMain
   object pnlBottom: TPanel
     Left = 0
     Height = 75
-    Top = 673
-    Width = 1236
+    Top = 773
+    Width = 1429
     Align = alBottom
     BevelOuter = bvNone
     Caption = 'pnlBottom'
     ClientHeight = 75
-    ClientWidth = 1236
+    ClientWidth = 1429
     Color = 13006080
     ParentBackground = False
     ParentColor = False
     TabOrder = 2
     object btnClose: TButton
-      Left = 1104
+      Left = 1297
       Height = 38
       Top = 24
       Width = 113
@@ -65,220 +66,350 @@ object frmMain: TfrmMain
   end
   object pnlMainAllClient: TPanel
     Left = 0
-    Height = 598
+    Height = 698
     Top = 75
-    Width = 1236
+    Width = 1429
     Align = alClient
     BevelOuter = bvNone
     Caption = 'pnlMainAllClient'
-    ClientHeight = 598
-    ClientWidth = 1236
+    ClientHeight = 698
+    ClientWidth = 1429
     Color = clSkyBlue
     ParentBackground = False
     ParentColor = False
     TabOrder = 3
     object PageControl1: TPageControl
       Left = 5
-      Height = 588
+      Height = 688
       Top = 5
-      Width = 1226
+      Width = 1419
       ActivePage = tsQuery
       Align = alClient
       BorderSpacing.Around = 5
       TabIndex = 2
       TabOrder = 0
-      OnChange = PageControl1Change
       object tsPrepare: TTabSheet
         Caption = 'tsPrepare'
-        ClientHeight = 550
-        ClientWidth = 1218
+        ClientHeight = 650
+        ClientWidth = 1411
         object pnlPrepareMain: TPanel
           Left = 0
-          Height = 550
+          Height = 650
           Top = 0
-          Width = 1218
+          Width = 1411
           Align = alClient
           Caption = 'pnlPrepareMain'
-          ClientHeight = 550
-          ClientWidth = 1218
+          ClientHeight = 650
+          ClientWidth = 1411
           Color = 13006080
           ParentBackground = False
           ParentColor = False
           TabOrder = 0
           object pnlDataSettings: TPanel
             Left = 1
-            Height = 548
+            Height = 648
             Top = 1
-            Width = 360
+            Width = 390
             Align = alLeft
             BevelOuter = bvNone
             Caption = 'pnlDataSettings'
-            ClientHeight = 548
-            ClientWidth = 360
+            ClientHeight = 648
+            ClientWidth = 390
             Color = clSkyBlue
             ParentBackground = False
             ParentColor = False
             TabOrder = 0
             OnResize = pnlDataSettingsResize
-            object gbConnection: TGroupBox
-              Left = 8
-              Height = 223
-              Top = 0
-              Width = 345
-              Anchors = [akTop, akLeft, akRight]
-              Caption = 'gbConnection'
-              ClientHeight = 193
-              ClientWidth = 341
-              ParentBackground = False
-              TabOrder = 0
-              object edtPassword: TEdit
-                AnchorSideLeft.Side = asrBottom
-                AnchorSideTop.Side = asrBottom
-                Left = 136
-                Height = 33
-                Top = 88
-                Width = 200
-                BorderSpacing.Left = 10
-                BorderSpacing.Top = 7
-                EchoMode = emPassword
-                PasswordChar = '*'
-                TabOrder = 2
-              end
-              object lblDatabaseName: TLabel
-                Left = 8
-                Height = 25
-                Top = 16
-                Width = 140
-                Caption = 'lblDatabaseName'
-              end
-              object lblUserName: TLabel
-                Left = 8
-                Height = 25
-                Top = 56
-                Width = 101
-                Caption = 'lblUserName'
-              end
-              object lblPassword: TLabel
-                Left = 8
-                Height = 25
-                Top = 96
-                Width = 94
-                Caption = 'lblPassword'
-              end
-              object btnConnect: TButton
-                Left = 8
-                Height = 38
-                Top = 144
-                Width = 328
-                Caption = 'btnConnect'
-                TabOrder = 3
-                OnClick = btnConnectClick
-              end
-              object cbDatabaseName: TComboBox
-                Left = 136
-                Height = 33
-                Top = 8
-                Width = 200
-                AutoComplete = True
-                AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
-                ItemHeight = 25
-                TabOrder = 0
-                OnExit = cbDatabaseNameExit
-              end
-              object cbUserName: TComboBox
-                Left = 136
-                Height = 33
-                Top = 48
-                Width = 200
-                AutoComplete = True
-                AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
-                ItemHeight = 25
-                TabOrder = 1
-                OnExit = cbUserNameExit
-              end
-            end
-            object gbGetData: TGroupBox
-              Left = 8
-              Height = 80
-              Top = 232
-              Width = 345
-              Anchors = [akTop, akLeft, akRight]
-              Caption = 'gbGetData'
-              ClientHeight = 50
-              ClientWidth = 341
-              ParentBackground = False
-              TabOrder = 1
-              object btnGetData: TButton
-                Left = 8
-                Height = 38
-                Top = 8
-                Width = 328
-                Caption = 'btnGetData'
-                Enabled = False
-                TabOrder = 0
-                OnClick = btnGetDataClick
-              end
-            end
-            object gbExport: TGroupBox
-              Left = 8
-              Height = 136
-              Top = 320
-              Width = 345
-              Anchors = [akTop, akLeft, akRight]
-              Caption = 'gbExport'
-              ClientHeight = 106
-              ClientWidth = 341
-              ParentBackground = False
-              TabOrder = 2
-              object btnExportToFile: TButton
-                Left = 8
-                Height = 38
-                Top = 56
-                Width = 328
-                Caption = 'btnExportToFile'
-                TabOrder = 0
-                OnClick = btnExportToFileClick
-              end
-              object lblOrganizationName: TLabel
-                Left = 8
-                Height = 25
-                Top = 16
-                Width = 168
-                Caption = 'lblOrganizationName'
-              end
-              object cbOrganizationName: TComboBox
-                Left = 136
-                Height = 33
-                Top = 8
-                Width = 200
-                Anchors = [akLeft, akBottom]
-                AutoComplete = True
-                AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
-                ItemHeight = 25
-                TabOrder = 1
-                OnExit = cbOrganizationNameExit
-              end
-            end
             object ProgressBar: TProgressBar
               Left = 8
               Height = 22
-              Top = 512
-              Width = 345
+              Top = 612
+              Width = 375
               Anchors = [akLeft, akRight, akBottom]
               Smooth = True
-              TabOrder = 3
+              TabOrder = 0
+            end
+            object PageControl2: TPageControl
+              Left = 8
+              Height = 528
+              Top = 8
+              Width = 370
+              ActivePage = tsOracle
+              Anchors = [akTop, akLeft, akRight]
+              TabIndex = 0
+              TabOrder = 1
+              object tsOracle: TTabSheet
+                Caption = 'tsOracle'
+                ClientHeight = 490
+                ClientWidth = 362
+                object Panel1: TPanel
+                  Left = 0
+                  Height = 490
+                  Top = 0
+                  Width = 362
+                  Align = alClient
+                  BevelOuter = bvNone
+                  Caption = 'Panel1'
+                  ClientHeight = 490
+                  ClientWidth = 362
+                  ParentBackground = False
+                  TabOrder = 0
+                  object gbConnection: TGroupBox
+                    Left = 8
+                    Height = 224
+                    Top = 8
+                    Width = 350
+                    Anchors = [akTop, akLeft, akRight]
+                    Caption = 'gbConnection'
+                    ClientHeight = 194
+                    ClientWidth = 346
+                    ParentBackground = False
+                    TabOrder = 0
+                    object edtPassword: TEdit
+                      AnchorSideLeft.Side = asrBottom
+                      AnchorSideTop.Control = cbUserName
+                      AnchorSideTop.Side = asrBottom
+                      Left = 136
+                      Height = 33
+                      Top = 94
+                      Width = 200
+                      BorderSpacing.Left = 10
+                      BorderSpacing.Top = 10
+                      EchoMode = emPassword
+                      PasswordChar = '*'
+                      TabOrder = 2
+                    end
+                    object lblDatabaseName: TLabel
+                      Left = 8
+                      Height = 25
+                      Top = 16
+                      Width = 140
+                      Caption = 'lblDatabaseName'
+                    end
+                    object lblUserName: TLabel
+                      Left = 8
+                      Height = 25
+                      Top = 56
+                      Width = 101
+                      Caption = 'lblUserName'
+                    end
+                    object lblPassword: TLabel
+                      Left = 8
+                      Height = 25
+                      Top = 96
+                      Width = 94
+                      Caption = 'lblPassword'
+                    end
+                    object btnConnect: TButton
+                      AnchorSideTop.Control = edtPassword
+                      AnchorSideTop.Side = asrBottom
+                      Left = 136
+                      Height = 38
+                      Top = 142
+                      Width = 200
+                      BorderSpacing.Top = 15
+                      Caption = 'btnConnect'
+                      TabOrder = 3
+                      OnClick = btnConnectClick
+                    end
+                    object cbDatabaseName: TComboBox
+                      Left = 136
+                      Height = 33
+                      Top = 8
+                      Width = 200
+                      AutoComplete = True
+                      AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+                      ItemHeight = 25
+                      TabOrder = 0
+                      OnExit = cbDatabaseNameExit
+                    end
+                    object cbUserName: TComboBox
+                      AnchorSideTop.Control = cbDatabaseName
+                      AnchorSideTop.Side = asrBottom
+                      Left = 136
+                      Height = 33
+                      Top = 51
+                      Width = 200
+                      AutoComplete = True
+                      AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+                      BorderSpacing.Top = 10
+                      ItemHeight = 25
+                      TabOrder = 1
+                      OnExit = cbUserNameExit
+                    end
+                    object btnDisconnect: TButton
+                      Left = 8
+                      Height = 38
+                      Top = 142
+                      Width = 113
+                      Anchors = [akLeft, akBottom]
+                      Caption = 'btnDisconnect'
+                      TabOrder = 4
+                      OnClick = btnDisconnectClick
+                    end
+                  end
+                  object gbGetData: TGroupBox
+                    AnchorSideTop.Control = gbConnection
+                    AnchorSideTop.Side = asrBottom
+                    Left = 8
+                    Height = 80
+                    Top = 247
+                    Width = 350
+                    Anchors = [akTop, akLeft, akRight]
+                    BorderSpacing.Top = 15
+                    Caption = 'gbGetData'
+                    ClientHeight = 50
+                    ClientWidth = 346
+                    ParentBackground = False
+                    TabOrder = 1
+                    object btnGetData: TButton
+                      Left = 8
+                      Height = 38
+                      Top = 8
+                      Width = 328
+                      Caption = 'btnGetData'
+                      Enabled = False
+                      TabOrder = 0
+                      OnClick = btnGetDataClick
+                    end
+                  end
+                  object gbExport: TGroupBox
+                    AnchorSideTop.Control = gbGetData
+                    AnchorSideTop.Side = asrBottom
+                    Left = 8
+                    Height = 136
+                    Top = 342
+                    Width = 350
+                    Anchors = [akTop, akLeft, akRight]
+                    BorderSpacing.Top = 15
+                    Caption = 'gbExport'
+                    ClientHeight = 106
+                    ClientWidth = 346
+                    ParentBackground = False
+                    TabOrder = 2
+                    object btnExportToFileOra: TButton
+                      Left = 8
+                      Height = 38
+                      Top = 56
+                      Width = 328
+                      Caption = 'btnExportToFileOra'
+                      TabOrder = 0
+                      OnClick = btnExportToFileOraClick
+                    end
+                    object lblOrganizationName: TLabel
+                      Left = 8
+                      Height = 25
+                      Top = 16
+                      Width = 168
+                      Caption = 'lblOrganizationName'
+                    end
+                    object cbOrganizationName: TComboBox
+                      Left = 136
+                      Height = 33
+                      Top = 8
+                      Width = 200
+                      Anchors = [akLeft, akBottom]
+                      AutoComplete = True
+                      AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+                      ItemHeight = 25
+                      TabOrder = 1
+                      OnExit = cbOrganizationNameExit
+                    end
+                  end
+                end
+              end
+              object tsCsv: TTabSheet
+                Caption = 'tsCsv'
+                ClientHeight = 490
+                ClientWidth = 362
+                object Panel2: TPanel
+                  Left = 0
+                  Height = 490
+                  Top = 0
+                  Width = 362
+                  Align = alClient
+                  BevelOuter = bvNone
+                  Caption = 'Panel2'
+                  ClientHeight = 490
+                  ClientWidth = 362
+                  ParentBackground = False
+                  TabOrder = 0
+                  object btnSelectCsvFile: TButton
+                    Left = 8
+                    Height = 38
+                    Top = 16
+                    Width = 348
+                    Anchors = [akTop, akLeft, akRight]
+                    Caption = 'btnSelectCsvFile'
+                    TabOrder = 0
+                    OnClick = btnSelectCsvFileClick
+                  end
+                  object edtCsvFile: TEdit
+                    Left = 8
+                    Height = 33
+                    Top = 72
+                    Width = 348
+                    Anchors = [akTop, akLeft, akRight]
+                    ReadOnly = True
+                    TabOrder = 1
+                  end
+                  object gbExport1: TGroupBox
+                    AnchorSideTop.Control = edtCsvFile
+                    AnchorSideTop.Side = asrBottom
+                    Left = 8
+                    Height = 136
+                    Top = 120
+                    Width = 350
+                    Anchors = [akTop, akLeft, akRight]
+                    BorderSpacing.Top = 15
+                    Caption = 'gbExport1'
+                    ClientHeight = 106
+                    ClientWidth = 346
+                    ParentBackground = False
+                    TabOrder = 2
+                    object btnExportToFileCSV: TButton
+                      Left = 8
+                      Height = 38
+                      Top = 56
+                      Width = 328
+                      Caption = 'btnExportToFileOra'
+                      TabOrder = 0
+                      OnClick = btnExportToFileCSVClick
+                    end
+                    object lblOrganizationNameCsv: TLabel
+                      Left = 8
+                      Height = 25
+                      Top = 16
+                      Width = 168
+                      Caption = 'lblOrganizationName'
+                    end
+                    object cbOrganizationNameCSV: TComboBox
+                      Left = 136
+                      Height = 33
+                      Top = 8
+                      Width = 200
+                      Anchors = [akLeft, akBottom]
+                      AutoComplete = True
+                      AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
+                      ItemHeight = 25
+                      TabOrder = 1
+                      OnExit = cbOrganizationNameExit
+                    end
+                  end
+                end
+              end
             end
           end
           object pnlPrepareData: TPanel
-            Left = 371
-            Height = 548
+            Left = 401
+            Height = 648
             Top = 1
-            Width = 846
+            Width = 1009
             Align = alClient
             BevelOuter = bvNone
             Caption = 'pnlPrepareData'
-            ClientHeight = 548
-            ClientWidth = 846
+            ClientHeight = 648
+            ClientWidth = 1009
             Color = 13006080
             ParentBackground = False
             ParentColor = False
@@ -286,33 +417,34 @@ object frmMain: TfrmMain
             OnResize = pnlPrepareDataResize
             object pnlDataGrid: TPanel
               Left = 0
-              Height = 400
+              Height = 300
               Top = 0
-              Width = 846
+              Width = 1009
               Align = alTop
               BevelOuter = bvNone
               Caption = 'pnlDataGrid'
-              ClientHeight = 400
-              ClientWidth = 846
+              ClientHeight = 300
+              ClientWidth = 1009
               Color = clSkyBlue
               ParentBackground = False
               ParentColor = False
               TabOrder = 0
               object dbgSewerData: TDBGrid
                 Left = 8
-                Height = 326
+                Height = 226
                 Top = 16
-                Width = 834
+                Width = 997
                 Anchors = [akTop, akLeft, akRight, akBottom]
                 Color = clWindow
                 Columns = <>
                 Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgHeaderHotTracking, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert, dgThumbTracking, dgDblClickAutoSize, dgDisplayMemoText]
                 TabOrder = 0
+                TitleImageList = ImageListDbGridSort
               end
               object btnExportDbgridToCsv: TButton
-                Left = 729
+                Left = 892
                 Height = 38
-                Top = 352
+                Top = 252
                 Width = 113
                 Anchors = [akRight, akBottom]
                 Caption = 'btnExportDbgridToCsv'
@@ -322,7 +454,7 @@ object frmMain: TfrmMain
               object DBNavigator: TDBNavigator
                 Left = 8
                 Height = 38
-                Top = 352
+                Top = 252
                 Width = 362
                 Anchors = [akLeft, akBottom]
                 BevelOuter = bvNone
@@ -343,22 +475,22 @@ object frmMain: TfrmMain
               Cursor = crVSplit
               Left = 0
               Height = 10
-              Top = 400
-              Width = 846
+              Top = 300
+              Width = 1009
               Align = alTop
               ResizeAnchor = akTop
               OnMoved = SplitterdataGridMoved
             end
             object pnlProgressExport: TPanel
               Left = 0
-              Height = 138
-              Top = 410
-              Width = 846
+              Height = 338
+              Top = 310
+              Width = 1009
               Align = alClient
               BevelOuter = bvNone
               Caption = 'pnlProgressExport'
-              ClientHeight = 138
-              ClientWidth = 846
+              ClientHeight = 338
+              ClientWidth = 1009
               Color = 13006080
               ParentBackground = False
               ParentColor = False
@@ -366,13 +498,13 @@ object frmMain: TfrmMain
               OnResize = pnlProgressExportResize
               object pnlProgress: TPanel
                 Left = 0
-                Height = 138
+                Height = 338
                 Top = 0
                 Width = 500
                 Align = alLeft
                 BevelOuter = bvNone
                 Caption = 'pnlProgress'
-                ClientHeight = 138
+                ClientHeight = 338
                 ClientWidth = 500
                 Color = clSkyBlue
                 ParentBackground = False
@@ -380,12 +512,12 @@ object frmMain: TfrmMain
                 TabOrder = 0
                 object memReportProgress: TMemo
                   Left = 8
-                  Height = 64
+                  Height = 248
                   Top = 40
                   Width = 485
                   Anchors = [akTop, akLeft, akRight, akBottom]
                   Lines.Strings = (
-                    'mmExportLog'
+                    'memReportProgress'
                   )
                   ReadOnly = True
                   ScrollBars = ssAutoBoth
@@ -401,7 +533,7 @@ object frmMain: TfrmMain
                 object lblProgress: TLabel
                   Left = 8
                   Height = 25
-                  Top = 108
+                  Top = 308
                   Width = 88
                   Anchors = [akLeft, akBottom]
                   Caption = 'lblProgress'
@@ -409,33 +541,33 @@ object frmMain: TfrmMain
               end
               object SplitterMemos: TSplitter
                 Left = 500
-                Height = 138
+                Height = 338
                 Top = 0
                 Width = 10
                 OnMoved = SplitterMemosMoved
               end
               object pnlError: TPanel
                 Left = 510
-                Height = 138
+                Height = 338
                 Top = 0
-                Width = 336
+                Width = 499
                 Align = alClient
                 BevelOuter = bvNone
                 Caption = 'pnlError'
-                ClientHeight = 138
-                ClientWidth = 336
+                ClientHeight = 338
+                ClientWidth = 499
                 Color = clSkyBlue
                 ParentBackground = False
                 ParentColor = False
                 TabOrder = 2
                 object memReportError: TMemo
                   Left = 8
-                  Height = 64
+                  Height = 248
                   Top = 40
-                  Width = 323
+                  Width = 486
                   Anchors = [akTop, akLeft, akRight, akBottom]
                   Lines.Strings = (
-                    'mmReportError'
+                    'memReportError'
                   )
                   ScrollBars = ssAutoBoth
                   TabOrder = 0
@@ -447,123 +579,512 @@ object frmMain: TfrmMain
                   Width = 57
                   Caption = 'lblError'
                 end
+                object btnSaveErrorLog: TButton
+                  Left = 381
+                  Height = 38
+                  Top = 292
+                  Width = 113
+                  Anchors = [akRight, akBottom]
+                  Caption = 'btnSaveErrorLog'
+                  TabOrder = 1
+                  OnClick = btnSaveErrorLogClick
+                end
               end
             end
           end
           object SplitterDataSettings: TSplitter
-            Left = 361
-            Height = 548
+            Left = 391
+            Height = 648
             Top = 1
             Width = 10
             OnMoved = SplitterDataSettingsMoved
           end
         end
       end
-      object tsSettings: TTabSheet
-        Caption = 'tsSettings'
-        ClientHeight = 550
-        ClientWidth = 1218
+      object tsExportSettings: TTabSheet
+        Caption = 'tsExportSettings'
+        ClientHeight = 650
+        ClientWidth = 1411
         object pnlSettings: TPanel
           Left = 0
-          Height = 550
+          Height = 650
           Top = 0
-          Width = 1218
+          Width = 1411
           Align = alClient
           BevelOuter = bvNone
           Caption = 'pnlSettings'
-          ClientHeight = 550
-          ClientWidth = 1218
+          ClientHeight = 650
+          ClientWidth = 1411
           ParentBackground = False
           TabOrder = 0
-          object gbSettings: TGroupBox
-            Left = 8
-            Height = 529
-            Top = 8
-            Width = 1200
-            Anchors = [akTop, akLeft, akRight, akBottom]
-            Caption = 'gbSettings'
-            ClientHeight = 499
-            ClientWidth = 1196
-            Color = clWindow
+          object gbManholes: TGroupBox
+            Left = 16
+            Height = 620
+            Top = 16
+            Width = 320
+            Anchors = [akTop, akLeft, akBottom]
+            Caption = 'gbManholes'
+            ClientHeight = 590
+            ClientWidth = 316
             ParentBackground = False
-            ParentColor = False
             TabOrder = 0
-            object lblMappingsFile: TLabel
+            object chkIncludePutVorm: TCheckBox
               Left = 16
-              Height = 25
-              Top = 16
-              Width = 125
-              Caption = 'lblMappingsFile'
+              Height = 29
+              Top = 168
+              Width = 179
+              Caption = 'chkIncludePutVorm'
+              TabOrder = 4
+              OnChange = chkIncludePutVormChange
             end
-            object edtMappingsFile: TEdit
-              Left = 304
-              Height = 33
+            object chkIncludePutLengte: TCheckBox
+              Left = 16
+              Height = 29
               Top = 8
-              Width = 840
+              Width = 188
+              Caption = 'chkIncludePutLengte'
               TabOrder = 0
+              OnChange = chkIncludePutLengteChange
             end
-            object BitBtnSelectMappingsFile: TBitBtn
-              AnchorSideLeft.Control = edtMappingsFile
-              AnchorSideLeft.Side = asrBottom
-              Left = 1154
-              Height = 33
-              Top = 8
-              Width = 33
-              BorderSpacing.Left = 10
-              Caption = 'BitBtnSelectMappingsFile'
-              TabOrder = 1
-              OnClick = BitBtnSelectMappingsFileClick
-            end
-            object lblGWSWVersion: TLabel
+            object chkIncludePutBreedte: TCheckBox
               Left = 16
-              Height = 25
-              Top = 59
-              Width = 133
-              Caption = 'lblGWSWVersion'
+              Height = 29
+              Top = 48
+              Width = 195
+              Caption = 'chkIncludePutBreedte'
+              TabOrder = 1
+              OnChange = chkIncludePutBreedteChange
             end
-            object cbGWSWVersion: TComboBox
-              Left = 304
-              Height = 33
-              Top = 51
-              Width = 177
-              ItemHeight = 25
-              ReadOnly = True
+            object chkIncludePutHoogte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 88
+              Width = 196
+              Caption = 'chkIncludePutHoogte'
               TabOrder = 2
+              OnChange = chkIncludePutHoogteChange
+            end
+            object chkIncludePutDiameter: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 128
+              Width = 207
+              Caption = 'chkIncludePutDiameter'
+              TabOrder = 3
+              OnChange = chkIncludePutDiameterChange
+            end
+            object chkIncludePutMateriaal: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 208
+              Width = 207
+              Caption = 'chkIncludePutMateriaal'
+              TabOrder = 5
+              OnChange = chkIncludePutMateriaalChange
+            end
+            object chkIncludePutFundering: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 248
+              Width = 215
+              Caption = 'chkIncludePutFundering'
+              TabOrder = 6
+              OnChange = chkIncludePutFunderingChange
+            end
+            object chkIncludePutBegindatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 288
+              Width = 231
+              Caption = 'chkIncludePutBegindatum'
+              TabOrder = 7
+              OnChange = chkIncludePutBegindatumChange
+            end
+            object chkIncludePutEinddatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 328
+              Width = 221
+              Caption = 'chkIncludePutEinddatum'
+              TabOrder = 8
+              OnChange = chkIncludePutEinddatumChange
+            end
+            object chkIncludePutMaaiveldhoogte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 368
+              Width = 264
+              Caption = 'chkIncludePutMaaiveldhoogte'
+              TabOrder = 9
+              OnChange = chkIncludePutMaaiveldhoogteChange
+            end
+          end
+          object gbPipelines: TGroupBox
+            AnchorSideLeft.Control = gbManholes
+            AnchorSideLeft.Side = asrBottom
+            Left = 351
+            Height = 620
+            Top = 16
+            Width = 320
+            Anchors = [akTop, akLeft, akBottom]
+            BorderSpacing.Left = 15
+            Caption = 'gbPipelines'
+            ClientHeight = 590
+            ClientWidth = 316
+            ParentBackground = False
+            TabOrder = 1
+            object chkIncludeLeidingLengte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 8
+              Width = 219
+              Caption = 'chkIncludeLeidingLengte'
+              TabOrder = 0
+              OnChange = chkIncludeLeidingLengteChange
+            end
+            object chkIncludeLeidingBreedte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 48
+              Width = 226
+              Caption = 'chkIncludeLeidingBreedte'
+              TabOrder = 1
+              OnChange = chkIncludeLeidingBreedteChange
+            end
+            object chkIncludeLeidingHoogte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 88
+              Width = 227
+              Caption = 'chkIncludeLeidingHoogte'
+              TabOrder = 2
+              OnChange = chkIncludeLeidingHoogteChange
+            end
+            object chkIncludeLeidingDiameter: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 128
+              Width = 238
+              Caption = 'chkIncludeLeidingDiameter'
+              TabOrder = 3
+              OnChange = chkIncludeLeidingDiameterChange
+            end
+            object chkIncludeLeidingVorm: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 168
+              Width = 210
+              Caption = 'chkIncludeLeidingVorm'
+              TabOrder = 4
+              OnChange = chkIncludeLeidingVormChange
+            end
+            object chkIncludeLeidingMateriaal: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 208
+              Width = 238
+              Caption = 'chkIncludeLeidingMateriaal'
+              TabOrder = 5
+              OnChange = chkIncludeLeidingMateriaalChange
+            end
+            object chkIncludeLeidingFundering: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 248
+              Width = 246
+              Caption = 'chkIncludeLeidingFundering'
+              TabOrder = 6
+              OnChange = chkIncludeLeidingFunderingChange
+            end
+            object chkIncludeLeidingStatusFunctioneren: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 288
+              Width = 317
+              Caption = 'chkIncludeLeidingStatusFunctioneren'
+              TabOrder = 7
+              OnChange = chkIncludeLeidingStatusFunctionerenChange
+            end
+            object chkIncludeLeidingWIBONThema: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 328
+              Width = 278
+              Caption = 'chkIncludeLeidingWIBONThema'
+              TabOrder = 8
+              OnChange = chkIncludeLeidingWIBONThemaChange
+            end
+            object chkIncludeLeidingBegindatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 368
+              Width = 262
+              Caption = 'chkIncludeLeidingBegindatum'
+              TabOrder = 9
+              OnChange = chkIncludeLeidingBegindatumChange
+            end
+            object chkIncludeLeidingEinddatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 408
+              Width = 252
+              Caption = 'chkIncludeLeidingEinddatum'
+              TabOrder = 10
+              OnChange = chkIncludeLeidingEinddatumChange
+            end
+            object chkIncludeLeidingBobBegin: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 448
+              Width = 242
+              Caption = 'chkIncludeLeidingBobBegin'
+              TabOrder = 11
+              OnChange = chkIncludeLeidingBobBeginChange
+            end
+            object chkIncludeLeidingBobEind: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 488
+              Width = 232
+              Caption = 'chkIncludeLeidingBobEind'
+              TabOrder = 12
+              OnChange = chkIncludeLeidingBobEindChange
+            end
+          end
+          object gbMechanicalPipeline: TGroupBox
+            AnchorSideLeft.Control = gbPipelines
+            AnchorSideLeft.Side = asrBottom
+            Left = 686
+            Height = 620
+            Top = 16
+            Width = 320
+            Anchors = [akTop, akLeft, akBottom]
+            BorderSpacing.Left = 15
+            Caption = 'gbMechanicalPipeline'
+            ClientHeight = 590
+            ClientWidth = 316
+            ParentBackground = False
+            TabOrder = 2
+            object chkIncludePersleidingLengte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 8
+              Width = 248
+              Caption = 'chkIncludePersleidingLengte'
+              TabOrder = 0
+              OnChange = chkIncludePersleidingLengteChange
+            end
+            object chkIncludePersleidingHoogte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 48
+              Width = 256
+              Caption = 'chkIncludePersleidingHoogte'
+              TabOrder = 1
+              OnChange = chkIncludePersleidingHoogteChange
+            end
+            object chkIncludePersleidingDiameter: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 88
+              Width = 267
+              Caption = 'chkIncludePersleidingDiameter'
+              TabOrder = 2
+              OnChange = chkIncludePersleidingDiameterChange
+            end
+            object chkIncludePersleidingVorm: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 128
+              Width = 239
+              Caption = 'chkIncludePersleidingVorm'
+              TabOrder = 3
+              OnChange = chkIncludePersleidingVormChange
+            end
+            object chkIncludePersleidingMateriaal: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 168
+              Width = 267
+              Caption = 'chkIncludePersleidingMateriaal'
+              TabOrder = 4
+              OnChange = chkIncludePersleidingMateriaalChange
+            end
+            object chkIncludePersleidingStatusFunctioneren: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 208
+              Width = 346
+              Caption = 'chkIncludePersleidingStatusFunctioneren'
+              TabOrder = 5
+              OnChange = chkIncludePersleidingStatusFunctionerenChange
+            end
+            object chkIncludePersleidingBegindatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 248
+              Width = 291
+              Caption = 'chkIncludePersleidingBegindatum'
+              TabOrder = 6
+              OnChange = chkIncludePersleidingBegindatumChange
+            end
+            object chkIncludePersleidingEinddatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 288
+              Width = 281
+              Caption = 'chkIncludePersleidingEinddatum'
+              TabOrder = 7
+              OnChange = chkIncludePersleidingEinddatumChange
+            end
+            object chkIncludePersleidingBobBegin: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 328
+              Width = 271
+              Caption = 'chkIncludePersleidingBobBegin'
+              TabOrder = 8
+              OnChange = chkIncludePersleidingBobBeginChange
+            end
+            object chkIncludePersleidingBobEind: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 368
+              Width = 261
+              Caption = 'chkIncludePersleidingBobEind'
+              TabOrder = 9
+              OnChange = chkIncludePersleidingBobEindChange
+            end
+          end
+          object gbGully: TGroupBox
+            AnchorSideLeft.Control = gbMechanicalPipeline
+            AnchorSideLeft.Side = asrBottom
+            Left = 1021
+            Height = 620
+            Top = 16
+            Width = 320
+            Anchors = [akTop, akLeft, akBottom]
+            BorderSpacing.Left = 15
+            Caption = 'gbGully'
+            ClientHeight = 590
+            ClientWidth = 316
+            ParentBackground = False
+            TabOrder = 3
+            object chkIncludeKolkLengte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 8
+              Width = 196
+              Caption = 'chkIncludeKolkLengte'
+              TabOrder = 0
+              OnChange = chkIncludeKolkLengteChange
+            end
+            object chkIncludeKolkBreedte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 48
+              Width = 203
+              Caption = 'chkIncludeKolkBreedte'
+              TabOrder = 1
+              OnChange = chkIncludeKolkBreedteChange
+            end
+            object chkIncludeKolkHoogte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 88
+              Width = 204
+              Caption = 'chkIncludeKolkHoogte'
+              TabOrder = 2
+              OnChange = chkIncludeKolkHoogteChange
+            end
+            object chkIncludeKolkDiameter: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 128
+              Width = 215
+              Caption = 'chkIncludeKolkDiameter'
+              TabOrder = 3
+              OnChange = chkIncludeKolkDiameterChange
+            end
+            object chkIncludeKolkVorm: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 168
+              Width = 187
+              Caption = 'chkIncludeKolkVorm'
+              TabOrder = 4
+              OnChange = chkIncludeKolkVormChange
+            end
+            object chkIncludeKolkMateriaal: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 208
+              Width = 215
+              Caption = 'chkIncludeKolkMateriaal'
+              TabOrder = 5
+              OnChange = chkIncludeKolkMateriaalChange
+            end
+            object chkIncludeKolkWanddikte: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 248
+              Width = 229
+              Caption = 'chkIncludeKolkWanddikte'
+              TabOrder = 6
+              OnChange = chkIncludeKolkWanddikteChange
+            end
+            object chkIncludeKolkBegindatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 288
+              Width = 239
+              Caption = 'chkIncludeKolkBegindatum'
+              TabOrder = 7
+              OnChange = chkIncludeKolkBegindatumChange
+            end
+            object chkIncludeKolkEinddatum: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 328
+              Width = 229
+              Caption = 'chkIncludeKolkEinddatum'
+              TabOrder = 8
+              OnChange = chkIncludeKolkEinddatumChange
             end
           end
         end
       end
       object tsQuery: TTabSheet
         Caption = 'tsQuery'
-        ClientHeight = 550
-        ClientWidth = 1218
+        ClientHeight = 650
+        ClientWidth = 1411
         object pnlQuery: TPanel
           Left = 0
-          Height = 550
+          Height = 650
           Top = 0
-          Width = 1218
+          Width = 1411
           Align = alClient
           BevelOuter = bvNone
           Caption = 'pnlQuery'
-          ClientHeight = 550
-          ClientWidth = 1218
+          ClientHeight = 650
+          ClientWidth = 1411
           ParentBackground = False
           TabOrder = 0
           object gbQuery: TGroupBox
             Left = 8
-            Height = 544
+            Height = 644
             Top = 0
-            Width = 1200
+            Width = 1393
             Anchors = [akTop, akLeft, akRight, akBottom]
-            ClientHeight = 514
-            ClientWidth = 1196
+            ClientHeight = 614
+            ClientWidth = 1389
             ParentBackground = False
             TabOrder = 0
             inline SynEditSqlQuery: TSynEdit
               Left = 8
-              Height = 466
+              Height = 566
               Top = 0
-              Width = 1174
+              Width = 1367
               Anchors = [akTop, akLeft, akRight, akBottom]
               Font.Height = 20
               Font.Name = 'Courier New'
@@ -1002,9 +1523,6 @@ object frmMain: TfrmMain
               MouseTextActions = <>
               MouseSelActions = <>
               Lines.Strings = (
-                '-- Dit is een voorbeeld.'
-                '-- Maak eerst een goede query en sla die op. Daarna werkt het ophalen van de data.'
-                ''
                 'Select'
                 '    ''LEIDING'' as OBJECT_TYPE,'
                 '    l.id, -- gebruikt bij debug, worder verder niets mee gedaan.'
@@ -1037,7 +1555,6 @@ object frmMain: TfrmMain
                 #9'WION_THEMA as WIBON_THEMA,'
                 '    NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 '    NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                '    NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 '    NULL as AANTAL_WONINGEN,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 '    NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 '    NULL as AANTAL_IE_RECREATIE,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
@@ -1050,7 +1567,7 @@ object frmMain: TfrmMain
                 'FROM gv_vrijv_leiding l'
                 'LEFT JOIN gv_stelsel s ON l.STELSEL_ID = s.OBJECT_GUID  -- stelselnaam kunnen ophalen'
                 'WHERE l.eind_tijd is null'
-                '--AND l.id = 69719'
+                'AND l.id = 69719'
                 ''
                 'UNION ALL'
                 ''
@@ -1086,7 +1603,6 @@ object frmMain: TfrmMain
                 #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                #9'NULL as WIONTHEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as AANTAL_WONINGEN,'#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
@@ -1100,7 +1616,7 @@ object frmMain: TfrmMain
                 '-- BELANGRIJK: Gebruik LEFT JOIN in plaats van alleen JOIN voor stelsel'
                 'LEFT JOIN gv_stelsel s ON p.STELSEL_ID = s.OBJECT_GUID  -- stelselnaam EN stelseltype ophalen'
                 'WHERE p.eind_tijd is null'
-                '--AND p.id in (62960, 65884)'
+                'AND p.id in (62960, 65884)'
                 ''
                 'UNION ALL'
                 ''
@@ -1125,17 +1641,16 @@ object frmMain: TfrmMain
                 #9'NULL as KOLK_TYPE,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
                 '    NULL as MAAIVELD,'#9#9#9#9#9#9#9#9#9#9'--> n.v.t. (velden gelijk houden voor union)'
                 '    pl.aanlegjaar as BEGINDATUM,'#9#9#9#9#9#9#9#9'--> aanlegjaar, wordt omgezet naar een datum.'
-                #9'NULL as EINDDATUM,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                '    NULL as BOB_BEGIN,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
-                '    NULL as BOB_EIND,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
-                #9'NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> Nog niet ingebouwd'
+                '    NULL as EINDDATUM,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
+                '    pl.DIEPTE_BEGIN as BOB_BEGIN,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
+                '    pl.DIEPTE_EIND as BOB_EIND,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'
+                '    NULL as WANDDIKTE,'#9#9#9#9#9#9#9#9#9#9'--> Nog niet ingebouwd'
                 '    NULL as TYPE_REINIGING,                                 --> n.v.t. (velden gelijk houden voor union)'
                 #9'NULL as VERBINDINGSTYPE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as FUNDERING,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 #9'NULL as DATUM_INSPECTIE,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as DATUM_REINIGING,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as AANTAL_WONINGEN,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as AANTAL_IE_RECREATIE,'#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
@@ -1143,64 +1658,12 @@ object frmMain: TfrmMain
                 #9'NULL as LATERAALDEBIET_DWA,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as LATERAALDEBIET_HWA,'#9#9#9#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
                 #9'NULL as LATERAAL_AFVOEREND_OPPERVLAK,'#9#9#9#9#9'--> is (nog) niet geïmplementeerd.'
-                '    --SDO_UTIL.TO_WKTGEOMETRY(pl.GEOMETRIE) as WKT_GEOMETRY,'#9'--> type = string / varchar.'
-                ''
-                '    CASE'
-                '        WHEN SDO_GEOM.VALIDATE_GEOMETRY(pl.geometrie, 0.005) = ''TRUE'''
-                '        THEN SDO_UTIL.TO_WKTGEOMETRY(pl.geometrie)'
-                '        ELSE NULL'
-                '    END as WKT_GEOMETRY,'
+                '    SDO_UTIL.TO_WKTGEOMETRY(pl.GEOMETRIE) as WKT_GEOMETRY,'#9'--> type = string / varchar.'
                 ''
                 '    pl.STELSEL_ID as STELSEL_ID'#9#9#9#9#9#9#9#9'--> type = string / varchar.'
                 'FROM gv_mech_leiding pl'
                 'LEFT JOIN gv_stelsel s ON pl.STELSEL_ID = s.OBJECT_GUID  -- stelselnaam kunnen ophalen'
                 'WHERE pl.eind_tijd is null'
-                ''
-                'UNION ALL'
-                ''
-                'SELECT'
-                '    ''KOLK'' as OBJECT_TYPE,  -- Gebruik ''PUT'' zodat het als put wordt behandeld'
-                '    k.ID,'
-                '    k.object_guid as GUID,'
-                '    k.kolkcode as NAAM,'
-                '    NULL as STELSEL_TYPE,  -- Geen stelsel info beschikbaar'
-                '    NULL as STELSEL_NAAM,   -- Geen stelsel info beschikbaar'
-                '    NULL as LEIDING_TYPE,'
-                '    NULL as BEGINPUT_ID,'
-                '    NULL as EINDPUT_ID,'
-                '    k.lengte as LENGTE,'
-                '    k.breedte as BREEDTE,'
-                '    k.hoogte as HOOGTE,'
-                '    k.diameter as DIAMETER,'
-                '    k.materiaal as MATERIAAL,'
-                '    k.vorm as VORM,'
-                '    NULL as STATUS_FUNCTIONEREN,'
-                '    NULL as PUT_TYPE,  -- Vaste waarde "KOLK" als puttype'
-                '    k.KOLKTYPE as KOLK_TYPE,'
-                '    NULL as MAAIVELD,'
-                '    NULL as BEGINDATUM,'
-                '    NULL as EINDDATUM,'
-                '    NULL as BOB_BEGIN,'
-                '    NULL as BOB_EIND,'
-                '    k.wanddikte as WANDDIKTE,'
-                '    k.TYPE_REINIGING as TYPE_REINIGING, -- zit niet in de ttl'
-                '    NULL as VERBINDINGSTYPE,'
-                '    NULL as FUNDERING,'
-                #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                '    NULL as DATUM_INSPECTIE,'
-                '    NULL as DATUM_REINIGING,  -- TYPE_REINIGING overslaan, is geen datum'
-                '    NULL as WIONTHEMA,'
-                '    NULL as AANTAL_WONINGEN,'
-                '    NULL as AANTAL_IE_BEDRIJVEN,'
-                '    NULL as AANTAL_IE_RECREATIE,'
-                '    NULL as AFVOEREND_OPPERVLAK,'
-                '    NULL as LATERAALDEBIET_DWA,'
-                '    NULL as LATERAALDEBIET_HWA,'
-                '    NULL as LATERAAL_AFVOEREND_OPPERVLAK,'
-                '    SDO_UTIL.TO_WKTGEOMETRY(k.GEOMETRIE) as WKT_GEOMETRY,  -- Geometrie is wel beschikbaar'
-                '    NULL as STELSEL_ID  -- Geen stelsel_id'
-                'FROM gv_kolk k'
-                'WHERE k.eind_tijd is null'
                 ''
                 'UNION ALL'
                 ''
@@ -1235,7 +1698,6 @@ object frmMain: TfrmMain
                 #9'NULL as WIBON_THEMA,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as DATUM_INSPECTIE,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as DATUM_REINIGING,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
-                '    NULL as WIONTHEMA,'#9#9#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as AANTAL_WONINGEN,'#9#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as AANTAL_IE_BEDRIJVEN,'#9#9#9'--> N.v.t., niet geïmplenteerd'
                 '    NULL as AANTAL_IE_RECREATIE,'#9#9#9'--> N.v.t., niet geïmplenteerd'
@@ -1313,21 +1775,27 @@ object frmMain: TfrmMain
               end
             end
             object btnSaveQuery: TButton
-              Left = 1069
+              AnchorSideTop.Control = SynEditSqlQuery
+              AnchorSideTop.Side = asrBottom
+              Left = 1262
               Height = 38
-              Top = 474
+              Top = 574
               Width = 113
               Anchors = [akRight, akBottom]
+              BorderSpacing.Top = 10
               Caption = 'btnSaveQuery'
               TabOrder = 1
               OnClick = btnSaveQueryClick
             end
             object btnOpenQuery: TButton
+              AnchorSideTop.Control = SynEditSqlQuery
+              AnchorSideTop.Side = asrBottom
               Left = 8
-              Height = 38
-              Top = 474
+              Height = 36
+              Top = 576
               Width = 113
-              Anchors = [akLeft, akBottom]
+              Anchors = [akTop, akLeft, akBottom]
+              BorderSpacing.Top = 10
               Caption = 'btnOpenQuery'
               TabOrder = 2
               OnClick = btnOpenQueryClick
@@ -1335,7 +1803,7 @@ object frmMain: TfrmMain
             object lblSQLFileLocation: TLabel
               Left = 136
               Height = 25
-              Top = 487
+              Top = 587
               Width = 144
               Anchors = [akLeft, akBottom]
               Caption = 'lblSQLFileLocation'
@@ -1381,7 +1849,22 @@ object frmMain: TfrmMain
     NumberAttri.Foreground = clPurple
     StringAttri.Foreground = clMaroon
     SQLDialect = sqlSybase
-    Left = 1072
-    Top = 168
+    Left = 1064
+    Top = 16
+  end
+  object ImageListDbGridSort: TImageList
+    Left = 892
+    Top = 31
+    Bitmap = {
+      4C7A020000001000000010000000EF0000000000000078DACD953D0E83300C85
+      C3D2997321C1A5E010C0C2C0443AF4069991183AB4F42E5948FD68064A457E94
+      46EDF04956F29E1C9C602BA5988AC0F5C2D23B672340ECE39D393B914F104A23
+      B0E6E667C97C663D7C370D62AC61CF2177A5732E9BFC2F06565ABCC587670734
+      47FEC7C032D248835F42A322DD5928755D674DD348421D20A131F8738377051A
+      D319485369EDB2F7B66D5B3A7C4742DA5EE75AD1FE1E7B2E75E09C9F482F36B9
+      05D67C6AD9755D4ABE0920FED73BB79C7F04BEE70FAC5FD0FD85BC1FDA2F6CEF
+      179A58FFCFAF09ED5FD45F735BFF842656FFFEC6FC089F5F6FF37302BEF3D387
+      27F4EF94C6
+    }
   end
 end

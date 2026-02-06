@@ -26,6 +26,7 @@ type
     function GetAccurateRecordCount: Integer;
     function GetRecordCount: Integer;  // alleen nog als falback voor GetAccurateRecordCount (kan weg)
     function GetProviderType: string;
+
   end;
 
 implementation

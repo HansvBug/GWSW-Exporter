@@ -243,6 +243,8 @@ begin
     setRapportFieldIsEmpty:= fSettings.RapportFieldIsEmpty;
     setRapportFieldIsMissing:= fSettings.RapportFieldIsMissing;
     setRapportOutOfRange:= fSettings.RapportOutOfRange;
+    setMappingFile:= fSettings.MappingFile;
+    setGWSWVersion:= fSettings.GWSWVersion;
     //...
 
     setSucces:= fSettings.Succes;
@@ -299,6 +301,7 @@ begin
       fSettings.RapportFieldIsEmpty:= setRapportFieldIsEmpty;
       fSettings.RapportFieldIsMissing:= setRapportFieldIsMissing;
       fSettings.RapportOutOfRange:= setRapportOutOfRange;
+      fSettings.MappingFile:= setMappingFile;
       //... add new settings
 
       fSettings.SettingsFile:= setSettingsFile;
@@ -339,7 +342,7 @@ begin
   if assigned(fSettings) then begin
     with PSingleSettingRec(Settingdata)^ do begin
       fSettings.SettingsFile:= ssSettingsFile;
-      fSettings.WriteSetting(ssName, ssValue);
+      fSettings.WriteSetting(ssName, ssSection, ssValue);
     end;
   end;
 end;

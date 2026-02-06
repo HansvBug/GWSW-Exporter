@@ -39,6 +39,7 @@ type
     function IsFileInUse(const FileName: String): Boolean;
 
     procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
+    procedure DbDisconnect(DbConnectionData : PDbConnectRec);
     function IsConnected: Boolean;
     function RetrieveData(Data: PRetrieveDataRec): TRetrieveDataRec;
     function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
@@ -48,6 +49,9 @@ type
     // get a setting
     function GetSetting_AskToOpenExportFile: Boolean;
     procedure DisableChildControls(aData : TExportInProgressRec);
+    function GetSingleSetting(const SettingName: String): String;
+    function SortDbGrid(Data: PSortDbGridRec): TSortDbGridRec;
+    function LoadCSVData(aRec: PRetrieveCSVDataRec): TRetrieveCSVDataRec;  { #todo : aRec is een betere naam dan Data. OVERAL hernoemen }
   end; { IModelMain }
 
   {--------------------------------------------------------------------------------------------------------}
@@ -118,10 +122,12 @@ type
     procedure WriteToLog(const aSection, aLogType, LogText: String);
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
     procedure MakeDbConnection(DbConnectionData: PDbConnectRec);
+    procedure DbDisconnect(DbConnectionData: PDbConnectRec);
     function GetSQLfileLocation: String;
     function GetKeepLastOrganization: Boolean;
     function GetLastUsedOrganization: String;
     procedure ExportInProgress(aData: TExportInProgressRec);
+    function GetSingleSetting(const SettingName: String): String;
 
     property Model: IModelMain read get_Model; // TODO: write set_Model;
     property Provider: IobsProvider read get_Provider write set_Provider;

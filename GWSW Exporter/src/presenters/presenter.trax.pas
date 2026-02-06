@@ -77,9 +77,13 @@ type
       fFrmRestoredLeft,
       fFrmRestoredTop,
       fFrmRestoredWidth: Integer;
+      fManholeShape: Boolean;
       fRead: Boolean;
       fReadFrmState: Boolean;
       fSettingsFile: String;
+      fSplitterdataGrid: Integer;
+      fSplitterDataSettings: Integer;
+      fSplitterMemos: Integer;
       fSuccess: boolean;
       fWrite: Boolean;
       fStoreFrmState: Boolean;
@@ -110,17 +114,24 @@ type
       property FormRestoredLeft: Integer read fFrmRestoredLeft write fFrmRestoredLeft;
       property FormRestoredHeight: Integer read fFrmRestoredHeight write fFrmRestoredHeight;
       property FormRestoredWidth: Integer read fFrmRestoredWidth write fFrmRestoredWidth;
+      property SplitterdataGrid: Integer read fSplitterdataGrid write fSplitterdataGrid;
+      property SplitterDataSettings: Integer read fSplitterDataSettings write fSplitterDataSettings;
+      property SplitterMemos: Integer read fSplitterMemos write fSplitterMemos;
+      //Export settings
+      property ManholeShape: Boolean read fManholeShape write fManholeShape;
     end;
 
   { TSingleSettingTrx }
   TSingleSettingTrx = class(TTransaction, ITrxExec)
   private
+    fSection: String;
     fSettingName: String;
     fSettingsFile: String;
     fSettingValue: String;
   public
     function Execute(aMgr: ITransactionManager): boolean;
     property SettingsLocationAndFileName: String read fSettingsFile write fSettingsFile;
+    property Section: String read fSection write fSection;
     property SettingName: String read fSettingName write fSettingName;
     property SettingValue: String read fSettingValue write fSettingValue;
   end;
@@ -145,8 +156,10 @@ type
   { TExportToOroxTtlFileTrx }
   TExportToOroxTtlFileTrx = class(TTransaction, ITrxExec)
     private
+      fDataType: String;
       fDisableErrorReport : Boolean;
-      fFileName : String;
+      fFileNameCsvFile: String;
+      fFileNameExportFile : String;
       fMappingFile : String;
       fMessage : String;
       fOrganizationName : String;
@@ -155,17 +168,18 @@ type
     public
       function Execute(aMgr: ITransactionManager): boolean;
 
-      property FileName: String read fFileName write fFileName;
+      property FileNameExportFile: String read fFileNameExportFile write fFileNameExportFile;
+      property FileNameCsvFile : String read fFileNameCsvFile write fFileNameCsvFile;
       property MappingFile: String read fMappingFile write fMappingFile;
       property OrganizationName: String read fOrganizationName write fOrganizationName;
       property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
       property Version: String read fVersion write fVersion;
+      property DataType: String read fDataType write fDataType;
       property Success: Boolean read fSuccess write fSuccess;
       property Message: String read fMessage write fMessage;
   end;
 
   { TUniqueStringlistTrx }
-
   TUniqueStringlistTrx = class(TTransaction, ITrxExecNoRes)
     private
       faComponent : TObject;
@@ -180,6 +194,47 @@ type
       property ListItems: TStrings read fListItems write fListItems;
       property NewString: String read fNewString write fNewString;
       property aComponent: TObject read faComponent write faComponent;
+  end;
+
+  { TSortDbGridTrx }
+  TSortDbGridTrx = class(TTransaction, ITrxExec)
+  private
+    fColumn: TObject;       // TColumn
+    fDataProvider: TObject; // SQLQuery
+    fDataType: String;
+    fDbGrid: TObject;
+    fFieldName: String;
+    fCurrentSortOrder: String; // 'ASC' of 'DESC'
+  public
+    function Execute(aMgr: ITransactionManager): boolean;
+
+    property Column: TObject read fColumn write fColumn;
+    property DataProvider: TObject read fDataProvider write fDataProvider;
+    property DbGrid: TObject read fDbGrid write fDbGrid;
+    property FieldName: string read fFieldName write fFieldName;
+    property CurrentSortOrder: string read fCurrentSortOrder write fCurrentSortOrder;
+    property DataType: String read fDataType write fDataType;
+  end;
+
+
+  { TRetrieveCSVDataTrx }
+  TRetrieveCSVDataTrx = class(TTransaction, ITrxExec)
+    private
+      fDataGrid: TObject;
+      fDataSource: TObject;
+      fDelimiter: Char;
+      fFileName: String;
+      fHasHeader: Boolean;
+      fQuoteChar: Char;
+    public
+      function Execute(aMgr: ITransactionManager): boolean;
+
+      property FileName: String read fFileName write fFileName;
+      property HasHeader: Boolean read fHasHeader write fHasHeader;
+      property Delimiter: Char read fDelimiter write fDelimiter;
+      property QuoteChar: Char read fQuoteChar write fQuoteChar;
+      property DataGrid: TObject read fDataGrid write fDataGrid;
+      property DataSource: TObject read fDataSource write fDataSource;
   end;
 
 implementation
@@ -315,6 +370,9 @@ begin
         lRec.setFrmRestoredLeft := FormRestoredLeft;
         lRec.setFrmRestoredHeight := FormRestoredHeight;
         lRec.setFrmRestoredWidth := FormRestoredWidth;
+        lRec.setSplitterdataGrid:= SplitterdataGrid;  // Noodzakelijk, andsers kan er een div by zero ontstaa in de doappsettings omdat deze settings dan een default waarde die onbekend is.
+        lRec.setSplitterDataSettings:= SplitterDataSettings;
+        lRec.setSplitterMemos:= SplitterMemos;
         lRec:= aMgr.OwnerMain.Model.StoreFormState(@lRec);
 
         aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
@@ -359,6 +417,7 @@ begin
   if Result then begin
     lRec.ssSettingsFile:= SettingsLocationAndFileName;
     lRec.ssName:= SettingName;
+    lRec.ssSection:= Section;
     lRec.ssValue:= SettingValue;
 
     aMgr.OwnerMain.Model.WriteSingleSetting(@lRec);
@@ -388,6 +447,7 @@ begin
   if Result then begin
     lRec.DataSource:= Nil;
     lRec.SqlText:= SqlText;
+    lRec.DataGrid:= DataGrid;
     lRec:= aMgr.OwnerMain.Model.RetrieveData(@lRec);
   end;
 
@@ -400,9 +460,11 @@ var
   lRec : TExportToOroxTtlFileRec;
 begin
   lRec.OrganizationName:= OrganizationName;
-  lRec.FileName:= FileName;
+  lRec.FileNameExportFile:= FileNameExportFile;
+  lRec.FileNameCsvFile:= FileNameCsvFile;
   lRec.MappingFile:= MappingFile;
   lRec.Version:= Version;
+  lRec.DataType:= DataType;
 
   lRec:= aMgr.OwnerMain.Model.ExportToOroxTtlFile(@lRec);
 
@@ -410,7 +472,6 @@ begin
 end;
 
 { TUniqueStringlistTrx }
-
 constructor TUniqueStringlistTrx.Create(aModReason : word);
 begin
   fModReason:= aModReason;
@@ -442,11 +503,54 @@ begin
   finally
     tempList.Free;
   end;
-
-
-
-
 end;
+
+{ TSortDbGridTrx }
+function TSortDbGridTrx.Execute(aMgr: ITransactionManager): boolean;
+var
+  lRec: TSortDbGridRec;
+begin
+  // Bereid de record voor om naar Model te sturen
+  lRec.Column:= fColumn;
+  lRec.FieldName:= fFieldName;
+  lRec.CurrentSortOrder:= fCurrentSortOrder;
+  lRec.DataType:= DataType;
+  lRec.DataProvider:= DataProvider;  // wordt voor de csv dataaset gebruikt.
+  lRec:= aMgr.OwnerMain.Model.SortDbGrid(@lRec);
+
+  // Stuur het resultaat terug naar de View
+  aMgr.OwnerMain.Provider.NotifySubscribers(prSortDbGrid, DbGrid, @lRec);
+end;
+
+{ TRetrieveCSVDataTrx }
+function TRetrieveCSVDataTrx.Execute(aMgr: ITransactionManager): boolean;
+var
+  lRec: TRetrieveCSVDataRec;
+begin
+  Result:= aMgr.OwnerMain.Model.DoesFileExists(FileName);
+
+  if Result then begin
+    lRec.FilePath:= FileName;
+    lRec.Delimiter:= Delimiter;
+    lRec.QuoteChar:= QuoteChar;
+    lRec.HasHeader:= HasHeader;
+    lRec.DataSource:= Nil;
+    lRec:= aMgr.OwnerMain.Model.LoadCSVData(@lRec);
+  end
+  else begin
+      lRec.Success:= False;
+      LRec.Message:= 'File does not exists';  { #todo : Taalinstelling }
+      lRec.DataSource:= Nil;
+      lRec.DataSet:= Nil;
+  end;
+
+  aMgr.OwnerMain.Provider.NotifySubscribers(prRetrieveCSVData, DataGrid, @lRec);
+end;
+
+
+
+
+
 
 procedure InitTrax;
 begin

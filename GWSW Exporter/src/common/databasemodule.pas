@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils,
-  ZConnection, ZDbcIntfs, ZExceptions, ZDataset, DB,
+  oracleconnection, SQLDB, DB,
   model.intf;
 
 type
@@ -18,7 +18,8 @@ type
   end;
 
   TDataSetResult = record
-    DataSet: TDataSource;
+    DataSource: TDataSource;
+    DataSet: TDataSet;
     Success: Boolean;
   end;
 
@@ -28,24 +29,24 @@ type
     private
       fIsConnected : Boolean;
 
-      procedure OptimizeOracleSession(Connection: TZConnection);
+      procedure OptimizeOracleSession(Connection: TOracleConnection);
     protected
-      fZConnection: TZConnection;
-      fTransaction: TZTransaction;
-      fZQuery: TZQuery;
+      fConnection: TOracleConnection;
+      fTransaction: TSQLTransaction;
+      fSqlQuery: TSQLQuery;
       fDataSource: TDataSource;
-
     public
       constructor Create(); overload;
       destructor Destroy; override;
 
       function MakeDbConnection(const DbName, UserName, aPassword : String) : TConnectionResult;
+      function DbDisconnect: TConnectionResult;
       function RetrieveData(const SqlText: String): TDataSetResult;
 
       function IsConnected: Boolean;
       function GetConnection: TObject;
 
-      property CurrentQuery: TZQuery read fZQuery;
+      property CurrentQuery: TSQLQuery read fSqlQuery;
       //property IsConnected: Boolean read FIsConnected write fIsConnected;
   end;
 
@@ -53,127 +54,184 @@ implementation
 
 
 { TDatabaseModule }
-function TDatabaseModule.MakeDbConnection(const DbName, UserName, aPassword : String) : TConnectionResult;
+function TDatabaseModule.MakeDbConnection(const DbName, UserName, aPassword: String): TConnectionResult;
 var
   ErrorMsg: String;
+  ErrorCode: Integer;
+  OraError: String;
 begin
   // Initialize
   Result.Success:= False;
   Result.Message:= '';
   Result.ErrorCode:= 0;
-  Result.Message:= '';
 
-  if not Assigned(fZConnection) then begin
-    Result.Message:= 'DbConnNotInitialized' ; //'Database connection not initialized';
-    fIsConnected := False;
+  if not Assigned(fConnection) then begin
+    Result.Message:= 'DbConnNotInitialized';
+    fIsConnected:= False;
     Exit;
   end;
 
-  with fZConnection do begin
-    // General
-    Protocol:= 'Oracle';
-    AutoCommit:= False;
-    ReadOnly:= True;
-    TransactIsolationLevel:= tiNone;
-    UseMetadata:= False;  // Data retrieval should now be a little faster...
-
-    // Connection data
-    Database:= DbName;
-    User:= UserName;
-    Password:= aPassword;
-
-    // Properties that should make retrieving the data faster
-    Properties.Clear;
-    // Oracle-specific optimizations (don't help anything, network stays slow)
-    Properties.Add('ora_metadata=0');
-    Properties.Add('arraysize=5000'); // Number of rows per fetch
-    Properties.Add('prefetch_rows=5000'); // Prefetch count
-    Properties.Add('statement_cache_size=50');
-    Properties.Add('compress=1'); // Network compression
-    Properties.Add('packet_size=32768'); // Bigger packets
-    // Properties.Add('sendblob=1'); // Blobs in one go
-    Properties.Add('pooled=true');
-    Properties.Add('max_connections=15');
-    Properties.Add('min_connections=3');
-    // Character set settings
-    Properties.Add('codepage=UTF8');
-    Properties.Add('controls_cp=CP_UTF8');
-    // Specific Oracle driver optimizations
-    Properties.Add('BindDoubleAsString=0');
-    Properties.Add('BindDecimalAsString=0');
-
-    Catalog := ''; // Oracle doesn't use a catalog
-  end;
-
   try
-    fZConnection.AutoCommit:= True; // So: Necessary because: TransactIsolationLevel:= tiReadCommitted.
-    fZConnection.Connected:= True;
-    fZConnection.TransactIsolationLevel:= tiReadCommitted; // For read-only queries, this is the best option. mar LET OP AutoCommit moert dan op true staan anders blijft de query naar dezelfde data kijken. Altijd eerst de transactie committen
+    // Eerst transaction parameters instellen VOOR connectie
+    fTransaction.Params.Clear;
+    fTransaction.Params.Add('read_committed');     // Transaction isolation level
+    fTransaction.Params.Add('nowait');             // Geen wachten op locks
 
-    OptimizeOracleSession(fZConnection);
+    // Dan connection parameters instellen
+    with fConnection do begin
+      // Performance parameters instellen (alleen als nog niet connected)
+      if not Connected then
+      begin
+        Params.Clear;
+
+        // Performance parameters
+        Params.Add('arraysize=1000');                  // Rijen per fetch
+        Params.Add('prefetch_rows=1000');              // Prefetch memory
+        Params.Add('statement_cache_size=20');         // Prepared statements cache
+
+        // Network parameters
+        Params.Add('packet_size=8192');                // Network packet size
+
+        // Character set - belangrijk voor Unicode
+        Params.Add('codepage=UTF8');
+        Params.Add('ClientCharset=UTF8');
+
+        // Connection parameters
+        Params.Add('LoginTimeout=10');                 // Timeout in seconden
+        //Params.Add('ConnectTimeout=10');            // Alternatieve naam
+        Params.Add('MultipleTransactions=False');      // Voor betere performance
+      end;
+    end;
+
+    // Nu pas connecteren
+    fConnection.DatabaseName:= DbName;
+    fConnection.UserName:= UserName;
+    fConnection.Password:= aPassword;
+    fConnection.HostName:= ''; // Moet leeg zijn als van TNSNAMES.ora gebruik wordt gemaakt.
+
+    fConnection.Connected:= True;
+
+    // Session optimaliseren
+    OptimizeOracleSession(fConnection);
 
     fIsConnected:= True;
     Result.Success:= True;
     Result.Message:= 'Success';
-  Except
-    on E: EZSQLException do begin
-      ErrorMsg := 'DbError' + '|' + ' (' + E.ErrorCode.ToString + '): ';
 
-      // Check for specific Oracle error codes
-      case E.ErrorCode of
-        12154: ErrorMsg := ErrorMsg + '|' + 'CannotFindConnIdentifier';  // 'Cannot find the connection identifier. Check TNSNAMES.ORA';
-        1017:  ErrorMsg := ErrorMsg + '|' + 'InvalidUserOrPwd';          // 'Invalid username/password';
-        12541: ErrorMsg := ErrorMsg + '|' + 'NoListener';                // 'No listener on the server';
-        12514: ErrorMsg := ErrorMsg + '|' + 'ListenerDoesNotKnowServer'; // 'Listener doesn''t know the service';
-        12505: ErrorMsg := ErrorMsg + '|' + 'SIDNotFound';               // 'SID not found';
-        1005:  ErrorMsg := ErrorMsg + '|' + 'NUllPwd';                   // 'Null password given; logon denied';
-        //... Maybe even more so
+  except
+    on E: EDatabaseError do begin
+      ErrorMsg:= 'DbError|';
+      ErrorCode:= 0;
+
+      // Try to extract error information
+      OraError:= UpperCase(E.Message);
+
+      // Check voor specifieke Oracle fouten
+      if Pos('ORA-12154', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'CannotFindConnIdentifier'
+      else if Pos('ORA-01017', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'InvalidUserOrPwd'
+      else if Pos('ORA-12541', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'NoListener'
+      else if Pos('ORA-12514', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'ListenerDoesNotKnowServer'
+      else if Pos('ORA-12505', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'SIDNotFound'
+      else if Pos('ORA-01005', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'NullPwd'
+      else if Pos('ORA-12170', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'ConnectTimeout'
+      else if Pos('ORA-12535', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'OperationTimeout'
+      else if Pos('ORA-12560', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'ProtocolAdapterError'
+      else if Pos('TNS-', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'TNS Error: ' + E.Message
+      else if Pos('NO DATA FOUND', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'NoDataFound'
+      else if Pos('TOO MANY ROWS', OraError) > 0 then
+        ErrorMsg:= ErrorMsg + 'TooManyRows'
       else
-        ErrorMsg := ErrorMsg + E.Message;
-      end;
+        ErrorMsg:= ErrorMsg + E.Message;
+
       Result.Success:= False;
-      fIsConnected:= False;
+      Result.ErrorCode:= ErrorCode;
       Result.Message:= ErrorMsg;
+      fIsConnected:= False;
+
+      // Zorg dat connection gesloten wordt bij error
+      if fConnection.Connected then
+      begin
+        try
+          fConnection.Connected:= False;
+        except
+          // Negeer errors bij sluiten
+        end;
+      end;
     end;
 
     on E: Exception do begin
-      // Common Errors
-      if Pos('could not resolve', LowerCase(E.Message)) > 0 then
-        ErrorMsg:= 'ServerNotFound'                         // 'Netwerkfout: Kan server niet vinden.'
-      else if Pos('timeout', LowerCase(E.Message)) > 0 then
-        ErrorMsg:= 'ServerNotResponding'                    // 'Timeout: Server reageert niet.'
-      else if Pos('network', LowerCase(E.Message)) > 0 then
-        ErrorMsg:= 'CheckConnection'                        //'Netwerkfout: Controleer uw verbinding.'
+      // Algemene exceptions
+      OraError:= LowerCase(E.Message);
+
+      if Pos('could not resolve', OraError) > 0 then
+        ErrorMsg:= 'ServerNotFound'
+      else if Pos('unknown host', OraError) > 0 then
+        ErrorMsg:= 'UnknownHost'
+      else if Pos('timeout', OraError) > 0 then
+        ErrorMsg:= 'ServerNotResponding'
+      else if Pos('network', OraError) > 0 then
+        ErrorMsg:= 'CheckConnection'
+      else if Pos('access violation', OraError) > 0 then
+        ErrorMsg:= 'InternalError'
+      else if Pos('ora-', OraError) > 0 then
+        ErrorMsg:= 'OracleError: ' + E.Message  // Catch any ORA- error we missed
       else
         ErrorMsg:= 'Error: ' + E.Message;
 
       Result.Success:= False;
       fIsConnected:= False;
       Result.Message:= ErrorMsg;
+
+      // Zorg dat connection gesloten wordt bij error
+      if fConnection.Connected then
+      begin
+        try
+          fConnection.Connected:= False;
+        except
+          // Negeer errors bij sluiten
+        end;
+      end;
     end;
+  end;
+end;
+
+function TDatabaseModule.DbDisconnect: TConnectionResult;
+begin
+  if not Assigned(fConnection) then begin
+    Result.Success:= False;
+  end
+  else begin
+    fConnection.Connected:= False;
+    Result.Success:= False;
   end;
 end;
 
 function TDatabaseModule.RetrieveData(const SqlText : String) : TDataSetResult;
 begin
-  with fZQuery do begin
+  with fSqlQuery do begin
     Close;
-    EmptyDataSet;
-
     SQL.Clear;
     SQL.Text:= SqlText;
-
-    FetchRow:= 1000;       // Disbled makes retrieving data verry slow but it it needed for the progress counter
-    CachedUpdates:= True;  // Should make it faster on the network. --> Difference is not noticeable
-    Prepared:= True;       { Makes no sense. The query should only be extracted once.}
-    ReadOnly:= True;
+    PacketRecords:= -1;
+    Prepared;
 
     try
       DisableControls;
       Open;
       EnableControls;
 
-      Result.DataSet:= fDataSource;
+      Result.DataSource:= fDataSource;
 
       if RecordCount> 0 then Result.Success:= True else Result.Success:= False;
     finally
@@ -189,30 +247,42 @@ end;
 
 function TDatabaseModule.GetConnection : TObject;
 begin
-  Result:= fZConnection;
+  Result:= fConnection;
 end;
 
-procedure TDatabaseModule.OptimizeOracleSession(Connection : TZConnection);
+procedure TDatabaseModule.OptimizeOracleSession(Connection: TOracleConnection);
 var
-  Query: TZQuery;
+  Query: TSQLQuery;
 begin
-  Query:= TZQuery.Create(nil);
+  Query:= TSQLQuery.Create(nil);
   try
-    Query.Connection:= Connection;
+    Query.Database:= Connection;
+    Query.Transaction:= fTransaction;
 
     // Set session parameters for better performance
-    Query.SQL.Text :=
+    Query.SQL.Text:=
       'ALTER SESSION SET ' +
       'NLS_DATE_FORMAT = ''YYYY-MM-DD HH24:MI:SS'' ' +
       'NLS_NUMERIC_CHARACTERS = ''.,'' ' +
       'OPTIMIZER_MODE = ALL_ROWS ' +
-      'CURSOR_SHARING = FORCE ' +     // Usually better for performance
-      'OPTIMIZER_DYNAMIC_SAMPLING = 4 ' +
-      'DB_FILE_MULTIBLOCK_READ_COUNT = 128 ' +  // Higher read count
-      'SORT_AREA_SIZE = 1048576 ' +             // Larger sort area
-      'HASH_AREA_SIZE = 1048576';
+      'CURSOR_SHARING = EXACT ' +      // FORCE kan problemen geven, EXACT is veiliger
+      'OPTIMIZER_DYNAMIC_SAMPLING = 2 ' +
+      'QUERY_REWRITE_ENABLED = TRUE ' +
+      'RESULT_CACHE_MODE = MANUAL ' +  // Cache beheerd door applicatie
+      'STATISTICS_LEVEL = BASIC';      // Minimal statistics overhead
 
     Query.ExecSQL;
+
+    // Additional optimization for large result sets
+    // Tijdelijk appart. { #todo : Nog een keer testen of dit verschil maakt }
+    Query.SQL.Text:=
+      'ALTER SESSION SET ' +
+      'SORT_AREA_SIZE = 1048576 ' +
+      'HASH_AREA_SIZE = 1048576 ' +
+      'DB_FILE_MULTIBLOCK_READ_COUNT = 128';
+
+    Query.ExecSQL;
+
   finally
     Query.Free;
   end;
@@ -220,29 +290,32 @@ end;
 
 constructor TDatabaseModule.Create();
 begin
-  fZConnection:= TZConnection.Create(Nil);
+  fConnection:= TOracleConnection.Create(Nil);
   fIsConnected:= False;
 
-  fTransaction:= TZTransaction.create(Nil);
-  fZQuery:= TZQuery.create(Nil);
-  fDataSource:= TDataSource.Create(Nil);
+  fTransaction:= TSQLTransaction.create(Nil);
+  fTransaction.DataBase:= fConnection;
 
-  fTransaction.Connection:= fZConnection;
-  fZQuery.Connection:= fZConnection;
-  fDataSource.DataSet:= fZQuery;
+  fSqlQuery:= TSQLQuery.create(Nil);
+  fSqlQuery.MaxIndexesCount:= 100;  // Nodig voor het sorteren. Dit zijn 50 kolommen in 2 richtingen.
+  fSqlQuery.Database:= fConnection;
+  fSqlQuery.Transaction:= fTransaction;
+
+  fDataSource:= TDataSource.Create(Nil);
+  fDataSource.DataSet:= fSqlQuery;
 end;
 
 destructor TDatabaseModule.Destroy;
 begin
-  if Assigned(fDataSource) Then FreeAndNil(fDataSource);
-  if Assigned(fZQuery) then FreeAndNil(fZQuery);
+  if Assigned(fDataSource) then FreeAndNil(fDataSource);
+  if Assigned(fSqlQuery) then FreeAndNil(fSqlQuery);
   if Assigned(fTransaction) then FreeAndNil(fTransaction);
 
-  if Assigned(fZConnection) then begin
-    if fZConnection.Connected then
-      fZConnection.Disconnect;
+  if Assigned(fConnection) then begin
+    if fConnection.Connected then
+      fConnection.Connected:= False;
 
-    FreeAndNil(fZConnection);
+    FreeAndNil(fConnection);
   end;
 
   inherited Destroy;

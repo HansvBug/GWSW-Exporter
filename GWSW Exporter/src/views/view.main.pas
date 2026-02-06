@@ -4,45 +4,94 @@ unit view.main;
 interface
 uses Classes, SysUtils, Forms, StdCtrls, Controls, Graphics, Dialogs, ComCtrls,
   ExtCtrls, Menus, DBGrids, Buttons, DBCtrls, fpspreadsheetctrls,
-  SynEdit, Windows, ShellAPI,  { #todo : Waarschijnlijk een probleen voor Linux straks..... }
+  SynEdit, LCLIntf,
   SynHighlighterSQL, istrlist, model.intf, model.decl, presenter.main,
-  presenter.trax, DB, fpcsvexport;
+  presenter.trax, DB, fpcsvexport, oracleconnection, SQLDB, csvdataset;
 
 type
   { TfrmMain }
 
   TfrmMain = class(TForm, IViewMain)
-    BitBtnSelectMappingsFile : TBitBtn;
-    btnConnect : TButton;
+    btnConnect: TButton;
     btnExportDbgridToCsv : TButton;
-    btnGetData : TButton;
-    btnExportToFile : TButton;
+    btnExportToFileOra: TButton;
+    btnExportToFileCSV: TButton;
+    btnGetData: TButton;
     btnSaveQuery : TButton;
     btnOpenQuery : TButton;
     btnClose : TButton;
-    cbGWSWVersion : TComboBox;
-    cbOrganizationName : TComboBox;
-    cbDatabaseName : TComboBox;
-    cbUserName : TComboBox;
+    btnSaveErrorLog: TButton;
+    btnSelectCsvFile: TButton;
+    btnDisconnect: TButton;
+    cbDatabaseName: TComboBox;
+    cbOrganizationName: TComboBox;
+    cbOrganizationNameCSV: TComboBox;
+    cbUserName: TComboBox;
+    chkIncludePersleidingBobBegin: TCheckBox;
+    chkIncludePersleidingBobEind: TCheckBox;
+    chkIncludePutMaaiveldhoogte: TCheckBox;
+    chkIncludeKolkLengte: TCheckBox;
+    chkIncludeKolkBreedte: TCheckBox;
+    chkIncludeKolkHoogte: TCheckBox;
+    chkIncludeKolkDiameter: TCheckBox;
+    chkIncludeKolkVorm: TCheckBox;
+    chkIncludeKolkMateriaal: TCheckBox;
+    chkIncludeKolkWanddikte: TCheckBox;
+    chkIncludeKolkBegindatum: TCheckBox;
+    chkIncludeKolkEinddatum: TCheckBox;
+    chkIncludePersleidingLengte: TCheckBox;
+    chkIncludePersleidingHoogte: TCheckBox;
+    chkIncludePersleidingDiameter: TCheckBox;
+    chkIncludePersleidingVorm: TCheckBox;
+    chkIncludePersleidingMateriaal: TCheckBox;
+    chkIncludePersleidingStatusFunctioneren: TCheckBox;
+    chkIncludePersleidingBegindatum: TCheckBox;
+    chkIncludePersleidingEinddatum: TCheckBox;
+    chkIncludeLeidingLengte: TCheckBox;
+    chkIncludeLeidingBegindatum: TCheckBox;
+    chkIncludeLeidingEinddatum: TCheckBox;
+    chkIncludeLeidingBobBegin: TCheckBox;
+    chkIncludeLeidingBobEind: TCheckBox;
+    chkIncludeLeidingBreedte: TCheckBox;
+    chkIncludeLeidingHoogte: TCheckBox;
+    chkIncludeLeidingDiameter: TCheckBox;
+    chkIncludeLeidingVorm: TCheckBox;
+    chkIncludeLeidingMateriaal: TCheckBox;
+    chkIncludeLeidingFundering: TCheckBox;
+    chkIncludeLeidingStatusFunctioneren: TCheckBox;
+    chkIncludeLeidingWIBONThema: TCheckBox;
+    chkIncludePutLengte: TCheckBox;
+    chkIncludePutBreedte: TCheckBox;
+    chkIncludePutHoogte: TCheckBox;
+    chkIncludePutDiameter: TCheckBox;
+    chkIncludePutMateriaal: TCheckBox;
+    chkIncludePutFundering: TCheckBox;
+    chkIncludePutBegindatum: TCheckBox;
+    chkIncludePutEinddatum: TCheckBox;
+    chkIncludePutVorm: TCheckBox;
     dbgSewerData : TDBGrid;
     DBNavigator : TDBNavigator;
-    edtMappingsFile : TEdit;
-    edtPassword : TEdit;
-    gbConnection : TGroupBox;
-    gbExport : TGroupBox;
-    gbGetData : TGroupBox;
+    edtCsvFile: TEdit;
+    edtPassword: TEdit;
+    gbConnection: TGroupBox;
+    gbExport: TGroupBox;
+    gbExport1: TGroupBox;
+    gbGetData: TGroupBox;
     gbQuery : TGroupBox;
-    gbSettings : TGroupBox;
+    gbManholes : TGroupBox;
+    gbPipelines: TGroupBox;
+    gbMechanicalPipeline: TGroupBox;
+    gbGully: TGroupBox;
+    ImageListDbGridSort: TImageList;
+    lblDatabaseName: TLabel;
+    lblOrganizationName: TLabel;
+    lblOrganizationNameCsv: TLabel;
+    lblPassword: TLabel;
     lblProgress: TLabel;
     lblSQLFileLocation : TLabel;
     lblError : TLabel;
-    lblGWSWVersion : TLabel;
-    lblMappingsFile : TLabel;
-    lblDatabaseName : TLabel;
-    lblOrganizationName : TLabel;
     lblProgressTitle : TLabel;
-    lblUserName : TLabel;
-    lblPassword : TLabel;
+    lblUserName: TLabel;
     MainMenu1 : TMainMenu;
     miOptionsLanguageNL : TMenuItem;
     miOptionsLanguageEN : TMenuItem;
@@ -55,6 +104,9 @@ type
     memReportError : TMemo;
     memReportProgress : TMemo;
     PageControl1 : TPageControl;
+    PageControl2: TPageControl;
+    Panel1: TPanel;
+    Panel2: TPanel;
     pnlDataSettings : TPanel;
     pnlProgress : TPanel;
     pnlError : TPanel;
@@ -74,20 +126,67 @@ type
     stbInfo : TStatusBar;
     SynEditSqlQuery : TSynEdit;
     SynSQLSyn1 : TSynSQLSyn;
+    tsOracle: TTabSheet;
+    tsCsv: TTabSheet;
     tsQuery : TTabSheet;
     tsPrepare : TTabSheet;
-    tsSettings : TTabSheet;
-    procedure BitBtnSelectMappingsFileClick(Sender : TObject);
+    tsExportSettings : TTabSheet;
     procedure btnConnectClick(Sender : TObject);
+    procedure btnDisconnectClick(Sender: TObject);
     procedure btnExportDbgridToCsvClick(Sender : TObject);
-    procedure btnExportToFileClick(Sender : TObject);
+    procedure btnExportToFileCSVClick(Sender: TObject);
+    procedure btnExportToFileOraClick(Sender : TObject);
     procedure btnGetDataClick(Sender : TObject);
     procedure btnOpenQueryClick(Sender : TObject);
+    procedure btnSaveErrorLogClick(Sender: TObject);
     procedure btnSaveQueryClick(Sender : TObject);
+    procedure btnSelectCsvFileClick(Sender: TObject);
     procedure cbDatabaseNameExit(Sender : TObject);
     procedure cbOrganizationNameExit(Sender : TObject);
     procedure cbUserNameExit(Sender : TObject);
-    procedure PageControl1Change(Sender : TObject);
+    procedure chkIncludeKolkBegindatumChange(Sender: TObject);
+    procedure chkIncludeKolkBreedteChange(Sender: TObject);
+    procedure chkIncludeKolkDiameterChange(Sender: TObject);
+    procedure chkIncludeKolkEinddatumChange(Sender: TObject);
+    procedure chkIncludeKolkHoogteChange(Sender: TObject);
+    procedure chkIncludeKolkLengteChange(Sender: TObject);
+    procedure chkIncludeKolkMateriaalChange(Sender: TObject);
+    procedure chkIncludeKolkVormChange(Sender: TObject);
+    procedure chkIncludeKolkWanddikteChange(Sender: TObject);
+    procedure chkIncludeLeidingBegindatumChange(Sender: TObject);
+    procedure chkIncludeLeidingBobBeginChange(Sender: TObject);
+    procedure chkIncludeLeidingBobEindChange(Sender: TObject);
+    procedure chkIncludeLeidingBreedteChange(Sender: TObject);
+    procedure chkIncludeLeidingDiameterChange(Sender: TObject);
+    procedure chkIncludeLeidingEinddatumChange(Sender: TObject);
+    procedure chkIncludeLeidingFunderingChange(Sender: TObject);
+    procedure chkIncludeLeidingHoogteChange(Sender: TObject);
+    procedure chkIncludeLeidingLengteChange(Sender: TObject);
+    procedure chkIncludeLeidingMateriaalChange(Sender: TObject);
+    procedure chkIncludeLeidingStatusFunctionerenChange(Sender: TObject);
+    procedure chkIncludeLeidingVormChange(Sender: TObject);
+    procedure chkIncludeLeidingWIBONThemaChange(Sender: TObject);
+    procedure chkIncludePersleidingBegindatumChange(Sender: TObject);
+    procedure chkIncludePersleidingBobBeginChange(Sender: TObject);
+    procedure chkIncludePersleidingBobEindChange(Sender: TObject);
+    procedure chkIncludePersleidingDiameterChange(Sender: TObject);
+    procedure chkIncludePersleidingEinddatumChange(Sender: TObject);
+    procedure chkIncludePersleidingHoogteChange(Sender: TObject);
+    procedure chkIncludePersleidingLengteChange(Sender: TObject);
+    procedure chkIncludePersleidingMateriaalChange(Sender: TObject);
+    procedure chkIncludePersleidingStatusFunctionerenChange(Sender: TObject);
+    procedure chkIncludePersleidingVormChange(Sender: TObject);
+    procedure chkIncludePutBegindatumChange(Sender: TObject);
+    procedure chkIncludePutEinddatumChange(Sender: TObject);
+    procedure chkIncludePutBreedteChange(Sender: TObject);
+    procedure chkIncludePutDiameterChange(Sender: TObject);
+    procedure chkIncludePutFunderingChange(Sender: TObject);
+    procedure chkIncludePutHoogteChange(Sender: TObject);
+    procedure chkIncludePutLengteChange(Sender: TObject);
+    procedure chkIncludePutMaaiveldhoogteChange(Sender: TObject);
+    procedure chkIncludePutMateriaalChange(Sender: TObject);
+    procedure chkIncludePutVormChange(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure pnlDataSettingsResize(Sender : TObject);
     procedure pnlPrepareDataResize(Sender : TObject);
     procedure pnlProgressExportResize(Sender : TObject);
@@ -99,6 +198,9 @@ type
     fSubscriber: IobsSubscriber;
 
     fCanContinue: Boolean;
+
+    fCurrentCSVDataSource: TDataSource;
+    fCurrentCSVDataSet: TCSVDataset;
 
     function get_Observer: IobsSubscriber;
     function get_Presenter: IPresenterMain;
@@ -114,7 +216,7 @@ type
     procedure ReadFormState;
     procedure StoreFormstate;
     procedure StartLogging;
-    procedure WriteSingleSetting(Setting, aValue: String);
+    procedure WriteSingleSetting(Setting, Section, aValue: String);
     procedure AddCbListItem(sender: TObject);
     procedure LoadComboBoxItems;
     procedure ExportInProgress(IsInProgress: Boolean);
@@ -126,8 +228,13 @@ type
     procedure miOptionsOptionsOnClick(Sender : TObject);
     procedure miOptionsLanguageENOnClick(Sender : TObject);
     procedure miOptionsLanguageNLOnClick(Sender : TObject);
-    procedure edtMappingsFileOnChange(Sender : TObject);
+    procedure dbgSewerDataTitleClick(Column: TColumn);
+    procedure LoadCsvData(const FileName: String);
 
+    // Testen, Zou moeten voorkomen dat op Linux de componenten verschuiven -- > Werkt niet
+    procedure setFormFonts_Default(F: TForm);  { #todo : Doet niets in Linux, gui gaat nog steeds kapot. later naar kijken }
+
+    procedure CleanupCurrentCSVData;
   protected
     procedure DoStaticTexts(Texts: IStrings);           
     procedure DoStatus(anObj: TObject; aData: pointer);
@@ -142,6 +249,8 @@ type
     procedure DoReportProgressCount(anObj: TObject; aData: pointer);
     procedure DoExportError(anObj: TObject; aData: PExportToOroxTtlFileRec);
     procedure DoUniqueStringlist(anObj: TObject; aData: PUniqueStringlistRec);
+    procedure DoSortDbGrid(anObj: TObject; aData: PSortDbGridRec);
+    procedure DoRetrieveCSVData(anObj: TObject; aData: PRetrieveCSVDataRec);
     procedure HandleObsNotify(aReason: ptrint; aNotifyObj: TObject; aData: pointer);
   public
     procedure AfterConstruction; override;
@@ -177,38 +286,96 @@ begin
   fPresenter.MakeDbConnection(@lRec);
 end;
 
+procedure TfrmMain.btnDisconnectClick(Sender: TObject);
+var
+  lRec: TDbConnectRec;
+begin
+  lRec.HasConnection:= btnConnect.Enabled;
+  fPresenter.DbDisconnect(@lRec);
+end;
+
 procedure TfrmMain.btnExportDbgridToCsvClick(Sender : TObject);
 var
   csvExporter: TCSVExporter;
   saveDialog: TSaveDialog;
+  Success: Boolean;
 begin
-  { #todo : Make this MVP proof }
-  csvExporter:= TCSVExporter.Create(Nil);
-  saveDialog:= TSaveDialog.Create(Nil);
+  csvExporter:= nil;
+  saveDialog:= nil;
+  Success:= False;
   try
-    csvExporter.Dataset:= dbgSewerData.DataSource.DataSet;
+    try
+      csvExporter:= TCSVExporter.Create(Nil);
+      saveDialog:= TSaveDialog.Create(Nil);
 
-    saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveCSVFile');
-    saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgCSVFilesFilter');
-    saveDialog.DefaultExt:= 'csv';
-    saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName; { #todo : Make Linux proof }
-    saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt];
+      csvExporter.Dataset:= dbgSewerData.DataSource.DataSet;  // Configureer exporter
 
-    if saveDialog.Execute then begin
+      saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveCSVFile');
+      saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgCSVFilesFilter');
+      saveDialog.DefaultExt:= 'csv';
+      {$IFDEF MSWINDOWS}
+      saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName;
+      {$ENDIF}
+      {$IFDEF LINUX}
+      saveDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) +
+                               PathDelim + '.config' + PathDelim + ApplicationName;
+      {$ENDIF}
+      saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt, ofPathMustExist];
+
+      if not saveDialog.Execute then
+        Exit; // User has canceled
+
+      // Check if file is available for writing BEFORE we try to export
+      if FileExists(saveDialog.FileName) and IsFileInUse(saveDialog.FileName) then
+      begin
+        MessageDlg(fPresenter.GetstaticText('view.main.statusbartexts', 'CsvFileInUse') + sLineBreak +
+                   saveDialog.FileName, mtError, [mbOK], 0); { #todo : Mischien een view.main.messages maken }
+        Exit;
+      end;
+
+      // Start the export
+      fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'SavingFile'), 0);
       Screen.Cursor:= crHourGlass;
-      csvExporter.FileName:= saveDialog.FileName;
-      csvExporter.Execute;
 
-      Screen.Cursor:= crDefault;
+      csvExporter.FileName:= saveDialog.FileName;
+
+      csvExporter.Execute;  // Run the export
+      Success:= True;
+
+      fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'FileSaved'), 0);
+    except
+      on E: EFOpenError do
+      begin
+        // Komt hier nooit want dit wordt al afgevangen met IsFileInUse(saveDialog.FileName).
+        MessageDlg(Format(fPresenter.GetstaticText('view.main.statusbartexts', 'FileLockedError'),
+                  [saveDialog.FileName]), mtError, [mbOK], 0);
+        fPresenter.WriteToLog(UnitName, ltWarning, fPresenter.GetstaticText('view.main.statusbartexts', 'FileLockedError') + ': '+ saveDialog.FileName + ' - ' + E.Message);
+
+      end;
+      on E: EStreamError do
+      begin
+        MessageDlg(Format(fPresenter.GetstaticText('view.main.statusbartexts', 'StreamError'),
+                  [E.Message]), mtError, [mbOK], 0);
+        fPresenter.WriteToLog(UnitName, ltWarning, fPresenter.GetstaticText('view.main.statusbartexts', 'StreamError') + ': ' + E.Message);
+      end;
+      on E: Exception do
+      begin
+        MessageDlg(fPresenter.GetstaticText('view.main.statusbartexts', 'UnexpectedExportError') +
+                  sLineBreak + E.ClassName + ': ' + E.Message,
+                  mtError, [mbOK], 0);
+        fPresenter.WriteToLog(UnitName, ltWarning, fPresenter.GetstaticText('view.main.statusbartexts', 'UnexpectedExportError') + ': ' + E.ClassName + ' - ' + E.Message);
+      end;
     end;
 
   finally
-    csvExporter.Free;
-    saveDialog.Free;
+    if Assigned(csvExporter) then csvExporter.Free;
+    if Assigned(saveDialog) then saveDialog.Free;
+    if Success then fPresenter.SetStatusbarText('', 0);
+    Screen.Cursor:= crDefault;
   end;
 end;
 
-procedure TfrmMain.btnExportToFileClick(Sender : TObject);
+procedure TfrmMain.btnExportToFileCSVClick(Sender: TObject);
 var
   saveDialog: TSaveDialog;
   lTrx: TExportToOroxTtlFileTrx;
@@ -216,18 +383,95 @@ var
   lCanContinue: Boolean;
 begin
   lCanContinue:= False;
-  if dbgSewerData.DataSource = Nil then begin
-    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'QueryNotActive'), mtWarning, [mbOK],0);
+
+  if fPresenter.GetSingleSetting('MappingFile') = '' then begin
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'MissingMappingFile'), mtWarning, [mbOK],0);
     Exit;
   end;
-  if edtMappingsFile.Text = '' then begin
+
+  if cbOrganizationNameCSV.Text = '' then begin
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'),
+               fPresenter.GetstaticText(UnitName, 'OrganizationNameIsBlank') + sLineBreak +
+               sLineBreak +
+               fPresenter.GetstaticText(UnitName, 'EnterDasetName')
+               , mtWarning, [mbOK],0);
+    cbOrganizationNameCSV.SetFocus;
+    Exit;
+  end;
+
+  saveDialog:= TSaveDialog.Create(Nil);
+  saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSaveTtlFile');
+  saveDialog.DefaultExt:= DefaultOroXFileExt;  // Is prescribed in this way.
+  {$IFDEF MSWINDOWS}
+  saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName + PathDelim + adExport;
+  {$ENDIF}
+  {$IFDEF LINUX}
+  saveDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adExport;
+  {$ENDIF}
+
+  try
+    if saveDialog.Execute then begin
+      lFileName:= saveDialog.FileName;
+      lCanContinue:= True;
+    end;
+  finally
+    saveDialog.Free;
+  end;
+
+  if lCanContinue then begin
+    ExportInProgress(lCanContinue);
+    try
+      Screen.Cursor:= crHourGlass;
+      lblProgress.Caption:= fPresenter.GetstaticText(UnitName, 'ExportStarted');
+      memReportProgress.Clear;
+      memReportError.Clear;
+
+      lTrx:= fPresenter.TrxMan.StartTransaction(prExportToOroxTtlFile) as TExportToOroxTtlFileTrx;
+
+      lTrx.OrganizationName:= cbOrganizationNameCSV.Text;
+      lTrx.FileNameExportFile:= lFileName;
+      lTrx.FileNameCsvFile:= edtCsvFile.Text;
+      lTrx.MappingFile:= fPresenter.GetSingleSetting('MappingFile');
+      lTrx.DataType:= dtCSV;
+      lTrx.Success:= btnExportToFileOra.Enabled;
+      lTrx.Version:= fPresenter.GetSingleSetting('GWSWVersion');
+
+      ProgressBar.Visible:= True;
+      fPresenter.TrxMan.CommitTransaction;
+      ProgressBar.Visible:= False;
+      ExportInProgress(False);
+      Screen.Cursor:= crDefault;
+    except
+      fPresenter.TrxMan.RollbackTransaction;
+      ExportInProgress(False);
+      fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'ErrorExportToOroxTtlFile'), 0);
+    end;
+  end;
+end;
+
+procedure TfrmMain.btnExportToFileOraClick(Sender : TObject);
+var
+  saveDialog: TSaveDialog;
+  lTrx: TExportToOroxTtlFileTrx;
+  lFileName: String;
+  lCanContinue: Boolean;
+begin
+  lCanContinue:= False;
+
+  if fPresenter.GetSingleSetting('MappingFile') = '' then begin
     messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'MissingMappingFile'), mtWarning, [mbOK],0);
+    Exit;
+  end;
+
+  if dbgSewerData.DataSource = Nil then begin
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'QueryNotActive'), mtWarning, [mbOK],0);
     Exit;
   end;
   if SynEditSqlQuery.Lines.Count = 0 then begin
     messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, 'QueryFileNotLoaded'), mtWarning, [mbOK],0);
     Exit;
   end;
+
   if cbOrganizationName.Text = '' then begin
     messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'),
                fPresenter.GetstaticText(UnitName, 'OrganizationNameIsBlank') + sLineBreak +
@@ -239,9 +483,15 @@ begin
   end;
 
   saveDialog:= TSaveDialog.Create(Nil);
-  saveDialog.Filter := fPresenter.GetstaticText(UnitName, 'DlgSaveTtlFile');
-  saveDialog.DefaultExt := DefaultOroXFileExt;  // Is prescribed in this way.
-  saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adExport; { #todo : Make Linux proof };
+  saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSaveTtlFile');
+  saveDialog.DefaultExt:= DefaultOroXFileExt;  // Is prescribed in this way.
+  {$IFDEF MSWINDOWS}
+  saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName + PathDelim + adExport;
+  {$ENDIF}
+  {$IFDEF LINUX}
+  saveDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adExport;
+  {$ENDIF}
+
   try
     if saveDialog.Execute then begin
       lFileName:= saveDialog.FileName;
@@ -262,10 +512,11 @@ begin
       lTrx:= fPresenter.TrxMan.StartTransaction(prExportToOroxTtlFile) as TExportToOroxTtlFileTrx;
 
       lTrx.OrganizationName:= cbOrganizationName.Text;
-      lTrx.FileName:= lFileName;
-      lTrx.MappingFile:= edtMappingsFile.Text;
-      lTrx.Success:= btnExportToFile.Enabled;
-      lTrx.Version:= cbGWSWVersion.Text;
+      lTrx.FileNameExportFile:= lFileName;
+      lTrx.MappingFile:= fPresenter.GetSingleSetting('MappingFile');
+      lTrx.Success:= btnExportToFileOra.Enabled;
+      lTrx.Version:= fPresenter.GetSingleSetting('GWSWVersion');
+      lTrx.DataType:= dtORA;
 
       ProgressBar.Visible:= True;
       fPresenter.TrxMan.CommitTransaction;
@@ -277,28 +528,6 @@ begin
       ExportInProgress(False);
       fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'ErrorExportToOroxTtlFile'), 0);
     end;
-  end;
-end;
-
-procedure TfrmMain.BitBtnSelectMappingsFileClick(Sender : TObject);
-var
-  openDialog: TOpenDialog;
-begin
-  openDialog:= TOpenDialog.Create(self);
-  openDialog.Title:= fPresenter.GetstaticText('view.main', 'SelectMapFile');
-  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adDomainlist; { #todo : Make Linux proof }
-                          // ExtractFilePath(ParamStr(0)) + PathDelim + adDomainlist;
-  openDialog.Options:= [ofFileMustExist];
-  openDialog.Filter:= 'BOR-GWSW mapping files|*.ods';
-  try
-    if openDialog.Execute then begin
-      edtMappingsFile.OnChange:= Nil;  // temporarily disable otherwise WriteSingleSetting triggers 2x
-      edtMappingsFile.Text:= openDialog.FileName;
-      edtMappingsFile.OnChange:= @edtMappingsFileOnChange;
-      WriteSingleSetting('MappingFile', openDialog.FileName);
-    end;
-  finally
-    openDialog.Free;
   end;
 end;
 
@@ -333,21 +562,57 @@ begin
 
   openDialog.Title:= fPresenter.GetstaticText(UnitName, 'OpenSqlFile');
   openDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSqlFilesFilter');
-  openDialog.DefaultExt:= 'txt';
-  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adQueries; { #todo : Make Linux proof }
+  openDialog.DefaultExt:= 'sql';
+  {$IFDEF MSWINDOWS}
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName + PathDelim + adQueries;
+  {$ENDIF}
+  {$IFDEF LINUX}
+  openDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adQueries;
+  {$ENDIF}
+
   openDialog.Options:= openDialog.Options + [ofFileMustExist];
 
   try
     if openDialog.Execute then begin
       SynEditSqlQuery.Lines.LoadFromFile(openDialog.FileName);
       SynEditSqlQuery.Modified:= False;
-      WriteSingleSetting('SQLfileLocation', openDialog.FileName);  // Immediately put the open file in the ini.
+      WriteSingleSetting('SQLfileLocation', 'Configure', openDialog.FileName);  // Immediately put the open file in the ini.
       ReadSettings;  /// and update model.main fSettings
       lblSQLFileLocation.Caption:= openDialog.FileName;
     end;
   finally
     openDialog.Free;
   end;
+end;
+
+procedure TfrmMain.btnSaveErrorLogClick(Sender: TObject);
+var
+  saveDialog: TSaveDialog;
+begin
+  { #todo : Make this MVP proof }
+  if memReportError.Lines.Count > 0 then begin
+    saveDialog:= TSaveDialog.Create(Nil);
+    try
+      saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveErrorLogFile');
+      saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSaveErrorLogFilesFilter');
+      saveDialog.DefaultExt:= 'txt';
+      {$IFDEF MSWINDOWS}
+      saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName + PathDelim + adQueries;
+      {$ENDIF}
+      {$IFDEF LINUX}
+      saveDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adQueries;
+      {$ENDIF}
+      saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt];
+
+      if saveDialog.Execute then begin
+        memReportError.Lines.SaveToFile(saveDialog.FileName);
+      end;
+    finally
+      saveDialog.Free;
+    end;
+  end
+  else
+    messageDlg(fPresenter.GetstaticText(UnitName, 'Information'), fPresenter.GetstaticText(UnitName, 'NoErrorReportPresent'), mtInformation, [mbOK],0);
 end;
 
 procedure TfrmMain.btnSaveQueryClick(Sender : TObject);
@@ -359,18 +624,56 @@ begin
   try
     saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveSqlFile');
     saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSqlFilesFilter');
-    saveDialog.DefaultExt:= 'txt';
-    saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adQueries; { #todo : Make Linux proof }
+    saveDialog.DefaultExt:= 'sql';
+    {$IFDEF MSWINDOWS}
+    saveDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName + PathDelim + adQueries;
+    {$ENDIF}
+    {$IFDEF LINUX}
+    saveDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adQueries;
+    {$ENDIF}
+
+
     saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt];
 
     if saveDialog.Execute then begin
       SynEditSqlQuery.Lines.SaveToFile(saveDialog.FileName);
-      WriteSingleSetting('SQLfileLocation', saveDialog.FileName);  // Save the location in the settings file as well.
+      WriteSingleSetting('SQLfileLocation','Configure',  saveDialog.FileName);  // Save the location in the settings file as well.
       ReadSettings;  // and update model.main fSettings
       lblSQLFileLocation.Caption:= saveDialog.FileName;
     end;
   finally
     saveDialog.Free;
+  end;
+end;
+
+procedure TfrmMain.btnSelectCsvFileClick(Sender: TObject);
+var
+  openDialog: TOpenDialog;
+begin
+  { #todo : Make this MVP proof }
+  openDialog:= TOpenDialog.Create(Nil);
+
+  openDialog.Title:= fPresenter.GetstaticText(UnitName, 'SelectCsvFile');
+  openDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgCSVFilesFilter');
+  openDialog.DefaultExt:= 'csv';
+  {$IFDEF MSWINDOWS}
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName;
+  {$ENDIF}
+  {$IFDEF LINUX}
+  openDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName;
+  {$ENDIF}
+  openDialog.Options:= openDialog.Options + [ofFileMustExist];
+
+  try
+    if openDialog.Execute then begin
+      edtCsvFile.Text:= openDialog.FileName;
+      btnExportToFileOra.Enabled:= True;
+
+      // Data naar de dbgrid halen
+      LoadCsvData(openDialog.FileName);
+    end;
+  finally
+    openDialog.Free;
   end;
 end;
 
@@ -383,7 +686,7 @@ procedure TfrmMain.cbOrganizationNameExit(Sender : TObject);
 begin
   AddCbListItem(Sender);
   if cbOrganizationName.Text <> '' then
-    WriteSingleSetting('LastUsedOrganization', cbOrganizationName.Text);
+    WriteSingleSetting('LastUsedOrganization','Configure',  cbOrganizationName.Text);
 end;
 
 procedure TfrmMain.cbUserNameExit(Sender : TObject);
@@ -391,11 +694,219 @@ begin
   AddCbListItem(Sender);
 end;
 
-procedure TfrmMain.PageControl1Change(Sender : TObject);
+procedure TfrmMain.chkIncludeKolkBegindatumChange(Sender: TObject);
 begin
-  if PageControl1.ActivePageIndex = 1 then begin
-    edtMappingsFile.SelStart:= 0;
-  end;
+  WriteSingleSetting('IncludeKolkBegindatum', 'Export',  BoolToStr(chkIncludeKolkBegindatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkBreedteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkBreedte', 'Export',  BoolToStr(chkIncludeKolkBreedte.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkDiameterChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkDiameter', 'Export',  BoolToStr(chkIncludeKolkDiameter.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkEinddatumChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkEinddatum', 'Export',  BoolToStr(chkIncludeKolkEinddatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkHoogteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkHoogte', 'Export',  BoolToStr(chkIncludeKolkHoogte.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkLengteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkLengte', 'Export',  BoolToStr(chkIncludeKolkLengte.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkMateriaalChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkMateriaal', 'Export',  BoolToStr(chkIncludeKolkMateriaal.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkVormChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkVorm', 'Export',  BoolToStr(chkIncludeKolkVorm.Checked));
+end;
+
+procedure TfrmMain.chkIncludeKolkWanddikteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeKolkWanddikte', 'Export',  BoolToStr(chkIncludeKolkWanddikte.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingBegindatumChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingBegindatum', 'Export',  BoolToStr(chkIncludeLeidingBegindatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingBobBeginChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingBobBegin', 'Export',  BoolToStr(chkIncludeLeidingBobBegin.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingBobEindChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingBobEind', 'Export',  BoolToStr(chkIncludeLeidingBobEind.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingBreedteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingBreedte', 'Export',  BoolToStr(chkIncludeLeidingBreedte.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingDiameterChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingDiameter', 'Export',  BoolToStr(chkIncludeLeidingDiameter.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingEinddatumChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingEinddatum', 'Export',  BoolToStr(chkIncludeLeidingEinddatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingFunderingChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingFundering', 'Export',  BoolToStr(chkIncludeLeidingFundering.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingHoogteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingHoogte', 'Export',  BoolToStr(chkIncludeLeidingHoogte.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingLengteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingLengte', 'Export',  BoolToStr(chkIncludeLeidingLengte.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingMateriaalChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingMateriaal', 'Export',  BoolToStr(chkIncludeLeidingMateriaal.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingStatusFunctionerenChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingStatusFunctioneren', 'Export',  BoolToStr(chkIncludeLeidingStatusFunctioneren.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingVormChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingVorm', 'Export',  BoolToStr(chkIncludeLeidingVorm.Checked));
+end;
+
+procedure TfrmMain.chkIncludeLeidingWIBONThemaChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludeLeidingWIBONThema', 'Export',  BoolToStr(chkIncludeLeidingWIBONThema.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingBegindatumChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingBegindatum', 'Export',  BoolToStr(chkIncludePersleidingBegindatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingBobBeginChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingBobBegin', 'Export',  BoolToStr(chkIncludePersleidingBobBegin.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingBobEindChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingBobEind', 'Export',  BoolToStr(chkIncludePersleidingBobEind.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingDiameterChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingDiameter', 'Export',  BoolToStr(chkIncludePersleidingDiameter.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingEinddatumChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingEinddatum', 'Export',  BoolToStr(chkIncludePersleidingEinddatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingHoogteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingHoogte', 'Export',  BoolToStr(chkIncludePersleidingHoogte.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingLengteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingLengte', 'Export',  BoolToStr(chkIncludePersleidingLengte.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingMateriaalChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingMateriaal', 'Export',  BoolToStr(chkIncludePersleidingMateriaal.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingStatusFunctionerenChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingStatusFunctioneren', 'Export',  BoolToStr(chkIncludePersleidingStatusFunctioneren.Checked));
+end;
+
+procedure TfrmMain.chkIncludePersleidingVormChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePersleidingVorm', 'Export',  BoolToStr(chkIncludePersleidingVorm.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutBegindatumChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutBegindatum', 'Export', BoolToStr(chkIncludePutBegindatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutEinddatumChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutEinddatum', 'Export', BoolToStr(chkIncludePutEinddatum.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutBreedteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutBreedte', 'Export', BoolToStr(chkIncludePutBreedte.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutDiameterChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutDiameter', 'Export',  BoolToStr(chkIncludePutDiameter.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutFunderingChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutFundering', 'Export',  BoolToStr(chkIncludePutFundering.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutHoogteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutHoogte', 'Export',  BoolToStr(chkIncludePutHoogte.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutLengteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutLengte', 'Export',  BoolToStr(chkIncludePutLengte.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutMaaiveldhoogteChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutMaaiveldhoogte',  'Export', BoolToStr(chkIncludePutMaaiveldhoogte.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutMateriaalChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutMateriaal',  'Export', BoolToStr(chkIncludePutMateriaal.Checked));
+end;
+
+procedure TfrmMain.chkIncludePutVormChange(Sender: TObject);
+begin
+  WriteSingleSetting('IncludePutVorm',  'Export', BoolToStr(chkIncludePutVorm.Checked));
+end;
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+begin
+  setFormFonts_Default(frmMain);
 end;
 
 procedure TfrmMain.pnlDataSettingsResize(Sender : TObject);
@@ -405,27 +916,31 @@ end;
 
 procedure TfrmMain.pnlPrepareDataResize(Sender : TObject);
 begin
+  dbgSewerData.BeginUpdate;  // kijken of dat helpt voor de vertraging bij splitter wijziging
   (sender as TPanel).Repaint;
+  dbgSewerData.EndUpdate();
 end;
 
 procedure TfrmMain.pnlProgressExportResize(Sender : TObject);
 begin
+  dbgSewerData.BeginUpdate;
   (sender as TPanel).Repaint;
+  dbgSewerData.EndUpdate();
 end;
 
 procedure TfrmMain.SplitterdataGridMoved(Sender : TObject);
 begin
-  WriteSingleSetting('SplitterdataGrid', pnlDataGrid.Height.ToString);
+  WriteSingleSetting('SplitterdataGrid','Configure',  pnlDataGrid.Height.ToString);
 end;
 
 procedure TfrmMain.SplitterDataSettingsMoved(Sender : TObject);
 begin
-  WriteSingleSetting('SplitterDataSettings', pnlDataSettings.Width.ToString);
+  WriteSingleSetting('SplitterDataSettings','Configure',  pnlDataSettings.Width.ToString);
 end;
 
 procedure TfrmMain.SplitterMemosMoved(Sender : TObject);
 begin
-  WriteSingleSetting('SplitterMemos', pnlProgress.Width.ToString);
+  WriteSingleSetting('SplitterMemos', 'Configure', pnlProgress.Width.ToString);
 end;
 
 function TfrmMain.get_Observer: IobsSubscriber;
@@ -555,7 +1070,6 @@ begin
           miOptionsLanguageEN.Checked:= False;
           miOptionsLanguageNL.Checked:= True;
         end;
-        edtMappingsFile.Text:= setMappingFile;
         pnlDataSettings.Width:= setSplitterDataSettings;
         pnlDataGrid.Height:= setSplitterdataGrid;
         pnlProgress.Width:= setSplitterMemos;
@@ -564,6 +1078,148 @@ begin
           dbgSewerData.Options:= dbgSewerData.Options + [dgRowHighlight]
         else
           dbgSewerData.Options:= dbgSewerData.Options - [dgRowHighlight];
+
+        // Put
+        chkIncludePutLengte.OnChange:= Nil;
+        chkIncludePutBreedte.OnChange:= Nil;
+        chkIncludePutHoogte.OnChange:= Nil;
+        chkIncludePutDiameter.OnChange:= Nil;
+        chkIncludePutVorm.OnChange:= Nil;
+        chkIncludePutMateriaal.OnChange:= Nil;
+        chkIncludePutFundering.OnChange:= Nil;
+        chkIncludePutBegindatum.OnChange:= Nil;
+        chkIncludePutEinddatum.OnChange:= Nil;
+        chkIncludePutMaaiveldhoogte.OnChange:= Nil;
+
+        chkIncludePutLengte.Checked:= setIncludePutLengte;
+        chkIncludePutBreedte.Checked:= setIncludePutBreedte;
+        chkIncludePutHoogte.Checked:= setIncludePutHoogte;
+        chkIncludePutDiameter.Checked:= setIncludePutDiameter;
+        chkIncludePutVorm.Checked:= setIncludePutVorm;
+        chkIncludePutMateriaal.Checked:= setIncludePutMateriaal;
+        chkIncludePutFundering.Checked:= setIncludePutFundering;
+        chkIncludePutBegindatum.Checked:= setIncludePutBegindatum;
+        chkIncludePutEinddatum.Checked:= setIncludePutEinddatum;
+        chkIncludePutMaaiveldhoogte.Checked:= setIncludePutMaaiveldhoogte;
+
+        chkIncludePutLengte.OnChange:= @chkIncludePutLengteChange;
+        chkIncludePutBreedte.OnChange:= @chkIncludePutBreedteChange;
+        chkIncludePutHoogte.OnChange:= @chkIncludePutHoogteChange;
+        chkIncludePutVorm.OnChange:= @chkIncludePutVormChange;
+        chkIncludePutDiameter.OnChange:= @chkIncludePutDiameterChange;
+        chkIncludePutMateriaal.OnChange:= @chkIncludePutMateriaalChange;
+        chkIncludePutFundering.OnChange:= @chkIncludePutFunderingChange;
+        chkIncludePutBegindatum.OnChange:= @chkIncludePutBegindatumChange;
+        chkIncludePutEinddatum.OnChange:= @chkIncludePutEinddatumChange;
+        chkIncludePutMaaiveldhoogte.OnChange:= @chkIncludePutMaaiveldhoogteChange;
+
+        // Leiding
+        chkIncludeLeidingLengte.OnChange:= Nil;
+        chkIncludeLeidingBreedte.OnChange:= Nil;
+        chkIncludeLeidingHoogte.OnChange:= Nil;
+        chkIncludeLeidingDiameter.OnChange:= Nil;
+        chkIncludeLeidingVorm.OnChange:= Nil;
+        chkIncludeLeidingMateriaal.OnChange:= Nil;
+        chkIncludeLeidingFundering.OnChange:= Nil;
+        chkIncludeLeidingStatusFunctioneren.OnChange:= Nil;
+        chkIncludeLeidingWIBONThema.OnChange:= Nil;
+        chkIncludeLeidingBegindatum.OnChange:= Nil;
+        chkIncludeLeidingEinddatum.OnChange:= Nil;
+        chkIncludeLeidingBobBegin.OnChange:= Nil;
+        chkIncludeLeidingBobEind.OnChange:= Nil;
+
+        chkIncludeLeidingLengte.Checked:= setIncludeLeidingLengte;
+        chkIncludeLeidingBreedte.Checked:= setIncludeLeidingBreedte;
+        chkIncludeLeidingHoogte.Checked:= setIncludeLeidingHoogte;
+        chkIncludeLeidingDiameter.Checked:= setIncludeLeidingDiameter;
+        chkIncludeLeidingVorm.Checked:= setIncludeLeidingVorm;
+        chkIncludeLeidingMateriaal.Checked:= setIncludeLeidingMateriaal;
+        chkIncludeLeidingFundering.Checked:= setIncludeLeidingFundering;
+        chkIncludeLeidingStatusFunctioneren.Checked:= setIncludeLeidingStatusFunctioneren;
+        chkIncludeLeidingWIBONThema.Checked:= setIncludeLeidingWIBONThema;
+        chkIncludeLeidingBegindatum.Checked:= setIncludeLeidingBegindatum;
+        chkIncludeLeidingEinddatum.Checked:= setIncludeLeidingEinddatum;
+        chkIncludeLeidingBobBegin.Checked:= setIncludeLeidingBobBegin;
+        chkIncludeLeidingBobEind.Checked:= setIncludeLeidingBobEind;
+
+        chkIncludeLeidingLengte.OnChange:= @chkIncludeLeidingLengteChange;
+        chkIncludeLeidingBreedte.OnChange:= @chkIncludeLeidingBreedteChange;
+        chkIncludeLeidingHoogte.OnChange:= @chkIncludeLeidingHoogteChange;
+        chkIncludeLeidingDiameter.OnChange:= @chkIncludeLeidingDiameterChange;
+        chkIncludeLeidingVorm.OnChange:= @chkIncludeLeidingVormChange;
+        chkIncludeLeidingMateriaal.OnChange:= @chkIncludeLeidingMateriaalChange;
+        chkIncludeLeidingFundering.OnChange:= @chkIncludeLeidingFunderingChange;
+        chkIncludeLeidingStatusFunctioneren.OnChange:= @chkIncludeLeidingStatusFunctionerenChange;
+        chkIncludeLeidingWIBONThema.OnChange:= @chkIncludeLeidingWIBONThemaChange;
+        chkIncludeLeidingBegindatum.OnChange:= @chkIncludeLeidingBegindatumChange;
+        chkIncludeLeidingEinddatum.OnChange:= @chkIncludeLeidingEinddatumChange;
+        chkIncludeLeidingBobBegin.OnChange:= @chkIncludeLeidingBobBeginChange;
+        chkIncludeLeidingBobEind.OnChange:= @chkIncludeLeidingBobEindChange;
+
+        // export Persleiding
+        chkIncludePersleidingLengte.OnChange:= Nil;
+        chkIncludePersleidingHoogte.OnChange:= Nil;
+        chkIncludePersleidingDiameter.OnChange:= Nil;
+        chkIncludePersleidingVorm.OnChange:= Nil;
+        chkIncludePersleidingMateriaal.OnChange:= Nil;
+        chkIncludePersleidingStatusFunctioneren.OnChange:= Nil;
+        chkIncludePersleidingBegindatum.OnChange:= Nil;
+        chkIncludePersleidingEinddatum.OnChange:= Nil;
+        chkIncludePersleidingBobBegin.OnChange:= Nil;
+        chkIncludePersleidingBobEind.OnChange:= Nil;
+
+        chkIncludePersleidingLengte.Checked:= setIncludePersleidingLengte;
+        chkIncludePersleidingHoogte.Checked:= setIncludePersleidingHoogte;
+        chkIncludePersleidingDiameter.Checked:= setIncludePersleidingDiameter;
+        chkIncludePersleidingVorm.Checked:= setIncludePersleidingVorm;
+        chkIncludePersleidingMateriaal.Checked:= setIncludePersleidingMateriaal;
+        chkIncludePersleidingStatusFunctioneren.Checked:= setIncludePersleidingStatusFunctioneren;
+        chkIncludePersleidingBegindatum.Checked:= setIncludePersleidingBegindatum;
+        chkIncludePersleidingEinddatum.Checked:= setIncludePersleidingEinddatum;
+        chkIncludePersleidingBobBegin.Checked:= setIncludePersleidingBobBegin;
+        chkIncludePersleidingBobEind.Checked:= setIncludePersleidingBobEind;
+
+        chkIncludePersleidingLengte.OnChange:= @chkIncludePersleidingLengteChange;
+        chkIncludePersleidingHoogte.OnChange:= @chkIncludePersleidingHoogteChange;
+        chkIncludePersleidingDiameter.OnChange:= @chkIncludePersleidingDiameterChange;
+        chkIncludePersleidingVorm.OnChange:= @chkIncludePersleidingVormChange;
+        chkIncludePersleidingMateriaal.OnChange:= @chkIncludePersleidingMateriaalChange;
+        chkIncludePersleidingStatusFunctioneren.OnChange:= @chkIncludePersleidingStatusFunctionerenChange;
+        chkIncludePersleidingBegindatum.OnChange:= @chkIncludePersleidingBegindatumChange;
+        chkIncludePersleidingEinddatum.OnChange:= @chkIncludePersleidingEinddatumChange;
+        chkIncludePersleidingBobBegin.OnChange:= @chkIncludePersleidingBobBeginChange;
+        chkIncludePersleidingBobEind.OnChange:= @chkIncludePersleidingBobEindChange;
+
+        // Export Kolk
+        chkIncludeKolkLengte.OnChange:= Nil;
+        chkIncludeKolkBreedte.OnChange:= Nil;
+        chkIncludeKolkHoogte.OnChange:= Nil;
+        chkIncludeKolkDiameter.OnChange:= Nil;
+        chkIncludeKolkVorm.OnChange:= Nil;
+        chkIncludeKolkMateriaal.OnChange:= Nil;
+        chkIncludeKolkWanddikte.OnChange:= Nil;
+        chkIncludeKolkBegindatum.OnChange:= Nil;
+        chkIncludeKolkEinddatum	.OnChange:= Nil;
+
+        chkIncludeKolkLengte.Checked:= setIncludeKolkLengte;
+        chkIncludeKolkBreedte.Checked:= setIncludeKolkBreedte;
+        chkIncludeKolkHoogte.Checked:= setIncludeKolkHoogte;
+        chkIncludeKolkDiameter.Checked:= setIncludeKolkDiameter;
+        chkIncludeKolkVorm.Checked:= setIncludeKolkVorm;
+        chkIncludeKolkMateriaal.Checked:= setIncludeKolkMateriaal;
+        chkIncludeKolkWanddikte.Checked:= setIncludeKolkWanddikte;
+        chkIncludeKolkBegindatum.Checked:= setIncludeKolkBegindatum;
+        chkIncludeKolkEinddatum	.Checked:= setIncludeKolkEinddatum;
+
+        chkIncludeKolkLengte.OnChange:= @chkIncludeKolkLengteChange;
+        chkIncludeKolkBreedte.OnChange:= @chkIncludeKolkBreedteChange;
+        chkIncludeKolkHoogte.OnChange:= @chkIncludeKolkHoogteChange;
+        chkIncludeKolkDiameter.OnChange:= @chkIncludeKolkDiameterChange;
+        chkIncludeKolkVorm.OnChange:= @chkIncludeKolkVormChange;
+        chkIncludeKolkMateriaal.OnChange:= @chkIncludeKolkMateriaalChange;
+        chkIncludeKolkWanddikte.OnChange:= @chkIncludeKolkWanddikteChange;
+        chkIncludeKolkBegindatum.OnChange:= @chkIncludeKolkBegindatumChange;
+        chkIncludeKolkEinddatum	.OnChange:= @chkIncludeKolkEinddatumChange;
       end;
     end;
   end;
@@ -607,7 +1263,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.DoDbConnection(anObj : TObject; aData : PDbConnectRec);
+procedure TfrmMain.DoDbConnection(anObj: TObject; aData : PDbConnectRec);
 var
   lMsg: string;
   Parts: TStringArray;
@@ -615,6 +1271,14 @@ var
 begin
   With aData^ do begin
     btnGetData.Enabled:= HasConnection;
+    if HasConnection then
+      btnDisconnect.Enabled:= True
+    else begin
+      btnDisconnect.Enabled:= False;
+      fPresenter.SetStatusbarText('', 0);
+      memReportProgress.Clear;
+      memReportError.Clear;
+    end;
 
     if Message = 'Success' then begin
       fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'DbConnEstablished'), 0);
@@ -635,19 +1299,31 @@ begin
   Screen.Cursor:= crDefault;
 end;
 
-procedure TfrmMain.DoRetrieveData(anObj : TObject; aData : PRetrieveDataRec);
+procedure TfrmMain.DoRetrieveData(anObj: TObject; aData : PRetrieveDataRec);
+var
+  lDbGrid: TDBGrid;
+  i: Integer;
 begin
   if (aData = Nil) or (anObj = Nil) then Exit;
 
   With aData^ do begin
     if anObj <> Nil then begin
-      TDBGrid(anObj).DataSource:= TDataSource(aData^.DataSource);
+      lDbGrid:= TDBGrid(anObj);
+      lDbGrid.BeginUpdate;
+
+      lDbGrid.DataSource:= TDataSource(aData^.DataSource);
       DBNavigator.DataSource:= TDataSource(aData^.DataSource);
+
+      for i:= 0 to lDbGrid.Columns.Count -1 do begin
+        lDbGrid.Columns[i].Width:= lDbGrid.Columns[i].Width + ExtraColumnWidthForImage;
+      end;
+
+      lDbGrid.EndUpdate(True);
     end;
     if Message <> '' then
     messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, Message), mtWarning, [mbOK],0);
 
-    btnExportToFile.Enabled:= Success;
+    btnExportToFileOra.Enabled:= Success;
     btnExportDbgridToCsv.Enabled:= Success;
   end;
   Screen.Cursor:= crDefault;
@@ -667,14 +1343,15 @@ begin
       if OpenFile then begin
         if MessageDlg(fPresenter.GetstaticText(UnitName, 'OpenFile'), fPresenter.GetstaticText(UnitName, 'ExportIsCompleteOpenFile'), mtConfirmation, [mbYes, mbNo], 0) = mrYes then
         begin
-          ShellExecute(Handle, 'open', PChar(FileName), nil, nil, SW_SHOWNORMAL);   // uses: ShellAPI
+          //ShellExecute(Handle, 'open', PChar(FileNameExportFile), nil, nil, SW_SHOWNORMAL);   // uses: ShellAPI
+          OpenDocument(aData^.FileNameExportFile);// OpenDocument is een cross-platform functie uit de LCLIntf unit. gebruikt op Windows ShellExecute en op Linux xdg-open
         end;
       end
       else
         messageDlg(fPresenter.GetstaticText(UnitName, 'Information'),
                    fPresenter.GetstaticText(UnitName, 'ExportIsCompleted') +
                    sLineBreak +
-                   '(' + FileName + ').'
+                   '(' + FileNameExportFile + ').'
                    , mtInformation, [mbOK],0);
     end;
   end;
@@ -756,13 +1433,13 @@ begin
   // Add to the memo (line)
   if Assigned(memReportError) then begin
     for i:= Low(Parts) to High(Parts) do begin
-      lMsg:= lMsg + fPresenter.GetstaticText('view.main', Parts[i]);  // Build the string
+      lMsg:= lMsg + fPresenter.GetstaticText('view.main', Parts[i]) + ' ';  // Build the string
     end;
 
     memReportError.Lines.Add(FormatDateTime('dd-mm-yyyy hh:nn:ss', Now) + ' ' + lMsg);
     // "Auto-scroll"
-    memReportError.SelStart := Length(memReportError.Text);
-    memReportError.SelLength := 0;
+    memReportError.SelStart:= Length(memReportError.Text);
+    memReportError.SelLength:= 0;
   end;
 
 //  Application.ProcessMessages;  // Force UI update
@@ -784,6 +1461,72 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoSortDbGrid(anObj: TObject; aData: PSortDbGridRec);
+begin
+  Screen.Cursor:= crDefault;
+  if anObj = Nil then Exit;
+  TDBGrid(anObj).EndUpdate(True);
+end;
+
+procedure TfrmMain.DoRetrieveCSVData(anObj: TObject; aData: PRetrieveCSVDataRec);
+var
+  lDataSource: TDataSource;
+  lDataSet: TCSVDataset;
+  lDbGrid: TDBGrid;
+  i: Integer;
+begin
+  if not Assigned(aData) then
+    Exit;
+
+  // Cleanup previous data
+  CleanupCurrentCSVData;
+
+  lDbGrid:= TDBGrid(anObj);
+  lDbGrid.BeginUpdate;
+
+  // Cast TObject to the right types
+  if (aData^.DataSource <> Nil) and (aData^.DataSet <> Nil) then
+  begin
+    lDataSource:= TDataSource(aData^.DataSource);
+    lDataSet:= TCSVDataset(aData^.DataSet);
+
+    for i:= 0 to lDbGrid.Columns.Count -1 do begin
+      lDbGrid.Columns[i].Width:= lDbGrid.Columns[i].Width + ExtraColumnWidthForImage;
+    end;
+
+    lDbGrid.EndUpdate(True);
+
+    if aData^.Message <> '' then
+      messageDlg(fPresenter.GetstaticText(UnitName, 'Warning'), fPresenter.GetstaticText(UnitName, aData^.Message), mtWarning, [mbOK],0);
+
+    btnExportToFileOra.Enabled:= aData^.Success;
+    btnExportDbgridToCsv.Enabled:= aData^.Success;
+
+    // Save references
+    fCurrentCSVDataSource:= lDataSource;
+    fCurrentCSVDataSet:= lDataSet;
+
+    // Connect to DBGrid
+    dbgSewerData.DataSource := lDataSource;
+
+    // Markeer dat we ownership hebben overgenomen
+    aData^.DataSource:= nil;
+    aData^.DataSet:= nil;
+  end
+  else
+  begin
+    // Unexpected types - cleanup
+    if Assigned(aData^.DataSource) then
+      aData^.DataSource.Free;
+    if Assigned(aData^.DataSet) then
+      aData^.DataSet.Free;
+
+    aData^.DataSource:= nil;
+    aData^.DataSet:= nil;
+  end;
+end;
+
+
 procedure TfrmMain.HandleObsNotify(aReason: ptrint; aNotifyObj: TObject; aData: pointer);
 begin
   case aReason of
@@ -804,6 +1547,8 @@ begin
     prReportProgressCount     : DoReportProgressCount(aNotifyObj, aData);
     prReportError             : DoExportError(aNotifyObj, aData);
     prUniqueStringlist        : DoUniqueStringlist(aNotifyObj, aData);
+    prSortDbGrid              : DoSortDbGrid(aNotifyObj, aData);
+    prRetrieveCSVData         : DoRetrieveCSVData(aNotifyObj, aData);
   end;
 end;
 {$EndRegion 'subscriber-events'}
@@ -831,7 +1576,7 @@ begin
     Lang:= 'nl';
     fPresenter.SwitchLanguage(UnitName);
     fPresenter.GetStaticTexts('view.main.StatusbarTexts');
-    WriteSingleSetting('Language', Lang);
+    WriteSingleSetting('Language', 'Configure', Lang);
     //
 
     if fPresenter.GetSQLfileLocation <> '' then begin
@@ -841,9 +1586,12 @@ begin
 
     if fPresenter.GetKeepLastOrganization then begin
       cbOrganizationName.Text:= fPresenter.GetLastUsedOrganization;
+      cbOrganizationNameCSV.Text:= fPresenter.GetLastUsedOrganization;
     end
-    else
+    else begin
       cbOrganizationName.Text:= '';
+      cbOrganizationNameCSV.Text:= '';
+    end;
 
     LoadComboBoxItems;  // Load the combobox items from a text file.
   end;
@@ -858,18 +1606,16 @@ begin
   miOptionsLanguageNL.OnClick:= @miOptionsLanguageNLOnClick;
   Self.OnShow:= @OnFormShow;
   Self.OnResize:= @OnFormResize;
-  edtMappingsFile.OnChange:= @edtMappingsFileOnChange;
+  dbgSewerData.OnTitleClick:= @dbgSewerDataTitleClick;
 
   btnGetData.Enabled:= False;
-  btnExportToFile.Enabled:= False;
+  btnExportToFileOra.Enabled:= False;
   btnExportDbgridToCsv.Enabled:= False;
   ProgressBar.Visible:= False;
   PageControl1.ActivePageIndex:= 0;
-  cbGWSWVersion.ItemIndex:= 0; { #note : There are no versions to choose from yet. Version 1.6 is still hard in the code }
+  btnDisconnect.Enabled:= False;
+  PageControl2.ActivePageIndex:= 0;
 
-  // GWSW Versie
-  cbGWSWVersion.Items.Add(GWSW_versie_16);
-  cbGWSWVersion.ItemIndex:= 0;
 end;
 
 procedure TfrmMain.BeforeDestruction;
@@ -879,8 +1625,16 @@ begin
   if fCanContinue then begin
     StoreFormstate;  // Store form position and size.
 
+    CleanupCurrentCSVData;  // tonen csvdata rommel nog opruimen.
+
     UserName:= StringReplace(SysUtils.GetEnvironmentVariable('USERNAME') , ' ', '_', [rfIgnoreCase, rfReplaceAll]) + '_';
-    Location:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings;
+    {$IFDEF MSWINDOWS}
+    Location:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName+PathDelim + adSettings;
+    {$ENDIF}
+    {$IFDEF LINUX}
+    Location:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adSettings;
+    {$ENDIF}
+
     cbOrganizationName.Items.SaveToFile(Location + PathDelim + UserName+'_Organisation.txt');
     cbDatabaseName.Items.SaveToFile(Location + PathDelim + UserName+'_DatabaseName.txt');
     cbUserName.Items.SaveToFile(Location + PathDelim + UserName+'_UserName.txt');
@@ -932,7 +1686,7 @@ var
 begin
   UserName:= StringReplace(SysUtils.GetEnvironmentVariable('USERNAME') , ' ', '_', [rfIgnoreCase, rfReplaceAll]) + '_';
   {$IFDEF MSWINDOWS}
-  Result:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';
+  Result:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';
   {$ENDIF}
   {$IFDEF LINUX}
   Result:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config' + PathDelim +  ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';
@@ -957,10 +1711,10 @@ begin
     lTrx.AppName:= ApplicationName;
     //  lTrx.RootDir should never be empty, because then no directory will be created.
     {$IFDEF MSWINDOWS}
-    lTrx.RootDir:= SysUtils.GetEnvironmentVariable('appdata'); // Win 11: lTrx.RootDir = 'C:\Users\<username>\AppData\Roaming'     // + ApplicationName;  // C:\Users\<username>\AppData\Roaming\<Application Name>
+    lTrx.RootDir:= SysUtils.GetEnvironmentVariable('APPDATA'); // Win 11: lTrx.RootDir = 'C:\Users\<username>\AppData\Roaming'     // + ApplicationName;  // C:\Users\<username>\AppData\Roaming\<Application Name>
     {$ENDIF}
     {$IFDEF LINUX}
-    lTrx.RootDir := IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config';  // Linux: lTrx.RootDir = '/home/<username>/.config'
+    lTrx.RootDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config';  // Linux: lTrx.RootDir = '/home/<username>/.config'
     {$ENDIF}
 
     lTrx.AppName:= ApplicationName;
@@ -995,11 +1749,11 @@ procedure TfrmMain.ReadFormState;
 var
   lTrx : TSettingsTrx;
 begin
-  lTrx := fPresenter.TrxMan.StartTransaction(prFormState) as TSettingsTrx;
+  lTrx:= fPresenter.TrxMan.StartTransaction(prFormState) as TSettingsTrx;
   try
     lTrx.ReadSettings:= True;
     lTrx.ReadFormState:= True;
-    lTrx.FormName := UnitName;
+    lTrx.FormName:= UnitName;
     lTrx.SettingsLocationAndFileName:= GetSettingsFile;
 
     FPresenter.TrxMan.CommitTransaction;
@@ -1013,9 +1767,10 @@ procedure TfrmMain.StoreFormstate;
 var
   lTrx : TSettingsTrx;
 begin
-  lTrx := fPresenter.TrxMan.StartTransaction(prAppSettings) as TSettingsTrx;
+  lTrx:= fPresenter.TrxMan.StartTransaction(prAppSettings) as TSettingsTrx;
   try
     lTrx.WriteSettings:= True;
+    lTrx.ReadSettings:= False;
     lTrx.StoreFormState:= True; // <<---
     lTrx.FormName:= UnitName;
     lTrx.FormWindowstate:= integer(Windowstate);
@@ -1028,6 +1783,9 @@ begin
     lTrx.FormRestoredHeight:= RestoredHeight;
     lTrx.FormRestoredWidth:= RestoredWidth;
     lTrx.SettingsLocationAndFileName:= GetSettingsFile;
+    lTrx.SplitterdataGrid:= pnlDataGrid.Height;
+    lTrx.SplitterDataSettings:= pnlDataSettings.Width;
+    lTrx.SplitterMemos:= pnlProgress.Width;
 
     FPresenter.TrxMan.CommitTransaction;
   except
@@ -1041,13 +1799,14 @@ begin
   fPresenter.StartLogging;
 end;
 
-procedure TfrmMain.WriteSingleSetting(Setting, aValue : String);
+procedure TfrmMain.WriteSingleSetting(Setting, Section, aValue : String);
 var
   lTrx: TSingleSettingTrx;
 begin
   lTrx:= FPresenter.TrxMan.StartTransaction(prAppSingleSetting) as TSingleSettingTrx;
   try
     lTrx.SettingName:= Setting;
+    lTrx.Section:= Section;
     lTrx.SettingValue:= aValue;
     lTrx.SettingsLocationAndFileName:= GetSettingsFile;
 
@@ -1079,7 +1838,12 @@ var
   UserName, Location: String;
 begin
   UserName:= StringReplace(SysUtils.GetEnvironmentVariable('USERNAME') , ' ', '_', [rfIgnoreCase, rfReplaceAll]) + '_';
-  Location:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings;
+  {$IFDEF MSWINDOWS}
+  Location:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName+PathDelim + adSettings;
+  {$ENDIF}
+  {$IFDEF LINUX}
+  Location:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adSettings;
+  {$ENDIF}
 
   if FileExists(Location + PathDelim + UserName+'_DatabaseName.txt') then
     cbDatabaseName.Items.LoadFromFile(Location + PathDelim + UserName+'_DatabaseName.txt');
@@ -1089,6 +1853,7 @@ begin
 
   if FileExists(Location + PathDelim + UserName+'_Organisation.txt') then
     cbOrganizationName.Items.LoadFromFile(Location + PathDelim + UserName+'_Organisation.txt');
+  cbOrganizationName.Sorted:= True;  { #todo : Instelbaar maken }
 end;
 
 procedure TfrmMain.ExportInProgress(IsInProgress : Boolean);
@@ -1110,11 +1875,12 @@ procedure TfrmMain.OnFormShow(Sender : TObject);
 begin
   if fCanContinue then ReadFormState;
   if fCanContinue then ReadSettings;
-  cbDatabaseName.SetFocus;
+  if PageControl2.ActivePageIndex = 0 then
+    cbDatabaseName.SetFocus;
 
   // Prevent the text from being selected and put cursor behind any text
-  cbDatabaseName.SelStart  := Length(cbDatabaseName.Text);
-  cbDatabaseName.SelLength := 0;
+  cbDatabaseName.SelStart := Length(cbDatabaseName.Text);
+  cbDatabaseName.SelLength:= 0;
 end;
 
 procedure TfrmMain.OnFormResize(Sender : TObject);
@@ -1138,7 +1904,7 @@ begin
     miOptionsLanguageNL.Checked:= False;
     fPresenter.GetStaticTexts('view.main.StatusbarTexts'); // get the English texts.
     fPresenter.WriteToLog(UnitName, ltInformation, 'SwitchlanguageEN'); //'English language option Enabled'.
-    WriteSingleSetting('Language', Lang);
+    WriteSingleSetting('Language','Configure',  Lang);
     SetAppLanguage;
   end;
 end;
@@ -1153,15 +1919,135 @@ begin
     miOptionsLanguageEN.Checked:= False;
     fPresenter.GetStaticTexts('view.main.StatusbarTexts');
     fPresenter.WriteToLog(UnitName, ltInformation, 'SwitchlanguageNL' ); //'Dutch language option Enabled'.
-    WriteSingleSetting('Language', Lang);
+    WriteSingleSetting('Language','Configure',  Lang);
     SetAppLanguage;
   end;
 end;
 
-procedure TfrmMain.edtMappingsFileOnChange(Sender : TObject);
+procedure TfrmMain.dbgSewerDataTitleClick(Column: TColumn);
+var
+  lTrx: TSortDbGridTrx;
+//  DataSet: TDataSet = Nil;
 begin
-  if edtMappingsFile.Text <> '' then
-    WriteSingleSetting('MappingFile', edtMappingsFile.Text);
+  if not Assigned(dbgSewerData.DataSource) or
+     not Assigned(dbgSewerData.DataSource.DataSet) then
+    Exit;
+
+  Screen.Cursor:= crHourGlass;
+  dbgSewerData.BeginUpdate;
+
+//  DataSet:= dbgSewerData.DataSource.DataSet;
+
+  lTrx:= fPresenter.TrxMan.StartTransaction(prSortDbGrid) as TSortDbGridTrx;
+  try
+    lTrx.Column:= Column;
+    lTrx.FieldName:= Column.FieldName;
+    lTrx.DbGrid:= dbgSewerData;
+
+    // Bepaal huidige sorteer volgorde
+    if Column.Title.ImageIndex = 0 then
+      lTrx.CurrentSortOrder:= 'ASC'
+    else if Column.Title.ImageIndex = 1 then
+      lTrx.CurrentSortOrder:= 'DESC'
+    else
+      lTrx.CurrentSortOrder:= ''; // Nog niet gesorteerd
+
+    if dbgSewerData.DataSource.DataSet is TSQLQuery then begin
+      lTrx.DataType:= dtORA;
+    end
+    else if dbgSewerData.DataSource.DataSet is TCSVDataset then begin
+      lTrx.DataType:= dtCSV;
+      lTrx.DataProvider:= dbgSewerData.DataSource.DataSet;  // zou voor Ora ook zo kunnen.
+    end;
+
+
+    fPresenter.TrxMan.CommitTransaction;
+  except
+    fPresenter.TrxMan.RollbackTransaction;
+    fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'ErrorSortingGrid'), 0);
+    dbgSewerData.EndUpdate(True);
+    Screen.Cursor:= crDefault;
+  end;
+end;
+
+procedure TfrmMain.LoadCsvData(const FileName: String);
+var
+  lTrx: TRetrieveCSVDataTrx;
+begin
+  if FileName = '' then Exit;
+
+  Screen.Cursor:= crHourGlass;
+  fPresenter.SetStatusbarText('Loading CSV data...', 0);  { #todo : Taalinstelling }
+
+
+  lTrx:= fPresenter.TrxMan.StartTransaction(prRetrieveCSVData) as TRetrieveCSVDataTrx;
+  try
+    lTrx.FileName:= FileName;
+    lTrx.HasHeader:= True;  { #todo : Moet instelbaar worden. }
+    lTrx.Delimiter:= ',';   { #todo : Moet instelbaar worden. }
+    lTrx.QuoteChar:= '"';   { #todo : Moet instelbaar worden. }
+    lTrx.DataGrid:= dbgSewerData;
+    lTrx.DataSource:= nil;
+
+    fPresenter.TrxMan.CommitTransaction;
+  except
+    fPresenter.TrxMan.RollbackTransaction;
+    Screen.Cursor:= crDefault;
+    fPresenter.SetStatusbarText('Error loading CSV data', 0);  { #todo : Taalinstelling }
+  end;
+end;
+
+procedure TfrmMain.setFormFonts_Default(F: TForm);
+begin
+  {$IFDEF LINUX}
+     F.Font.Name:='Noto Sans';
+     F.Font.Height:=12;
+  {$ENDIF}
+end;
+
+procedure TfrmMain.CleanupCurrentCSVData;
+var
+  tmpDataSource: TDataSource;
+  tmpDataSet: TDataSet;
+begin
+{  The box of tricks opens. This is ugly but works and
+   prevents a memory leak that occurred when reading a csv dataset into the dbgrid}
+
+  { #todo : See if this can be improved }
+
+  // Save to local variables and reset fields
+  tmpDataSource:= FCurrentCSVDataSource;
+  tmpDataSet:= TDataSet(FCurrentCSVDataSet);
+
+  FCurrentCSVDataSource:= nil;
+  FCurrentCSVDataSet:= nil;
+
+  // Decoupling DBGrid
+  dbgSewerData.DataSource:= nil;
+
+  // Remove link between DataSource and DataSet
+  if Assigned(tmpDataSource) then
+    tmpDataSource.DataSet:= nil;
+
+  // Release DataSet
+  if Assigned(tmpDataSet) then
+  begin
+    try
+      if tmpDataSet.Active then begin
+        //tmpDataSet.Close;  // Gebruik Close in plaats van Active := False
+      tmpDataSet.Free;
+      tmpDataSet:= Nil;
+      end;
+    except
+      // Ignoring closing errors
+    end;
+
+    //tmpDataSet.Free;
+  end;
+
+  // Release DataSource
+  if Assigned(tmpDataSource) then
+    tmpDataSource.Free;
 end;
 
 

@@ -70,6 +70,10 @@ type
   PUniqueStringlistRec      = model.base.PUniqueStringlistRec;
   TExportInProgressRec      = model.base.TExportInProgressRec;
   PExportInProgressRec      = model.base.PExportInProgressRec;
+  TSortDbGridRec            = model.base.TSortDbGridRec;
+  PSortDbGridRec            = model.base.PSortDbGridRec;
+  TRetrieveCSVDataRec       = model.base.TRetrieveCSVDataRec;
+  PRetrieveCSVDataRec       = model.base.PRetrieveCSVDataRec;
 
 { utility functions, here we publicly export these functions, to be made available
   in other units, that can't /see/ us, for import :o) gotta love FPC \o/\ö/\o/ }
@@ -214,6 +218,8 @@ begin { first we check if the reason is in our TransactionFactory, if so then ge
       prRetrieveData        : fTrx:= TRetrieveDataTrx.Create(aModReason);
       prExportToOroxTtlFile : fTrx:= TExportToOroxTtlFileTrx.Create(aModReason);
       prUniqueStringlist    : fTrx:= TUniqueStringlistTrx.Create(aModReason);
+      prSortDbGrid          : fTrx:= TSortDbGridTrx.Create(aModReason);
+      prRetrieveCSVData     : fTrx:= TRetrieveCSVDataTrx.Create(aModReason);
       /// etc...
 
       else fTrx:= TTransaction.Create(aModReason); // 0 or anything undefined by us

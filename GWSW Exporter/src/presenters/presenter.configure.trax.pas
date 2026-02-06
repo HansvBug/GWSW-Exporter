@@ -25,9 +25,9 @@ type
       fKeepLastOrganization: Boolean;
       fLanguage: String;
 
-      fAppName: string;
-      fAppVersion: string;
-      fAppBuildDate: string;
+      fAppName: String;
+      fAppVersion: String;
+      fAppBuildDate: String;
       fFormHeight: Integer;
       fFormLeft: Integer;
       fFormName: String;
@@ -38,6 +38,7 @@ type
       fFrmRestoredLeft,
       fFrmRestoredTop,
       fFrmRestoredWidth: Integer;
+      fMappingFile: String;
       fRapportFatalError: Boolean;
       fRapportFieldIsEmpty: Boolean;
       fRapportFieldIsMissing: Boolean;
@@ -59,9 +60,9 @@ type
       property ReadFormState: Boolean read fReadFrmState write fReadFrmState;
       property StoreFormState: Boolean read fStoreFrmState write fStoreFrmState;
 
-      property AppName: string read fAppName write fAppName;
-      property AppVersion: string read fAppVersion write fAppVersion;
-      property AppBuildDate: string read fAppBuildDate write fAppBuildDate;
+      property AppName: String read fAppName write fAppName;
+      property AppVersion: String read fAppVersion write fAppVersion;
+      property AppBuildDate: String read fAppBuildDate write fAppBuildDate;
 
       property ActivateLogging: Boolean read fActivateLogging write fActivateLogging;  // Enable or disbable Logging.
       property AppendLogging: Boolean read fAppendLogging write fAppendLogging;        // Append new logging to the log file. Or when disabled, delete previous logging and start again.
@@ -88,8 +89,22 @@ type
       property RapportFieldIsEmpty: Boolean read fRapportFieldIsEmpty write fRapportFieldIsEmpty;
       property RapportFieldIsMissing: Boolean read fRapportFieldIsMissing write fRapportFieldIsMissing;
       property RapportOutOfRange: Boolean read fRapportOutOfRange write fRapportOutOfRange;
+      property MappingFile: String read fMappingFile write fMappingFile;
     end;
 
+  { TSingleSettingConfigTrx }
+
+  TSingleSettingConfigTrx  = class(TTransaction, ITrxExec)
+    private
+      fSettingName: String;
+      fSettingsFile: String;
+      fSettingValue: String;
+    public
+      function Execute(aMgr: ITransactionManager): boolean;
+      property SettingsLocationAndFileName: String read fSettingsFile write fSettingsFile;
+      property SettingName: String read fSettingName write fSettingName;
+      property SettingValue: String read fSettingValue write fSettingValue;
+  end;
 
 implementation
 // uses StrUtils; { for: 'IndexText' etc... }
@@ -138,7 +153,7 @@ begin
         lRec.setApplicationVersion:= AppVersion;
         lRec.setApplicationBuildDate:= AppBuildDate;
         lRec.setWriteSettings:= WriteSettings;
-        lRec:= aMgr.OwnerConfig.Model.ReadSettings(@lRec);
+        lRec:= aMgr.OwnerConfig.Model.ReadSettings(@lRec);   // <---
         lRec.setFrmName:= FormName;
 
         aMgr.OwnerConfig.Provider.NotifySubscribers(prAppSettingsConfig, Self, @lRec);
@@ -182,6 +197,7 @@ begin
         lRec.setRapportFieldIsEmpty:= RapportFieldIsEmpty;
         lRec.setRapportFieldIsMissing:= RapportFieldIsMissing;
         lRec.setRapportOutOfRange:= RapportOutOfRange;
+        lRec.setMappingFile:= MappingFile;
 
         // new settings...
 
@@ -200,6 +216,28 @@ begin
 
     lRec.setSucces:= False;
     lRec.setMessage:= 'SettingsFileNotExists' ;
+    aMgr.OwnerConfig.Provider.NotifySubscribers(prAppSettingsConfig, Self, @lRec);
+  end;
+end;
+
+{ TSingleSettingConfigTrx }
+
+function TSingleSettingConfigTrx.Execute(aMgr: ITransactionManager): boolean;
+var
+  lRec: TSingleSettingRec;
+begin
+  Result:= aMgr.OwnerConfig.Model.DoesFileExists(SettingsLocationAndFileName);
+
+  if Result then begin
+    lRec.ssSettingsFile:= SettingsLocationAndFileName;
+    lRec.ssName:= SettingName;
+    lRec.ssValue:= SettingValue;
+
+    aMgr.OwnerMain.Model.WriteSingleSetting(@lRec);
+  end
+  else begin
+    lRec.ssSucces:= False;
+    lRec.ssMessage:= 'SettingsFileNotExists';
     aMgr.OwnerConfig.Provider.NotifySubscribers(prAppSettingsConfig, Self, @lRec);
   end;
 end;

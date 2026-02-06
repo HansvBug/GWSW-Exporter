@@ -1,6 +1,7 @@
 [view.configure]
 frmConfigure=Opties
 tbsMiscellaneous=Diversen
+tbsGWSW=GWSW
 chkActiveLogging=Activeer logging
 chkAppendLogging=Aanvullen logbestand
 gbLogging=Logging
@@ -20,9 +21,15 @@ lblQueryFileLocation=Location Query File
 BitBtnQueryFileLocation=...
 SelectQueryFile=Selecteer het query bestand.
 DlgSqlFilesFilter=SQL bestanden|*.sql|Alle bestanden|*.*
+gbGWSW=
+lblGWSWVersion=GWSW versie
+SelectMapFile=Selecteer een mappings bestand
+BORGWSWMappingFile=BOR-GWSW mapping bestanden|*.ods
+BitBtnSelectMappingsFile=...
+lblMappingsFile=Selecteer mappingsbestand
 
 [view.configure.statusbartexts]
-
+ErrorSaveSingleSetting=(!) Onverwachte fout bij het opslaan van een setting.
 
 [view.configure.hints]
 chkActiveLogging=Herstart de applicatie na een wijziging.

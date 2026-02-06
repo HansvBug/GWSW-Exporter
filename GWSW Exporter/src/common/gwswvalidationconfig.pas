@@ -60,7 +60,7 @@ var
   lVersion: String;
 begin
   lVersion:= StringReplace(Version, '.', '', [rfReplaceAll]);
-  Ini:= TIniFile.Create(GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ 'GWSW_' + lVersion + '.cfg');
+  Ini:= TIniFile.Create(GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ 'GWSW_' + lVersion + '.cfg');
 
   try
     // Reading with default

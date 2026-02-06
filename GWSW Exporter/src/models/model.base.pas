@@ -36,120 +36,197 @@ type
 
 { ---------------------------------------------------------------------------- }
 // New records go here...
-    PNewDirectoriesRec = ^TNewDirectoriesRec;  // Used with CreateDirectories, TNewCreDirTransaction
-    TNewDirectoriesRec = record
-      dirNewDirNames, { we'll translate like this: TStringList.Text:= dirNewDirNames; }
-      dirRoot,
-      dirAppName,
-      dirSuccesMsg: String;
-      dirIsWriteable: Boolean;
-      dirSucces: boolean;
-    end;
+  PNewDirectoriesRec = ^TNewDirectoriesRec;  // Used with CreateDirectories, TNewCreDirTransaction
+  TNewDirectoriesRec = record
+    dirNewDirNames, { we'll translate like this: TStringList.Text:= dirNewDirNames; }
+    dirRoot,
+    dirAppName,
+    dirSuccesMsg: String;
+    dirIsWriteable: Boolean;
+    dirSucces: boolean;
+  end;
 
 
-    PStatusbarPanelText = ^TStatusbarPanelText;
-    TStatusbarPanelText = record
-      stbPanelText: String;
-      stbActivePanel : Word;
-    end;
+  PStatusbarPanelText = ^TStatusbarPanelText;
+  TStatusbarPanelText = record
+    stbPanelText: String;
+    stbActivePanel : Word;
+  end;
 
-    PSettingsRec = ^TSettingsRec;  // used with ReadSettings, TSettingstransaction , ReadFormState; and   StoreFormstate;
-    TSettingsRec = record
-      setActivateLogging,
-      setAppendLogging: Boolean;
-      setLanguage : String;
-      setSettingsFile,
-      setDbFileLocation,
-      setApplicationName,
-      setApplicationVersion,
-      setApplicationBuildDate : String;
-      setFrmName : String;
-      setFrmWindowState,
-      setFrmTop,
-      setFrmLeft,
-      setFrmHeight,
-      setFrmWidth,
-      setFrmRestoredTop,
-      setFrmRestoredLeft,
-      setFrmRestoredHeight,
-      setFrmRestoredWidth : Integer;
-      setSucces,
-      setReadSettings,
-      setWriteSettings,
-      setReadFormState: Boolean;
-      setMessage: String;
-      setMappingFile: String;
-      setSqlFileLocation: String;
-      setSplitterDataSettings,
-      setSplitterdataGrid,
-      setSplitterMemos: Integer;
-      setDbGridRowHighlight,
-      setAskToOpenExportFile,
-      setKeepLastOrganization: Boolean;
-      setLastUsedOrganization: String;
-      setRapportMappingError,
-      setRapportFatalError,
-      setRapportFieldIsEmpty,
-      setRapportFieldIsMissing,
-      setRapportOutOfRange: Boolean;
-    end;
+  PSettingsRec = ^TSettingsRec;  // used with ReadSettings, TSettingstransaction , ReadFormState; and   StoreFormstate;
+  TSettingsRec = record
+    setActivateLogging,
+    setAppendLogging: Boolean;
+    setLanguage : String;
+    setSettingsFile,
+    setDbFileLocation,
+    setApplicationName,
+    setApplicationVersion,
+    setApplicationBuildDate : String;
+    setFrmName : String;
+    setFrmWindowState,
+    setFrmTop,
+    setFrmLeft,
+    setFrmHeight,
+    setFrmWidth,
+    setFrmRestoredTop,
+    setFrmRestoredLeft,
+    setFrmRestoredHeight,
+    setFrmRestoredWidth : Integer;
+    setSucces,
+    setReadSettings,
+    setWriteSettings,
+    setReadFormState: Boolean;
+    setMessage,
+    setGWSWVersion: String;
+    setMappingFile: String;
+    setSqlFileLocation: String;
+    setSplitterDataSettings,
+    setSplitterdataGrid,
+    setSplitterMemos: Integer;
+    setDbGridRowHighlight,
+    setAskToOpenExportFile,
+    setKeepLastOrganization: Boolean;
+    setLastUsedOrganization: String;
+    setRapportMappingError,
+    setRapportFatalError,
+    setRapportFieldIsEmpty,
+    setRapportFieldIsMissing,
+    setRapportOutOfRange: Boolean;
+    // Export put
+    setIncludePutLengte,
+    setIncludePutBreedte,
+    setIncludePutHoogte,
+    setIncludePutDiameter,
+    setIncludePutVorm,
+    setIncludePutMateriaal,
+    setIncludePutFundering,
+    setIncludePutBegindatum,
+    setIncludePutEinddatum,
+    setIncludePutMaaiveldhoogte: Boolean;
+    // Export leiding
+    setIncludeLeidingLengte,
+    setIncludeLeidingBreedte,
+    setIncludeLeidingHoogte,
+    setIncludeLeidingDiameter,
+    setIncludeLeidingVorm,
+    setIncludeLeidingMateriaal,
+    setIncludeLeidingFundering,
+    setIncludeLeidingStatusFunctioneren,
+    setIncludeLeidingWIBONThema,
+    setIncludeLeidingBegindatum,
+    setIncludeLeidingEinddatum,
+    setIncludeLeidingBobBegin,
+    setIncludeLeidingBobEind: Boolean;
+    // Export persleiding
+    setIncludePersleidingLengte,
+    setIncludePersleidingHoogte,
+    setIncludePersleidingDiameter,
+    setIncludePersleidingVorm,
+    setIncludePersleidingMateriaal,
+    setIncludePersleidingStatusFunctioneren,
+    setIncludePersleidingBegindatum,
+    setIncludePersleidingEinddatum,
+    setIncludePersleidingBobBegin,
+    setIncludePersleidingBobEind: Boolean;
+    // Export Kolk
+    setIncludeKolkLengte,
+    setIncludeKolkBreedte,
+    setIncludeKolkHoogte,
+    setIncludeKolkDiameter,
+    setIncludeKolkVorm,
+    setIncludeKolkMateriaal,
+    setIncludeKolkWanddikte,
+    setIncludeKolkBegindatum,
+    setIncludeKolkEinddatum: Boolean;
+  end;
 
-    PSingleSettingRec = ^TSingleSettingRec;
-    TSingleSettingRec = record
-      ssSettingsFile,
-      ssName,
-      ssValue: String;
-      ssSucces: Boolean;
-      ssMessage: String;
-    end;
+  PSingleSettingRec = ^TSingleSettingRec;
+  TSingleSettingRec = record
+    ssSettingsFile,
+    ssSection,
+    ssName,
+    ssValue: String;
+    ssSucces: Boolean;
+    ssMessage: String;
+  end;
 
-    PStbPanelsSize = ^TStbPanelsSize;
-    TStbPanelsSize = record
-      lpWidth,
-      mpWidth,
-      rpWidth: Integer;
-    end;
+  PStbPanelsSize = ^TStbPanelsSize;
+  TStbPanelsSize = record
+    lpWidth,
+    mpWidth,
+    rpWidth: Integer;
+  end;
 
-    { Database connection data }
-    PDbConnectRec = ^TDbConnectRec;
-    TDbConnectRec = record
-      DatabaseName,
-      UserName,
-      SchemaPassword,
-      Message: String;
-      HasConnection: Boolean;
-    end;
+  { Database connection data }
+  PDbConnectRec = ^TDbConnectRec;
+  TDbConnectRec = record
+    DatabaseName,
+    UserName,
+    SchemaPassword,
+    Message: String;
+    HasConnection: Boolean;
+  end;
 
-    PRetrieveDataRec = ^TRetrieveDataRec;
-    TRetrieveDataRec = record
-      SqlText,
-      OrganizationName: String;
-      DataSource: TObject;
-      Message: String;
-      Success: Boolean;
-    end;
+  PRetrieveDataRec = ^TRetrieveDataRec;
+  TRetrieveDataRec = record
+    SqlText,
+    OrganizationName: String;
+    DataSource: TObject;
+    DataSet: TObject;
+    DataGrid: TObject;
+    Message: String;
+    Success: Boolean;
+  end;
 
-    PExportToOroxTtlFileRec = ^TExportToOroxTtlFileRec;
-    TExportToOroxTtlFileRec = record
-      FileName,
-      MappingFile,
-      OrganizationName,
-      Version: String;
-      Success: Boolean;
-      Message: String;
-    end;
+  PExportToOroxTtlFileRec = ^TExportToOroxTtlFileRec;
+  TExportToOroxTtlFileRec = record
+    FileNameExportFile,
+    FileNameCsvFile,
+    MappingFile,
+    OrganizationName,
+    Version,
+    DataType: String;
+    Success: Boolean;
+    Message: String;
+  end;
 
-    PUniqueStringlistRec = ^TUniqueStringlistRec;
-    TUniqueStringlistRec = record
-      ListItems: TStrings;
-      NewString: String;
-    end;
+  PUniqueStringlistRec = ^TUniqueStringlistRec;
+  TUniqueStringlistRec = record
+    ListItems: TStrings;
+    NewString: String;
+  end;
 
-    PExportInProgressRec = ^TExportInProgressRec;
-    TExportInProgressRec = record
-      IsInProgress: Boolean;
-      aParent: TObject;
-    end;
+  PExportInProgressRec = ^TExportInProgressRec;
+  TExportInProgressRec = record
+    IsInProgress: Boolean;
+    aParent: TObject;
+  end;
+
+  PSortDbGridRec = ^TSortDbGridRec;
+  TSortDbGridRec = record
+    Column: TObject;       // TColumn
+    DataProvider: TObject; // TDataSet
+    FieldName: String;
+    CurrentSortOrder: String;
+    NewSortOrder: String;
+    DataType: String; // dtOra, dtCsv
+    Success: Boolean;
+    Message: String;
+  end;
+
+  PRetrieveCSVDataRec = ^TRetrieveCSVDataRec;
+  TRetrieveCSVDataRec = record
+    FilePath: String;
+    HasHeader: Boolean;
+    Delimiter: Char;
+    QuoteChar: Char;
+    DataGrid: TObject;
+    DataSource: TObject;
+    DataSet: TObject;
+    Success: Boolean;
+    Message: String;
+  end;
 
 { ---------------------------------------------------------------------------- }
   { TTransaction is our container vessel for changes }

@@ -10,35 +10,37 @@ miOptionsLanguageEN=&Engels
 miOptionsLanguageNL=&Nederlands
 
 tsPrepare=Voorbereiden
-tsSettings=Instellingen
+tsExportSettings=Export instellingen
 tsQuery=Query
 gbConnection=Connectie
 gbGetData=Haal de data op
 gbExport=Exporteer
 btnSaveQuery=Opslaan
 btnOpenQuery=Open
+btnSaveErrorLog=Opslaan
 btnExportDbgridToCsv=Opslaan
-BitBtnSelectMappingsFile=...
-lblMappingsFile=Selecteer mappingsbestand
 lblDatabaseName=Database
 lblUserName=User
 lblPassword=Wachtwoord
 lblOrganizationName=Organisatie
-lblGWSWVersion=GWSW versie
+lblOrganizationNameCsv=Organisatie
 lblProgressTitle=Voortgang log
 lblProgress=-
 lblError=Fouten log
 btnConnect=Connect
+btnDisconnect=Disconnect
 btnGetData=Haal de data op
-btnExportToFile=Export
+btnExportToFileOra=Export
+btnExportToFileCSV=Export
 btnClose=Sluiten
-SelectMapFile=Selecteer een mappings bestand
 MappingsFileIsMissing=Mappingsbestand ontbreekt. Ga naar tabblad instellingen.
 SaveSqlFile=Opslaan sql bestand.
+SaveErrorLogFile=Error log opslaan
 SaveCSVFile=Opslaan csv bestand.
 DlgSqlFilesFilter=SQL bestanden|*.sql|Alle bestanden|*.*
-DlgCSVFilesFilter=CSV Bestanden (*.csv)|Alle bestanden (*.*)|*.*
+DlgCSVFilesFilter=CSV Bestanden|*.csv|Alle bestanden|*.*
 DlgSaveTtlFile=GWSW-OroX Bestanden (*.orox.ttl)|*.orox.ttl|Turtle Bestanden (*.ttl)|*.ttl|Alle bestanden (*.*)|*.*
+DlgSaveErrorLogFilesFilter=Tekstbestanden (*.txt)|*.txt|Alle bestanden (*.*)|*.*					  
 OpenSqlFile=Open sql bestand.
 chkPutGrondwaterstand=Grondwaterstand
 ExportFailed=Export gefaald: 
@@ -63,7 +65,7 @@ KolktypeIsMissing=Geen "Kolktype" gevonden. Brondata aanpassen. "Type" is verpli
 MappingManhole=Mapping Put...
 MappingSewerSystem= Mapping Stelsel...
 MappingPipeline=Mapping Leiding...
-MappingMechanicalPipeline=Mapping mechanische leiding...
+MappingMechanicalPipeline=Mapping Mechanische leiding...
 MappingGully=Mapping Kolk...
 
 ManholeWidth=Put: Breedte moet tussen 
@@ -93,6 +95,63 @@ ExportIsCompleteOpenFile=Export voltooid. Bestand openen?
 TotalCountRecordsExported=Export voltooid, %d records gëexporteerd.
 ExportingNumberFromTotalCount=Bezig met exporteren: %d van %d
 ExportStarted=Export gestart...
+NoErrorReportPresent=Er is geen fouten logging aanwezig
+
+gbManholes=Rioolput
+chkIncludePutLengte=Lengte
+chkIncludePutBreedte=Breedte
+chkIncludePutHoogte=Hoogte
+chkIncludePutDiameter=Diameter
+chkIncludePutVorm=Vorm
+chkIncludePutMateriaal=Materiaal
+chkIncludePutFundering=Fundering
+chkIncludePutBegindatum=Begindatum
+chkIncludePutEinddatum=Einddatum
+chkIncludePutMaaiveldhoogte=Maaiveldhoogte
+
+gbPipelines=Vrijvervalleidingen
+chkIncludeLeidingLengte=Lengte
+chkIncludeLeidingBreedte=Breedte
+chkIncludeLeidingHoogte=Hoogte
+chkIncludeLeidingDiameter=Diameter
+chkIncludeLeidingVorm=Vorm
+chkIncludeLeidingMateriaal=Materiaal
+chkIncludeLeidingFundering=Fundering
+chkIncludeLeidingStatusFunctioneren=Status functioneren
+chkIncludeLeidingWIBONThema=Wibon thema
+chkIncludeLeidingBegindatum=Begindatum
+chkIncludeLeidingEinddatum=Einddatum
+chkIncludeLeidingBobBegin=B.o.b. begin
+chkIncludeLeidingBobEind=B.o.b. eind
+
+gbMechanicalPipeline=Persleiding
+chkIncludePersleidingLengte=Lengte
+chkIncludePersleidingHoogte=Hoogte
+chkIncludePersleidingDiameter=Diameter
+chkIncludePersleidingVorm=Vorm
+chkIncludePersleidingMateriaal=Materiaal
+chkIncludePersleidingStatusFunctioneren=Status functioneren
+chkIncludePersleidingBegindatum=Begindatum
+chkIncludePersleidingEinddatum=Einddatum
+chkIncludePersleidingBobBegin=Diepte begin
+chkIncludePersleidingBobEind=Diepte eind
+
+gbGully=Kolk
+chkIncludeKolkLengte=Lengte
+chkIncludeKolkBreedte=Breedte
+chkIncludeKolkHoogte=Hoogte
+chkIncludeKolkDiameter=Diameter
+chkIncludeKolkVorm=Vorm
+chkIncludeKolkMateriaal=Materiaal
+chkIncludeKolkWanddikte=Wanddikte
+chkIncludeKolkBegindatum=Begindatum
+chkIncludeKolkEinddatum=Einddatum
+
+tsOracle=Oracle
+tsCsv=Csv
+btnSelectCsvFile=Selecteer een CSV bestand
+SelectCsvFile=Selecteer een CSV bestand
+CsvFileInUse=Het csv bestand is in gebruik door een ander proces.
 
 [view.main.statusbartexts]
 Welcome=Welkom.
@@ -110,22 +169,31 @@ ErrorExportToOroxTtlFile=(!) Onverwachte fout bij het aanmaken van het exportbes
 ErrorUniqueStringlist=(!) Onverwachte fout bij het aanmaken van de unieke stringlist.
 DbConnNotInitialized=Databaseverbinding niet geïnitialiseerd
 
-DbError=Database fout
+DbError=(!)Database fout. 
 CannotFindConnIdentifier=Kan de verbindingsidentificatie niet vinden. Controleer TNSNAMES.ORA.
 InvalidUserOrPwd=Ongeldige gebruikersnaam/wachtwoord.
 NoListener=Geen listener op de server.
 ListenerDoesNotKnowServer=Listener kent de services niet.
 SIDNotFound=SID niet gevonden.
 NUllPwd=Geen wachtwoord gegeven; Login geweigerd.
+ConnectTimeout=Verbinding time-out is opgetreden
+OperationTimeout=Geen reactie
+ProtocolAdapterError=Protocol adapter fout
+NoDataFound=Geen data gevonden
+TooManyRows=Te veel rijen
 
 ServerNotFound=Netwerkfout: Kan server niet vinden.
 ServerNotResponding=Timeout: Server reageert niet.
 CheckConnection=Netwerkfout: Controleer uw verbinding.
-
-
-
-
-
+InternalError=Interne fout
+SavingFile=Opslaan bestand...
+CsvFileInUse=Het csv bestand is in gebruik door een ander proces.
+FileSaved=Het bestand is opgeslagen.
+FileLockedError=Bestand kon niet geopend worden (locked door andere applicatie).
+StreamError=Schrijffout (disk vol, permissies, etc.) 
+UnexpectedExportError=Onverwachte fout bij het opslaan.
+CsvFileInUse=Het csv bestand is in gebruik door een ander proces.
+LoadingCSVData=Ophalen data uit csv bestand...
 
 
 [view.main.hints]

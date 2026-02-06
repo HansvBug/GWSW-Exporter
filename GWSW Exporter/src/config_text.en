@@ -1,6 +1,7 @@
 [view.configure]
 frmConfigure=Options
 tbsMiscellaneous=Miscellaneous
+tbsGWSW=GWSW
 chkActiveLogging=Activate logging
 chkAppendLogging=Append logfile
 gbLogging=Logging
@@ -20,10 +21,15 @@ lblQueryFileLocation=Locatie query bestand
 BitBtnQueryFileLocation=...
 SelectQueryFile=Select the query file.
 DlgSqlFilesFilter=SQL files|*.sql|All files|*.*
-
+gbGWSW=
+lblGWSWVersion=GWSW version
+SelectMapFile=Select a mapping file
+BORGWSWMappingFile=BOR-GWSW mapping files|*.ods
+BitBtnSelectMappingsFile=...
+lblMappingsFile=Select mapping file
 
 [view.configure.statusbartexts]
-
+ErrorSaveSingleSetting=(!) Unexpected error when saving a setting.
 
 [view.configure.hints]
 chkActiveLogging=Restart the application after a change.

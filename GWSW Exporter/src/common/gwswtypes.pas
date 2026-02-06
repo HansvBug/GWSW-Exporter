@@ -95,6 +95,8 @@ end;
      MateriaalURI: String;
      VormURI: String;
      Wanddikte: Integer;
+     Begindatum: TDate;
+     Einddatum: TDate;
      // Topologie
      X: Double;
      Y: Double;
@@ -119,8 +121,9 @@ end;
       MateriaalURI: String;
       StatusFunctionerenURI: String;
       Begindatum: TDate;
-      BobBegin: Double;
-      BobEind: Double;
+      Einddatum: TDate;
+      BobBegin: Double; // Dit is DIEPTE_BEGIN
+      BobEind: Double;  // Dit is DIEPTE_EIND
 
       // Geometrie specifiek voor persleiding (kan meerdere vertices hebben)
       HasMultipleVertices: Boolean;

@@ -33,11 +33,13 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, zcomponent, view.main, view.configure;
+  Forms, view.main, view.configure;
 
 {$R *.res}
 
 begin
+  //SetHeapTraceOutput('d:\Development\Pascal\40\GWSW-Exporter\GWSW Exporter\Temp\memory_leaks.log');
+
   RequireDerivedFormResource:=True;
   Application.Title:= 'Gwsw-exporter';
   Application.Scaled:= True;

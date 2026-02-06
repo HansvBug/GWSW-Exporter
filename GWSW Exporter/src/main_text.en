@@ -10,35 +10,37 @@ miOptionsLanguageEN=&English
 miOptionsLanguageNL=&Dutch
 
 tsPrepare=Prepare
-tsSettings=Settings
+tsExportSettings=Export settings
 tsQuery=Query
 gbConnection=Connection
 gbGetData=Get data from database
 gbExport=Export
 btnSaveQuery=Save
 btnOpenQuery=Open
-BitBtnSelectMappingsFile=...
-lblMappingsFile=Select mapping file
+btnSaveErrorLog=Save
 lblDatabaseName=Database
 lblUserName=User
 lblPassword=Password
 lblOrganizationName=Organization
-lblGWSWVersion=GWSW version
+lblOrganizationNameCsv=Organization
 lblProgressTitle=Progress log
 lblProgress=-
 lblError=Error log
 btnConnect=Connect
+btnDisconnect=Disconnect
 btnGetData=Retrieve data
 btnExportDbgridToCsv=Save
-btnExportToFile=Export
+btnExportToFileOra=Export
+btnExportToFileCSV=Export
 btnClose=Close
-SelectMapFile=Select a mapping file
 MappingsFileIsMissing=Mapping is missing. Go to settings tab.
 SaveSqlFile=Save sql file.
+SaveErrorLogFile=Save error log
 SaveCSVFile=Save CSV file.
 DlgSqlFilesFilter=SQL files|*.sql|All files|*.*
 DlgCSVFilesFilter=CSV Files (*.csv)|All files (*.*)|*.*
 DlgSaveTtlFile=GWSW-OroX Files (*.orox.ttl)|*.orox.ttl|Turtle Files (*.ttl)|*.ttl|All files (*.*)|*.*
+DlgSaveErrorLogFilesFilter=Text files (*.txt)|*.txt|All files (*.*)|*.*
 OpenSqlFile=Open sql file.
 chkPutGrondwaterstand=Grondwaterstand
 ExportFailed=Export failed: 
@@ -94,6 +96,63 @@ ExportIsCompleteOpenFile=Export complete. Open file?
 TotalCountRecordsExported=Export completed, %d records exported.
 ExportingNumberFromTotalCount=Exporting: %d from %d
 ExportStarted=Export started...
+NoErrorReportPresent=No error logging is present
+
+gbManholes=Manhole
+chkIncludePutLengte=Length
+chkIncludePutBreedte=Width
+chkIncludePutHoogte=Height
+chkIncludePutDiameter=Diameter
+chkIncludePutVorm=Shape
+chkIncludePutMateriaal=Material
+chkIncludePutFundering=Foundation
+chkIncludePutBegindatum=Start date
+chkIncludePutEinddatum=End date
+chkIncludePutMaaiveldhoogte=Ground level
+
+gbPipelines=Pipelines
+chkIncludeLeidingLengte=Length
+chkIncludeLeidingBreedte=Width
+chkIncludeLeidingHoogte=Height
+chkIncludeLeidingDiameter=Diameter
+chkIncludeLeidingVorm=Shape
+chkIncludeLeidingMateriaal=Material
+chkIncludeLeidingFundering=Foundation
+chkIncludeLeidingStatusFunctioneren=Status functioning
+chkIncludeLeidingWIBONThema=Wibon
+chkIncludeLeidingBegindatum=Start date
+chkIncludeLeidingEinddatum=End date
+chkIncludeLeidingBobBegin=Inside bottom of sewer line, start
+chkIncludeLeidingBobEind=Inside bottom of sewer line, end
+
+gbMechanicalPipeline=Mechanical pipeline
+chkIncludePersleidingLengte=Length
+chkIncludePersleidingHoogte=Height
+chkIncludePersleidingDiameter=Diameter
+chkIncludePersleidingVorm=Shape
+chkIncludePersleidingMateriaal=Material
+chkIncludePersleidingStatusFunctioneren=Status functioning
+chkIncludePersleidingBegindatum=Start date
+chkIncludePersleidingEinddatum=End date
+chkIncludePersleidingBobBegin=Depth begin
+chkIncludePersleidingBobEind=Depth end
+
+gbGully=Gully
+chkIncludeKolkLengte=Length
+chkIncludeKolkBreedte=Width
+chkIncludeKolkHoogte=Height
+chkIncludeKolkDiameter=Diameter
+chkIncludeKolkVorm=Shape
+chkIncludeKolkMateriaal=Material
+chkIncludeKolkWanddikte=Wall thickness
+chkIncludeKolkBegindatum=Start date
+chkIncludeKolkEinddatum=End date
+
+tsOracle=Oracle
+tsCsv=Csv
+btnSelectCsvFile=Select a CSV file
+SelectCsvFile=Select a CSV file.
+CsvFileInUse=The csv file is in use by another process.
 
 [view.main.statusbartexts]
 Welcome=Welcome.
@@ -110,18 +169,34 @@ RetrievingData=Retrieving data...
 ErrorExportToOroxTtlFile=(!) Unexpected error creating the export file.
 ErrorUniqueStringlist=(!) Unexpected error when creating the unique stringlist.
 DbConnNotInitialized=Database connection not initialized
+CsvFileInUse=The csv file is in use by another process.
 
-DbError=Database error
+DbError=(!)Database error. 
 CannotFindConnIdentifier=Cannot find the connection identifier. Check TNSNAMES.ORA.
 InvalidUserOrPwd=Invalid username/password.
 NoListener=No listener on the server.
 ListenerDoesNotKnowServer=Listener doesn''t know the service.
 SIDNotFound=SID not found.
 NUllPwd=Null password given; logon denied.
+ConnectTimeout=Connect timeout occurred
+OperationTimeout=Operation timed out
+ProtocolAdapterError=Protocol adapter error
+NoDataFound=No data found
+TooManyRows=Too many rows
+
 
 ServerNotFound=Network error: Unable to find server.
 ServerNotResponding=Timeout: Server not responding.
 CheckConnection=Network Error: Check your connection.
+InternalError=Internal error
+SavingFile=Saving file...
+CsvFileInUse=The csv file is in use by another process.
+FileSaved=The file has been saved.
+FileLockedError=File could not be opened (locked by another application).
+StreamError=Writing error (disk full, permissions, etc.)
+UnexpectedExportError=Unexpected error saving.
+LoadingCSVData=Retrieving data from csv file...
+
 
 [view.main.hints]
 

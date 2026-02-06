@@ -18,7 +18,7 @@
     </General>
     <VersionInfo>
       <UseVersionInfo Value="True"/>
-      <MinorVersionNr Value="4"/>
+      <MinorVersionNr Value="5"/>
       <StringTable Comments="GWSW OroX export naar ttl bestand." CompanyName="Hans van Buggenum" FileDescription="GWSW OroX export naar ttl bestand." InternalName="GWSW-Bridge" LegalCopyright="Hans van Buggenum" OriginalFilename="GWSW-OroX-Exporter" ProductName="GWSW Exporter" ProductVersion="1.0.0"/>
     </VersionInfo>
     <BuildModes>
@@ -112,16 +112,16 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="SQLDBLaz"/>
+      </Item>
+      <Item>
         <PackageName Value="laz_fpspreadsheet_visual_dsgn"/>
       </Item>
       <Item>
         <PackageName Value="laz_fpspreadsheet_visual"/>
-      </Item>
-      <Item>
-        <PackageName Value="zcomponentdesign"/>
-      </Item>
-      <Item>
-        <PackageName Value="zcomponent"/>
       </Item>
       <Item>
         <PackageName Value="SynEditDsgn"/>
@@ -233,6 +233,44 @@
         <Filename Value="common\gwswvalidationconfig.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="GWSWValidationConfig"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\dbgridhelper.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="DbGridHelper"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\exportconfig.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ExportConfig"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\csvdataprovider.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CSVDataProvider"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\uleakcheck.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uLeakCheck"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\pas_csvdataset.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Pas_csvdataset"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\pascsvdataset.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="PAScsvdataset"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\csvdataset.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="common\csvreadwrite.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
   </ProjectOptions>

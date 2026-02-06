@@ -37,10 +37,12 @@ type
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
 
     procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
+    procedure DbDisconnect(DbConnectionData: PDbConnectRec);
     function GetSQLfileLocation: String;
     function GetKeepLastOrganization: Boolean;
     function GetLastUsedOrganization: String;
     procedure ExportInProgress(aData: TExportInProgressRec);
+    function GetSingleSetting(const SettingName: String): String;
 
     property Model: IModelMain read get_Model; // TODO: write set_Model; if needed...
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -221,6 +223,12 @@ begin
   fProvider.NotifySubscribers(prDbConnection, Nil, DbConnectionData);
 end;
 
+procedure TPresenterMain.DbDisconnect(DbConnectionData: PDbConnectRec);
+begin
+  fModel.DbDisconnect(DbConnectionData);
+  fProvider.NotifySubscribers(prDbConnection, Nil, DbConnectionData);
+end;
+
 function TPresenterMain.GetSQLfileLocation : String;
 begin
   Result:= fModel.GetSQLfileLocation;
@@ -239,6 +247,11 @@ end;
 procedure TPresenterMain.ExportInProgress(aData : TExportInProgressRec);
 begin
   fModel.DisableChildControls(aData);
+end;
+
+function TPresenterMain.GetSingleSetting(const SettingName: String): String;
+begin
+  Result:= fModel.GetSingleSetting(SettingName);
 end;
 
 

@@ -9,6 +9,19 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+## [0.5.0] - 2025-02-06
+### Added
+- Initial implementation of data validation framework.
+- CSV to TTL conversion and export functionality.
+- Option to disable individual object components for export.
+
+### Changed
+- Improved user interface with various minor updates and enhancements.
+
+### Fixed
+- Minor bug fixes and stability improvements.
+
+
 ## [0.4.0] - 2025-01-10
 ### Added
 - First workable version with some validation.

@@ -16,7 +16,9 @@ type
 
   TfrmConfigure = class(TForm, IViewConfigure)
     BitBtnQueryFileLocation: TBitBtn;
+    BitBtnSelectMappingsFile: TBitBtn;
     btnClose: TButton;
+    cbGWSWVersion: TComboBox;
     chkAskToOpenExportFile: TCheckBox;
     chkBdGridRowhighligth: TCheckBox;
     chkKeepLastOrganization: TCheckBox;
@@ -27,19 +29,26 @@ type
     chkMapping: TCheckBox;
     chkActiveLogging: TCheckBox;
     chkAppendLogging: TCheckBox;
+    edtMappingsFile: TEdit;
     edtSqlFileLocation: TEdit;
     gbLogging: TGroupBox;
     gbErrorReporting: TGroupBox;
     gbMiscelleneous: TGroupBox;
+    gbGWSW: TGroupBox;
+    lblGWSWVersion: TLabel;
+    lblMappingsFile: TLabel;
     lblQueryFileLocation: TLabel;
     pgcConfigure: TPageControl;
     pnlMain: TPanel;
     pnlBottom: TPanel;
     pnlTop: TPanel;
     stbInfo : TStatusBar;
+    tbsGWSW: TTabSheet;
     tbsMiscellaneous: TTabSheet;
     procedure BitBtnQueryFileLocationClick(Sender : TObject);
+    procedure BitBtnSelectMappingsFileClick(Sender: TObject);
     procedure chkActiveLoggingChange(Sender : TObject);
+    procedure pgcConfigureChange(Sender: TObject);
   private
     fPresenter: IPresenterConfigure;
     fSubscriber: IobsSubscriber;
@@ -75,7 +84,6 @@ type
   end;
 
   function SetUpConfigureView(aMainPresenter: IPresenterMain): Boolean;
-
 var
   frmConfigure : TfrmConfigure;
 
@@ -111,18 +119,56 @@ begin
   end;
 end;
 
+procedure TfrmConfigure.pgcConfigureChange(Sender: TObject);
+begin
+  if pgcConfigure.ActivePageIndex = 1 then begin
+    edtMappingsFile.SelStart:= 0;
+  end;
+end;
+
 procedure TfrmConfigure.BitBtnQueryFileLocationClick(Sender : TObject);
 var
   openDialog: TOpenDialog;
 begin
   openDialog:= TOpenDialog.Create(self);
   openDialog.Title:= fPresenter.GetstaticText(UnitName, 'SelectQueryFile');
-  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adQueries; { #todo : Make Linux proof }
+  {$IFDEF MSWINDOWS}
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName + PathDelim + adQueries;
+  {$ENDIF}
+  {$IFDEF LINUX}
+  openDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adQueries;
+  {$ENDIF}
   openDialog.Options:= [ofFileMustExist];
   openDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgSqlFilesFilter');
   try
     if openDialog.Execute then begin
       edtSqlFileLocation.Text:= openDialog.FileName;
+    end;
+  finally
+    openDialog.Free;
+  end;
+end;
+
+procedure TfrmConfigure.BitBtnSelectMappingsFileClick(Sender: TObject);
+var
+  openDialog: TOpenDialog;
+begin
+  openDialog:= TOpenDialog.Create(self);
+  openDialog.Title:= fPresenter.GetstaticText('view.configure', 'SelectMapFile');
+
+
+  {$IFDEF MSWINDOWS}
+  openDialog.InitialDir:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName + PathDelim + adDomainlist;
+  {$ENDIF}
+  {$IFDEF LINUX}
+  openDialog.InitialDir:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + PathDelim + '.config' + PathDelim + ApplicationName + PathDelim + adDomainlist;
+  {$ENDIF}
+                          // ExtractFilePath(ParamStr(0)) + PathDelim + adDomainlist;
+  openDialog.Options:= [ofFileMustExist];
+  openDialog.Filter:= fPresenter.GetstaticText('view.configure', 'BORGWSWMappingFile');
+  try
+    if openDialog.Execute then begin
+      edtMappingsFile.Text:= openDialog.FileName;
     end;
   finally
     openDialog.Free;
@@ -198,7 +244,7 @@ begin
   UserName:= StringReplace(SysUtils.GetEnvironmentVariable('USERNAME') , ' ', '_', [rfIgnoreCase, rfReplaceAll]) + '_';
 
   {$IFDEF MSWINDOWS}
-  Result:= SysUtils.GetEnvironmentVariable('appdata') + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';
+  Result:= SysUtils.GetEnvironmentVariable('APPDATA') + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';
   {$ENDIF}
   {$IFDEF LINUX}
   Result:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config' + PathDelim + ApplicationName+PathDelim+ adSettings +PathDelim+ UserName + ApplicationName+'.cfg';  // lTrx.RootDir = '/home/<username>/.config'
@@ -256,7 +302,7 @@ begin
   try
     lTrx.WriteSettings:= True;
     lTrx.ReadSettings:= False;
-    lTrx.FormName := UnitName;
+    lTrx.FormName:= UnitName;
     lTrx.ActivateLogging:= chkActiveLogging.Checked;
     lTrx.AppendLogging:= chkAppendLogging.Checked;
     lTrx.Language:= Lang;
@@ -270,6 +316,7 @@ begin
     lTrx.RapportFieldIsEmpty:= chkFieldIsEmpty.Checked;
     lTrx.RapportFieldIsMissing:= chkFieldIsMissing.Checked;
     lTrx.RapportOutOfRange:= chkValueOutOfRange.Checked;
+    lTrx.MappingFile:= edtMappingsFile.Text;
 
     fPresenter.TrxMan.CommitTransaction;
   except
@@ -357,6 +404,8 @@ begin
         chkFieldIsEmpty.Checked:= setRapportFieldIsEmpty;
         chkFieldIsMissing.Checked:= setRapportFieldIsMissing;
         chkValueOutOfRange.Checked:= setRapportOutOfRange;
+        edtMappingsFile.Text:= setMappingFile;
+        cbGWSWVersion.Text:= setGWSWVersion;
       end
       else if (setWriteSettings) and (setFrmName = UnitName) then begin
         // ...
@@ -436,6 +485,8 @@ begin
   Self.OnCreate:= @OnFormCreate;
   Self.OnShow:= @OnFormShow;
   btnClose.OnClick:= @BtnCloseOnClick;
+
+  pgcConfigure.ActivePageIndex:= 0;
 end;
 
 procedure TfrmConfigure.BeforeDestruction;

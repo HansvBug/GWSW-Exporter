@@ -6,7 +6,9 @@ unit model.main;
 interface
 uses classes, sysutils, istrlist, model.decl, model.intf,
   LazFileUtils,
-  Settings, AppLogging, DatabaseModule, exportProgressReporter.intf;
+  Settings, AppLogging, DatabaseModule, uIGWSWDataProvider,
+  exportProgressReporter.intf, DbGridHelper,
+  ExportConfig;
 //const
 
 type
@@ -16,6 +18,12 @@ type
   private { remember to use 'RegisterSection' in units, you want to add to 'Sects' :o) }
     fSettings: TSettings;
     fDatabaseModule: TDatabaseModule;
+
+    fDbGridHelper: TDbGridHelper;
+
+    function CreateORADataProvider(aQuery: TObject; DisableControles: Boolean): IGWSWDataProvider;
+    function CreateCSVDataProvider(const FileName: string; Delimiter: Char = ',';
+                                  QuoteChar: Char = '"'; HasHeader: Boolean = True): IGWSWDataProvider;
 
     // (progress) reporting
     procedure ReportProgressMsg(const Message: string);
@@ -63,6 +71,7 @@ type
     function GetDatabaseModule: TDatabaseModule;
     function IsConnected: Boolean;
     procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
+    procedure DbDisconnect(DbConnectionData : PDbConnectRec);
 
     // Execute query and get data
     function RetrieveData(data: PRetrieveDataRec): TRetrieveDataRec;
@@ -73,6 +82,9 @@ type
 
     function GetSetting_AskToOpenExportFile: Boolean;
     procedure DisableChildControls(aData : TExportInProgressRec);
+    function GetSingleSetting(const SettingName: String): String;
+    function SortDbGrid(Data: PSortDbGridRec): TSortDbGridRec;
+    function LoadCSVData(aRec: PRetrieveCSVDataRec): TRetrieveCSVDataRec;
   end;
 
 {$EndRegion 'TModelMainH'}
@@ -85,8 +97,8 @@ function gModelMain(aPresenter: IPresenterMain;const aRoot: shortstring): IModel
 
 
 implementation
-uses obs_prosu, strutils, common.consts, common.utils, uIGWSWDataProvider, QueryDataProvider,
-  OroxExport;
+uses obs_prosu, strutils, common.consts, common.utils, QueryDataProvider,
+  CSVDataProvider, OroxExport;
 
 var Singleton: TModelMain = nil;
 
@@ -98,6 +110,17 @@ begin
 end;
 
 {$Region 'TModelMain'}
+
+function TModelMain.CreateORADataProvider(aQuery: TObject; DisableControles: Boolean): IGWSWDataProvider;
+begin
+  Result:= TQueryDataProvider.Create(aQuery, DisableControles);  // No free/nil required
+end;
+
+function TModelMain.CreateCSVDataProvider(const FileName: string;
+  Delimiter: Char; QuoteChar: Char; HasHeader: Boolean): IGWSWDataProvider;
+begin
+  Result := TCSVDataProvider.Create(FileName, Delimiter, QuoteChar, HasHeader);
+end;
 
 procedure TModelMain.ReportProgressMsg(const Message : string);
 begin
@@ -187,7 +210,10 @@ constructor TModelMain.Create(aPresenter: IPresenterMain; const aRoot: shortstri
 begin
   inherited Create;
   fPresenter:= aPresenter;
-  fRoot:= aRoot;                                        
+  fRoot:= aRoot;
+
+  fDbGridHelper:= TDbGridHelper.Create;
+
   UpdateSections(Sects); { <- fetch our registered sections, v- i18n }
   fTextCache:= CreStrListFromFile(format(mvpTexts,[fRoot,Lang])); ///<- i18n
   { we need the model, this is a minor flaw if it fails, because then the }
@@ -197,6 +223,7 @@ end; /// the above text can't be translated in the i18n'ed mvptexts, the count i
 
 destructor TModelMain.Destroy;
 begin
+  if Assigned(fDbGridHelper) then FreeAndNil(fDbGridHelper);
   if Assigned(fDatabaseModule) then FreeAndNil(fDatabaseModule);
 
   fTextCache:= nil; // com-object
@@ -410,7 +437,53 @@ begin
     setDbGridRowHighlight:= fSettings.DbGridRowHighlight;
     setAskToOpenExportFile:= fSettings.AskToOpenExportFile;
     setLastUsedOrganization:= fSettings.LastUsedOrganization;
-    //...
+    //Export settings
+    // Put
+    setIncludePutLengte:= fSettings.IncludePutLengte;
+    setIncludePutBreedte:= fSettings.IncludePutBreedte;
+    setIncludePutHoogte:= fSettings.IncludePutHoogte;
+    setIncludePutDiameter:= fSettings.IncludePutDiameter;
+    setIncludePutVorm:= fSettings.IncludePutVorm;
+    setIncludePutMateriaal:= fSettings.IncludePutMateriaal;
+    setIncludePutFundering:= fSettings.IncludePutFundering;
+    setIncludePutBegindatum:= fSettings.IncludePutBegindatum;
+    setIncludePutEinddatum:= fSettings.IncludePutEinddatum;
+    setIncludePutMaaiveldhoogte:= fSettings.IncludePutMaaiveldhoogte;
+    //Leiding
+    setIncludeLeidingLengte:= fSettings.IncludeLeidingLengte;
+    setIncludeLeidingBreedte:= fSettings.IncludeLeidingBreedte;
+    setIncludeLeidingHoogte:= fSettings.IncludeLeidingHoogte;
+    setIncludeLeidingDiameter:= fSettings.IncludeLeidingDiameter;
+    setIncludeLeidingVorm:= fSettings.IncludeLeidingVorm;
+    setIncludeLeidingMateriaal:= fSettings.IncludeLeidingMateriaal;
+    setIncludeLeidingFundering:= fSettings.IncludeLeidingFundering;
+    setIncludeLeidingStatusFunctioneren:= fSettings.IncludeLeidingStatusFunctioneren;
+    setIncludeLeidingWIBONThema:= fSettings.IncludeLeidingWIBONThema;
+    setIncludeLeidingBegindatum:= fSettings.IncludeLeidingBegindatum;
+    setIncludeLeidingEinddatum:= fSettings.IncludeLeidingEinddatum;
+    setIncludeLeidingBobBegin:= fSettings.IncludeLeidingBobBegin;
+    setIncludeLeidingBobEind:= fSettings.IncludeLeidingBobEind;
+    // Persleiding
+    setIncludePersleidingLengte:= fSettings.IncludePersleidingLengte;
+    setIncludePersleidingHoogte:= fSettings.IncludePersleidingHoogte;
+    setIncludePersleidingDiameter:= fSettings.IncludePersleidingDiameter;
+    setIncludePersleidingVorm:= fSettings.IncludePersleidingVorm;
+    setIncludePersleidingMateriaal:= fSettings.IncludePersleidingMateriaal;
+    setIncludePersleidingStatusFunctioneren:= fSettings.IncludePersleidingStatusFunctioneren;
+    setIncludePersleidingBegindatum:= fSettings.IncludePersleidingBegindatum;
+    setIncludePersleidingEinddatum:= fSettings.IncludePersleidingEinddatum;
+    setIncludePersleidingBobBegin:= fSettings.IncludePersleidingBobBegin;
+    setIncludePersleidingBobEind:= fSettings.IncludePersleidingBobEind;
+    // Kolk
+    setIncludeKolkLengte:= fSettings.IncludeKolkLengte;
+    setIncludeKolkBreedte:= fSettings.IncludeKolkBreedte;
+    setIncludeKolkHoogte:= fSettings.IncludeKolkHoogte;
+    setIncludeKolkDiameter:= fSettings.IncludeKolkDiameter;
+    setIncludeKolkVorm:= fSettings.IncludeKolkVorm;
+    setIncludeKolkMateriaal:= fSettings.IncludeKolkMateriaal;
+    setIncludeKolkWanddikte:= fSettings.IncludeKolkWanddikte;
+    setIncludeKolkBegindatum:= fSettings.IncludeKolkBegindatum;
+    setIncludeKolkEinddatum:= fSettings.IncludeKolkEinddatum;
 
     setSucces:= fSettings.Succes;
     setSucces:= True;
@@ -435,12 +508,18 @@ begin
       fSettings.FormRestoredLeft:= setFrmRestoredLeft;
       fSettings.FormRestoredHeight:= setFrmRestoredHeight;
       fSettings.FormRestoredWidth:= setFrmRestoredWidth;
+      fSettings.SplitterMemos:= setSplitterMemos;
+      fSettings.SplitterDataSettings:= setSplitterDataSettings;
+      fSettings.SplitterDataGrid:= setSplitterdataGrid;
     end;
 
     fSettings.StoreFormState;
 
     With result do begin
       setSucces:= fSettings.Succes;
+      setSplitterdataGrid:= fSettings.SplitterDataGrid;
+      setSplitterMemos:= fSettings.SplitterMemos;
+      setSplitterDataSettings:= fSettings.SplitterDataSettings;
     end;
   end;
 end;
@@ -495,7 +574,7 @@ begin
   if assigned(fSettings) then begin
     with PSingleSettingRec(Settingdata)^ do begin
       fSettings.SettingsFile:= ssSettingsFile;
-      fSettings.WriteSetting(ssName, ssValue);
+      fSettings.WriteSetting(ssName, ssSection, ssValue);
     end;
   end;
 end;
@@ -609,13 +688,23 @@ begin
         WriteToLog(ltError, e.Message);
       end;
     end;
-  end
-  else begin
-    lResult.Success:= DbConnectionData^.HasConnection;
   end;
 end;
 
-function TModelMain.RetrieveData(data : PRetrieveDataRec) : TRetrieveDataRec;
+procedure TModelMain.DbDisconnect(DbConnectionData: PDbConnectRec);
+var
+  lResult: TConnectionResult;
+begin
+  if Assigned(fDatabaseModule) then begin
+    if IsConnected then begin
+      lResult:= fDatabaseModule.DbDisconnect;
+      DbConnectionData^.HasConnection:= lResult.Success;
+    end;
+    FreeAndNil(fDatabaseModule);
+  end;
+end;
+
+function TModelMain.RetrieveData(data : PRetrieveDataRec) : TRetrieveDataRec;    { #todo : Rename naar RetrieveOraData }
 var
   lResult: TDataSetResult;
 begin
@@ -623,7 +712,7 @@ begin
 
     lResult:= fDatabaseModule.RetrieveData(data^.SqlText);
 
-    Result.DataSource:= lResult.DataSet;
+    Result.DataSource:= lResult.DataSource;
     Result.Success:= lResult.Success;
   end
   else
@@ -632,21 +721,38 @@ end;
 
 function TModelMain.ExportToOroxTtlFile(Data : PExportToOroxTtlFileRec) : TExportToOroxTtlFileRec;
 var
-  DataProvider: IGWSWDataProvider;
+  DataProviderOraExp: IGWSWDataProvider;
+  DataProviderCSVExp: IGWSWDataProvider;
   OroxExport: TOroxExport;
+  ExportConfig: TExportConfig;
 begin
   Result.Success:= False;
   Result.Message:= '';
 
-  try
-    // Create a data provider. This is the query that retrieved the data.
-    DataProvider:= TQueryDataProvider.Create(fDatabaseModule.CurrentQuery, True);  // No free/nil required
+  if IsFileInUse(Data^.FileNameCsvFile) then begin
+    Result.Message:= 'CsvFileInUse';  // File is in use by another process.
+    Exit;
+  end;
 
-    OroxExport:= TOroxExport.Create(DataProvider, Data^.FileName, Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter);
+  if data^.DataType = '' then Exit;
+
+  try
+    fSettings.LoadExportConfigFromIni;
+    ExportConfig:= fSettings.ExportConfig;
+
+    if data^.DataType = dtORA then begin
+      DataProviderOraExp:= CreateORADataProvider(fDatabaseModule.CurrentQuery, True);  // Create a data provider. This is the query that retrieved the data.
+      OroxExport:= TOroxExport.Create(DataProviderOraExp, Data^.FileNameExportFile, Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter, ExportConfig  );
+    end
+    else if data^.DataType = dtCSV then begin
+      DataProviderCSVExp:= CreateCSVDataProvider(Data^.FileNameCsvFile, ',', '"', True);  { #todo : Let nu nog hard in de code maar moet naar de configuratie }
+      OroxExport:= TOroxExport.Create(DataProviderCSVExp, Data^.FileNameExportFile, Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter, ExportConfig  );
+    end;
+
     try
       fSettings.ReadFile; // Kan vervelend worden. leest het hele settingsbestand opnieuw terwijl maar 1 setting nodig is.
       OroxExport.ExportToOrox(Data^.Version);
-      Result.FileName:= Data^.FileName;
+      Result.FileNameExportFile:= Data^.FileNameExportFile;
       Result.Success:= True;
       Result.Message:= 'ExportIsCompleted';
     finally
@@ -688,6 +794,65 @@ begin
     common.utils.DisableChildControls(aData.aParent)
   else
     common.utils.EnableChildControls(aData.aParent)
+end;
+
+function TModelMain.GetSingleSetting(const SettingName: String): String;
+begin { #todo : Als dit er meer gaan worden dan anders opzetten. Dan een settings object in de view maken. }
+  case SettingName of
+    'MappingFile' : Result:= fSettings.MappingFile;
+    'GWSWVersion' : Result:= fSettings.GWSWVersion;
+  end;
+end;
+
+function TModelMain.SortDbGrid(Data: PSortDbGridRec): TSortDbGridRec;
+begin
+  if data^.DataType = dtORA then begin
+    Data^.DataProvider:= fDatabaseModule.CurrentQuery;
+    fDbGridHelper.SortOracleDbGrid(Data^.DataProvider, Data^.Column);
+  end
+  else if data^.DataType = dtCSV then begin
+    fDbGridHelper.SortCSVDataSet(Data^.DataProvider, Data^.Column);  // Hier is de dataprovider de dbgrid.datasource.dataset. (Zou bij Ora ook zo kunnen).
+  end;
+end;
+
+function TModelMain.LoadCSVData(aRec: PRetrieveCSVDataRec): TRetrieveCSVDataRec;  { #todo : Rename naar RetrieveCsvData }
+var
+  csvDataProvider: TCSVDataProvider;
+  lDataSourceObj, lDataSetObj: TObject;
+begin
+  // Initialiseer result
+  Result.FilePath:= aRec^.FilePath;
+  Result.Delimiter:= aRec^.Delimiter;
+  Result.QuoteChar:= aRec^.QuoteChar;
+  Result.HasHeader:= aRec^.HasHeader;
+  Result.DataSource:= nil;
+  Result.DataSet:= nil;
+
+  csvDataProvider := TCSVDataProvider.Create(
+    aRec^.FilePath,
+    aRec^.Delimiter,
+    aRec^.QuoteChar,
+    aRec^.HasHeader
+  );
+
+  try
+    // CSVDataProvider creëert objecten als TObject
+    if csvDataProvider.LoadCSVData(lDataSourceObj, lDataSetObj) then
+    begin
+      if (lDataSourceObj <> Nil) and (lDataSetObj <> Nil) then begin
+        Result.DataSource:= lDataSourceObj;
+        Result.DataSet:= lDataSetObj;
+        Result.Message:= '';
+        Result.Success:= True;
+      end
+      else begin
+        Result.Message:= 'Kon CSV niet laden (onbekende fout).';  { #todo : Taalinstelling }
+        Result.Success:= False;
+      end;
+    end;
+  finally
+    csvDataProvider.Free;
+  end;
 end;
 
 
