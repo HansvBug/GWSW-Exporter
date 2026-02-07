@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 ### Fixed
+## [0.5.1] - 2025-02-07
+-	First units equipped with AI-generated documentation.
 
 ## [0.5.0] - 2025-02-06
 ### Added

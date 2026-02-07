@@ -9,31 +9,63 @@ uses
   Classes, SysUtils, DBGrids, DB, SQLDB, Contnrs, BufDataset;
 
 type
+  { TIndexInfo
+    Represents metadata for a database index used for sorting.
+    Tracks index name, last usage timestamp, field name, and sort direction. }
   TIndexInfo = class
-    IndexName: string;
-    LastUsed: TDateTime;
-    FieldName: string;
-    IsAscending: Boolean;
+    IndexName: string;      // Name of the index (e.g., 'ASC_FieldName')
+    LastUsed: TDateTime;    // Timestamp of last usage for LRU management (Last Recently Used Management)
+    FieldName: string;      // Database field name this index operates on
+    IsAscending: Boolean;   // Sort direction: True = Ascending, False = Descending
   end;
 
-  { TDbGridHelper }
+  { TDbGridHelper
+    Helper class for managing dynamic index creation and sorting in TDBGrid components.
+    Provides efficient client-side sorting for TSQLQuery (Oracle) and TBufDataset (CSV)
+    with automatic index lifecycle management. }
   TDbGridHelper = class(TObject)
   private
-    fLastColumn: TColumn;
-    fIndexList: TObjectList; // Bevat TIndexInfo objecten
+    fLastColumn: TColumn;       // Reference to the last sorted column for UI cleanup
+    fIndexList: TObjectList;    // List of TIndexInfo objects for LRU index management
+
+    { Updates the index definitions cache for a TSQLQuery }
     procedure UpdateIndexes(Query: TSQLQuery);
+
+    { Checks if an index exists in the Query's IndexDefs }
     function IndexExists(Query: TSQLQuery; const IndexName: string): Boolean;
+
+    { Retrieves TIndexInfo by index name from the internal cache }
     function GetIndexInfo(const IndexName: string): TIndexInfo;
+
+    { Updates usage timestamp and metadata for an index, creates entry if missing }
     procedure UpdateIndexUsage(const IndexName: string; FieldName: string; IsAscending: Boolean);
+
+    { Finds the least recently used (LRU) index from the internal cache }
     function FindOldestIndex: TIndexInfo;
+
+    { Removes the LRU index from TSQLQuery and internal cache when limit approached }
     procedure RemoveOldestIndex(Query: TSQLQuery);
 
+    { Removes the LRU index from TBufDataset and internal cache }
     procedure RemoveOldestBufIndex(BufDS: TBufDataset);
+
   public
+    { Initializes the helper with empty index cache }
     constructor Create;
+
+    { Cleans up internal objects }
     destructor Destroy; override;
+
+    { Sorts TSQLQuery-based DBGrid by dynamically creating/using ascending/descending indexes
+      Parameters:
+        DataProvider: TSQLQuery instance attached to the DBGrid
+        Column: TColumn being sorted }
     procedure SortOracleDbGrid(DataProvider, Column: TObject);
 
+    { Sorts TBufDataset-based DBGrid (typically for CSV data) with index management
+      Parameters:
+        ADataset: TBufDataset instance
+        AColumn: TColumn being sorted }
     procedure SortCSVDataSet(ADataset: TObject; AColumn: TObject);
   end;
 
@@ -102,20 +134,42 @@ end;
 procedure TDbGridHelper.RemoveOldestIndex(Query: TSQLQuery);
 var
   Oldest: TIndexInfo;
+  Idx: Integer;
 begin
-  if fIndexList.Count < 98 then Exit; // Laat 2 plaatsen vrij
+  // Exit early if we haven't reached the cleanup threshold (98 out of 100 indexes)
+  if fIndexList.Count < 98 then Exit;
 
-  Oldest:= FindOldestIndex;
+  // Find the least recently used (LRU) index from the internal cache
+  Oldest := FindOldestIndex;
   if not Assigned(Oldest) then Exit;
 
   try
-    // Voorkom dat er teveel indexen worden aangemaakt.
+    // Remove the index from the actual TSQLQuery (not just from cache)
+    if Assigned(Query) then
+    begin
+      // Ensure IndexDefs are up to date
+      UpdateIndexes(Query);
+
+      // Find the index in the query's IndexDefs
+      Idx := Query.IndexDefs.IndexOf(Oldest.IndexName);
+      if Idx <> -1 then
+      begin
+        // If this index is currently active, deactivate it first
+        if Query.IndexName = Oldest.IndexName then
+          Query.IndexName := '';
+
+        // Actually delete the index definition from the query
+        Query.IndexDefs.Delete(Idx);
+      end;
+    end;
+
+    // Remove the index metadata from the internal cache (LRU list)
     fIndexList.Remove(Oldest);
   except
-    // Negeer fouten ...
+    // Ignore any errors during index removal to prevent application crashes
+    // This is a defensive measure - index management errors shouldn't break the UI
   end;
 end;
-
 
 procedure TDbGridHelper.RemoveOldestBufIndex(BufDS: TBufDataset);
 var
@@ -124,15 +178,15 @@ var
 begin
   if fIndexList.Count = 0 then Exit;
 
-  Oldest := FindOldestIndex;
+  Oldest:= FindOldestIndex;
   if not Assigned(Oldest) then Exit;
 
-  Idx := BufDS.IndexDefs.IndexOf(Oldest.IndexName);
+  Idx:= BufDS.IndexDefs.IndexOf(Oldest.IndexName);
   if Idx <> -1 then
   begin
-    // Laat actieve index eerst los
+    // Release active index first if it's the one being removed
     if BufDS.IndexName = Oldest.IndexName then
-      BufDS.IndexName := '';
+      BufDS.IndexName:= '';
 
     BufDS.IndexDefs.Delete(Idx);
   end;
@@ -140,12 +194,11 @@ begin
   fIndexList.Remove(Oldest);
 end;
 
-
 constructor TDbGridHelper.Create;
 begin
   inherited Create;
   fLastColumn:= nil;
-  fIndexList:= TObjectList.Create(True); // True = eigenaar van objecten
+  fIndexList:= TObjectList.Create(True); // True = Owns contained objects
 end;
 
 destructor TDbGridHelper.Destroy;
@@ -157,9 +210,9 @@ end;
 
 procedure TDbGridHelper.SortOracleDbGrid(DataProvider, Column: TObject);
 const
-  ImageArrowUp = 0;
-  ImageArrowDown = 1;
-  MAX_INDEXES = 100;
+  ImageArrowUp = 0;     // ImageList index for ascending sort indicator
+  ImageArrowDown = 1;   // ImageList index for descending sort indicator
+  MAX_INDEXES = 100;    // Maximum allowed indexes before cleanup
 var
   lColumn: TColumn;
   lQuery: TSQLQuery;
@@ -175,26 +228,27 @@ begin
   if not Assigned(lQuery) or not Assigned(lColumn.Field) then
     Exit;
 
+  // Skip sorting for BLOB and memo fields
   if (lColumn.Field.DataType in [ftBLOB, ftMemo, ftWideMemo]) then
     Exit;
 
   ASC_IndexName:= 'ASC_' + lColumn.FieldName;
   DESC_IndexName:= 'DESC_' + lColumn.FieldName;
 
+  // Determine current sort direction from column tag
   CurrentSortAscending:= not Boolean(lColumn.tag);
 
   try
-    // Controleer of we de index limiet naderen
+    // Proactive cleanup when approaching index limit
     if fIndexList.Count >= MAX_INDEXES - 2 then begin
       RemoveOldestIndex(lQuery);
     end;
 
-    // Controleer en maak ASC index aan indien nodig
+    // Create or update ascending index
     if not IndexExists(lQuery, ASC_IndexName) then begin
-      // Nog meer controle: kijk of IndexDefs niet al vol is
       UpdateIndexes(lQuery);
+      // Prevent index overflow
       if lQuery.IndexDefs.Count >= MAX_INDEXES - 2 then begin
-        // Te veel indexen - kan er geen meer aanmaken
         Exit;
       end;
 
@@ -206,7 +260,7 @@ begin
       UpdateIndexUsage(ASC_IndexName, lColumn.FieldName, True);
     end;
 
-    // Controleer en maak DESC index aan indien nodig
+    // Create or update descending index
     if not IndexExists(lQuery, DESC_IndexName) then begin
       UpdateIndexes(lQuery);
       if lQuery.IndexDefs.Count >= MAX_INDEXES - 2 then begin
@@ -223,13 +277,15 @@ begin
 
   except
     on E: Exception do begin
-      // Fout bij indexbeheer
+      // Gracefully handle index management errors
       Exit;
     end;
   end;
 
+  // Toggle sort direction for next click
   lColumn.tag:= not lColumn.tag;
 
+  // Apply sorting and update UI indicators
   if CurrentSortAscending then begin
     lColumn.Title.ImageIndex:= ImageArrowUp;
     lQuery.IndexName:= ASC_IndexName;
@@ -239,6 +295,7 @@ begin
     lQuery.IndexName:= DESC_IndexName;
   end;
 
+  // Clear previous column's sort indicator
   if (fLastColumn <> nil) and (fLastColumn <> Column) then
     fLastColumn.Title.ImageIndex:= -1;
 
@@ -247,18 +304,19 @@ end;
 
 procedure TDbGridHelper.SortCSVDataSet(ADataset: TObject; AColumn: TObject);
 const
-  ImageArrowUp   = 0;
-  ImageArrowDown = 1;
-  MAX_INDEXES    = 100;
+  ImageArrowUp   = 0;   // ImageList index for ascending sort indicator
+  ImageArrowDown = 1;   // ImageList index for descending sort indicator
+  MAX_INDEXES    = 100; // Maximum allowed indexes before cleanup
 var
   BufDS: TBufDataset;
   Col: TColumn;
   Ascending: Boolean;
   AscIdx, DescIdx: string;
-  // Hoeveel nieuwe indexen moeten er aangemaakt worden voor deze kolom?
+
+  { Calculates how many new indexes need creation for current column }
   function SlotsNeeded: Integer;
   begin
-    Result := 0;
+    Result:= 0;
     if BufDS.IndexDefs.IndexOf('ASC_' + Col.FieldName) = -1 then Inc(Result);
     if BufDS.IndexDefs.IndexOf('DESC_' + Col.FieldName) = -1 then Inc(Result);
   end;
@@ -268,20 +326,20 @@ begin
   if not (ADataset is TBufDataset) then Exit;
   if not (AColumn is TColumn) then Exit;
 
-  BufDS := TBufDataset(ADataset);
-  Col   := TColumn(AColumn);
+  BufDS:= TBufDataset(ADataset);
+  Col  := TColumn(AColumn);
 
   if not BufDS.Active then Exit;
   if not Assigned(Col.Field) then Exit;
 
-  AscIdx  := 'ASC_'  + Col.FieldName;
-  DescIdx := 'DESC_' + Col.FieldName;
+  AscIdx := 'ASC_'  + Col.FieldName;
+  DescIdx:= 'DESC_' + Col.FieldName;
 
-  // Maak ruimte vrij als het totaal aantal indexen te hoog wordt
+  // Free space dynamically if approaching index limit
   while (BufDS.IndexDefs.Count + SlotsNeeded > MAX_INDEXES - 2) do
     RemoveOldestBufIndex(BufDS);
 
-  // ASC index aanmaken indien nodig
+  // Create ascending index if missing
   if BufDS.IndexDefs.IndexOf(AscIdx) = -1 then
   begin
     BufDS.AddIndex(AscIdx, Col.FieldName, []);
@@ -290,7 +348,7 @@ begin
   else
     UpdateIndexUsage(AscIdx, Col.FieldName, True);
 
-  // DESC index aanmaken indien nodig
+  // Create descending index if missing
   if BufDS.IndexDefs.IndexOf(DescIdx) = -1 then
   begin
     BufDS.AddIndex(DescIdx, Col.FieldName, [ixDescending]);
@@ -299,31 +357,27 @@ begin
   else
     UpdateIndexUsage(DescIdx, Col.FieldName, False);
 
-  // Toggle sortering
-  Ascending := not Boolean(Col.Tag);
-  Col.Tag := Ord(Ascending);
+  // Toggle sort direction
+  Ascending:= not Boolean(Col.Tag);
+  Col.Tag:= Ord(Ascending);
 
+  // Apply sorting and update UI
   if Ascending then
   begin
-    BufDS.IndexName := AscIdx;
-    Col.Title.ImageIndex := ImageArrowUp;
+    BufDS.IndexName:= AscIdx;
+    Col.Title.ImageIndex:= ImageArrowUp;
   end
   else
   begin
-    BufDS.IndexName := DescIdx;
-    Col.Title.ImageIndex := ImageArrowDown;
+    BufDS.IndexName:= DescIdx;
+    Col.Title.ImageIndex:= ImageArrowDown;
   end;
 
-  // Vorige kolom resetten
+  // Clear previous column's sort indicator
   if Assigned(fLastColumn) and (fLastColumn <> Col) then
-    fLastColumn.Title.ImageIndex := -1;
+    fLastColumn.Title.ImageIndex:= -1;
 
-  fLastColumn := Col;
+  fLastColumn:= Col;
 end;
-
-
-
-
-
 
 end.

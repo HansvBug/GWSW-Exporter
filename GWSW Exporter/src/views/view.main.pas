@@ -1512,6 +1512,8 @@ begin
     // Markeer dat we ownership hebben overgenomen
     aData^.DataSource:= nil;
     aData^.DataSet:= nil;
+
+    fPresenter.SetStatusbarText('', 0);
   end
   else
   begin
@@ -1524,6 +1526,8 @@ begin
     aData^.DataSource:= nil;
     aData^.DataSet:= nil;
   end;
+
+  Screen.Cursor:= crDefault;
 end;
 
 

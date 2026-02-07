@@ -83,10 +83,10 @@ object frmMain: TfrmMain
       Height = 688
       Top = 5
       Width = 1419
-      ActivePage = tsQuery
+      ActivePage = tsPrepare
       Align = alClient
       BorderSpacing.Around = 5
-      TabIndex = 2
+      TabIndex = 0
       TabOrder = 0
       object tsPrepare: TTabSheet
         Caption = 'tsPrepare'
@@ -134,9 +134,9 @@ object frmMain: TfrmMain
               Height = 528
               Top = 8
               Width = 370
-              ActivePage = tsOracle
+              ActivePage = tsCsv
               Anchors = [akTop, akLeft, akRight]
-              TabIndex = 0
+              TabIndex = 1
               TabOrder = 1
               object tsOracle: TTabSheet
                 Caption = 'tsOracle'
@@ -1838,6 +1838,7 @@ object frmMain: TfrmMain
       end
       object mioptionsAbout: TMenuItem
         Caption = 'mioptionsAbout'
+        Visible = False
       end
     end
   end
