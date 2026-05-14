@@ -524,6 +524,47 @@ begin
     WriteString('Configure', 'GWSWVersion', 'GWSW_versie_16');
     WriteString('Configure', 'MappingFile', MappingFile);
 
+    WriteBool('Configure', 'IncludePutVorm' , IncludePutVorm);
+    WriteBool('Configure', 'IncludePutLengte' , IncludePutLengte);
+    WriteBool('Configure', 'IncludePutBreedte' , IncludePutBreedte);
+    WriteBool('Configure', 'IncludePutHoogte' , IncludePutHoogte);
+    WriteBool('Configure', 'IncludePutMateriaal' , IncludePutMateriaal);
+    WriteBool('Configure', 'IncludePutFundering' , IncludePutFundering);
+    WriteBool('Configure', 'IncludePutBegindatum' , IncludePutBegindatum);
+    WriteBool('Configure', 'IncludePutEinddatum' , IncludePutEinddatum);
+    WriteBool('Configure', 'IncludePutDiameter' , IncludePutDiameter);
+    WriteBool('Configure', 'IncludePersleidingBegindatum' , IncludePersleidingBegindatum);
+    WriteBool('Configure', 'IncludePersleidingStatusFunctioneren' , IncludePersleidingStatusFunctioneren);
+    WriteBool('Configure', 'IncludePersleidingMateriaal' , IncludePersleidingMateriaal);
+    WriteBool('Configure', 'IncludePersleidingVorm' , IncludePersleidingVorm);
+    WriteBool('Configure', 'IncludePersleidingDiameter' , IncludePersleidingDiameter);
+    WriteBool('Configure', 'IncludePersleidingHoogte' , IncludePersleidingHoogte);
+    WriteBool('Configure', 'IncludePersleidingLengte' , IncludePersleidingLengte);
+    WriteBool('Configure', 'IncludeKolkLengte' , IncludeKolkLengte);
+    WriteBool('Configure', 'IncludeKolkDiameter' , IncludeKolkDiameter);
+    WriteBool('Configure', 'IncludeKolkVorm' , IncludeKolkVorm);
+    WriteBool('Configure', 'IncludeKolkMateriaal' , IncludeKolkMateriaal);
+    WriteBool('Configure', 'IncludeKolkBegindatum' , IncludeKolkBegindatum);
+    WriteBool('Configure', 'IncludeKolkHoogte' , IncludeKolkHoogte);
+    WriteBool('Configure', 'IncludeKolkBreedte' , IncludeKolkBreedte);
+    WriteBool('Configure', 'IncludeLeidingLengte' , IncludeLeidingLengte);
+    WriteBool('Configure', 'IncludeLeidingBreedte' , IncludeLeidingBreedte);
+    WriteBool('Configure', 'IncludeLeidingHoogte' , IncludeLeidingHoogte);
+    WriteBool('Configure', 'IncludeLeidingDiameter' , IncludeLeidingDiameter);
+    WriteBool('Configure', 'IncludeLeidingVorm' , IncludeLeidingVorm);
+    WriteBool('Configure', 'IncludeLeidingMateriaal' , IncludeLeidingMateriaal);
+    WriteBool('Configure', 'IncludeLeidingFundering' , IncludeLeidingFundering);
+    WriteBool('Configure', 'IncludeLeidingStatusFunctioneren' , IncludeLeidingStatusFunctioneren);
+    WriteBool('Configure', 'IncludeLeidingBegindatum' , IncludeLeidingBegindatum);
+    WriteBool('Configure', 'IncludeLeidingBobBegin' , IncludeLeidingBobBegin);
+    WriteBool('Configure', 'IncludeLeidingBobEind' , IncludeLeidingBobEind);
+    WriteBool('Configure', 'IncludeLeidingWIBONThema' , IncludeLeidingWIBONThema);
+    WriteBool('Configure', 'IncludeKolkEinddatum' , IncludeKolkEinddatum);
+    WriteBool('Configure', 'IncludePutMaaiveldhoogte' , IncludePutMaaiveldhoogte);
+    WriteBool('Configure', 'IncludePersleidingBobBegin' , IncludePersleidingBobBegin);
+    WriteBool('Configure', 'IncludePersleidingBobEind' , IncludePersleidingBobEind);
+
+
     UpdateFile;
     Succes:= True;
   finally

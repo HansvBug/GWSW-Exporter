@@ -197,7 +197,7 @@ type
   end;
 
   { TSortDbGridTrx }
-  TSortDbGridTrx = class(TTransaction, ITrxExec)
+  TSortDbGridTrx = class(TTransaction, ITrxExecNoRes)
   private
     fColumn: TObject;       // TColumn
     fDataProvider: TObject; // SQLQuery
@@ -206,7 +206,7 @@ type
     fFieldName: String;
     fCurrentSortOrder: String; // 'ASC' of 'DESC'
   public
-    function Execute(aMgr: ITransactionManager): boolean;
+    procedure Execute(aMgr: ITransactionManager);
 
     property Column: TObject read fColumn write fColumn;
     property DataProvider: TObject read fDataProvider write fDataProvider;
@@ -468,6 +468,8 @@ begin
 
   lRec:= aMgr.OwnerMain.Model.ExportToOroxTtlFile(@lRec);
 
+  Result:= lRec.Success;
+
   aMgr.OwnerMain.Provider.NotifySubscribers(prExportToOroxTtlFile, Nil, @lRec);
 end;
 
@@ -506,7 +508,7 @@ begin
 end;
 
 { TSortDbGridTrx }
-function TSortDbGridTrx.Execute(aMgr: ITransactionManager): boolean;
+procedure TSortDbGridTrx.Execute(aMgr: ITransactionManager);
 var
   lRec: TSortDbGridRec;
 begin
@@ -516,10 +518,10 @@ begin
   lRec.CurrentSortOrder:= fCurrentSortOrder;
   lRec.DataType:= DataType;
   lRec.DataProvider:= DataProvider;  // wordt voor de csv dataaset gebruikt.
-  lRec:= aMgr.OwnerMain.Model.SortDbGrid(@lRec);
+  aMgr.OwnerMain.Model.SortDbGrid(@lRec);
 
   // Stuur het resultaat terug naar de View
-  aMgr.OwnerMain.Provider.NotifySubscribers(prSortDbGrid, DbGrid, @lRec);
+  aMgr.OwnerMain.Provider.NotifySubscribers(prSortDbGrid, DbGrid, Nil);
 end;
 
 { TRetrieveCSVDataTrx }

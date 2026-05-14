@@ -8,8 +8,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 ### Fixed
+## [0.5.2] - 2025-05-14
+- The Geometry text string was truncated at 256 characters.
+
 ## [0.5.1] - 2025-02-07
--	First units equipped with AI-generated documentation.
+- First units equipped with AI-generated documentation.
 
 ## [0.5.0] - 2025-02-06
 ### Added
@@ -21,7 +24,7 @@ All notable changes to this project will be documented in this file.
 - Improved user interface with various minor updates and enhancements.
 
 ### Fixed
-- Minor bug fixes and stability improvements.
+- 
 
 
 ## [0.4.0] - 2025-01-10

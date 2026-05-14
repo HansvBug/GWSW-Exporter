@@ -270,9 +270,9 @@ begin
     Close;
     SQL.Clear;
     SQL.Text:= SqlText;
-    PacketRecords:= -1;  // Fetch all records
+    PacketRecords:= -1;  // Fetch all records. { #todo : Kan nu niet worden gewijzigd zondeer dbgrid sortren kapot te maken. }
     Prepared;  // Prepare the query for execution
-
+    UniDirectional:= False;
     try
       DisableControls;  // Prevent UI updates during data loading
       Open;

@@ -83,16 +83,16 @@ Type
     constructor Create(ADataSet: TCustomBufDataset; AStream : TStream); override;
     constructor Create(ADataSet: TCustomBufDataset; AStream : TStream; AOptions : TCSVOptions);
     Destructor Destroy; override;
-    procedure LoadFieldDefs(var AnAutoIncValue : integer); override;
-    procedure StoreFieldDefs(AnAutoIncValue : integer); override;
+    procedure LoadFieldDefs(var {%H-}AnAutoIncValue : integer); override;
+    procedure StoreFieldDefs({%H-}AnAutoIncValue : integer); override;
     function GetRecordRowState(out AUpdOrder : Integer) : TRowState; override;
     procedure FinalizeStoreRecords; override;
     function GetCurrentRecord : boolean; override;
     procedure GotoNextRecord; override;
     procedure InitLoadRecords; override;
     procedure RestoreRecord; override;
-    procedure StoreRecord(ARowState : TRowState; AUpdOrder : integer = 0); override;
-    class function RecognizeStream(AStream : TStream) : boolean; override;
+    procedure StoreRecord({%H-}ARowState : TRowState; {%H-}AUpdOrder : integer = 0); override;
+    class function RecognizeStream({%H-}AStream : TStream) : boolean; override;
     Property Options : TCSVOptions Read FOptions;
     Property CreateFieldDefs : TFieldDefs read FCreateFieldDefs Write SetCreateFieldDefs;
   end;
@@ -109,7 +109,7 @@ Type
     class function DefaultPacketClass : TDataPacketReaderClass ; override;
     function CreateDefaultPacketReader(aStream : TStream): TDataPacketReader ; override;
     function GetPacketReader(const Format: TDataPacketFormat; const AStream: TStream): TDataPacketReader; override;
-    procedure LoadBlobIntoBuffer(FieldDef: TFieldDef;ABlobBuf: PBufBlobField); override;
+    procedure LoadBlobIntoBuffer({%H-}FieldDef: TFieldDef;{%H-}ABlobBuf: PBufBlobField); override;
     procedure InternalInitFieldDefs; override;
   Public
     Constructor Create(AOwner : TComponent); override;
@@ -298,7 +298,8 @@ end;
 Constructor TCSVOptions.Create;
 begin
   inherited Create;
-  DefaultFieldLength:=255;
+  DefaultFieldLength:=255;  // BUG, dit kapt de geometrie af op 255 tekens,  { #todo 1 : BUG BUG }
+
 end;
 
 Procedure TCSVOptions.Assign(Source: TPersistent);

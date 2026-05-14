@@ -704,6 +704,7 @@ end;
 function BytesToStr(const aBlob: TBytes): string;
 var len: ptrint;
 begin
+  Result:= '';
   len:= Length(aBlob);
   SetLength(Result,len);
   if len > 0 then Move(aBlob[0],Result[1],len);

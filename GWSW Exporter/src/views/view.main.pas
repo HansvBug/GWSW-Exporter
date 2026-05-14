@@ -232,7 +232,7 @@ type
     procedure LoadCsvData(const FileName: String);
 
     // Testen, Zou moeten voorkomen dat op Linux de componenten verschuiven -- > Werkt niet
-    procedure setFormFonts_Default(F: TForm);  { #todo : Doet niets in Linux, gui gaat nog steeds kapot. later naar kijken }
+//    procedure setFormFonts_Default(F: TForm);  { #todo : Doet niets in Linux, gui gaat nog steeds kapot. later naar kijken }
 
     procedure CleanupCurrentCSVData;
   protected
@@ -242,14 +242,14 @@ type
     procedure DoAppSettings({%H-}anObj: TObject; aData: PSettingsRec);
     procedure DoFormState({%H-}anObj: TObject; Settings: PSettingsRec);
     procedure DoStbPanelWidth(anObj: TObject; aData: pointer);
-    procedure DoDbConnection(anObj: TObject; aData: PDbConnectRec);
+    procedure DoDbConnection({%H-}anObj: TObject; aData: PDbConnectRec);
     procedure DoRetrieveData(anObj: TObject; aData: PRetrieveDataRec);
-    procedure DoExportToOroxTtlFile(anObj: TObject; aData: PExportToOroxTtlFileRec);
-    procedure DoExportProgress(anObj: TObject; aData: PExportToOroxTtlFileRec);
-    procedure DoReportProgressCount(anObj: TObject; aData: pointer);
-    procedure DoExportError(anObj: TObject; aData: PExportToOroxTtlFileRec);
+    procedure DoExportToOroxTtlFile({%H-}anObj: TObject; aData: PExportToOroxTtlFileRec);
+    procedure DoExportProgress({%H-}anObj: TObject; aData: PExportToOroxTtlFileRec);
+    procedure DoReportProgressCount({%H-}anObj: TObject; aData: pointer);
+    procedure DoExportError({%H-}anObj: TObject; aData: PExportToOroxTtlFileRec);
     procedure DoUniqueStringlist(anObj: TObject; aData: PUniqueStringlistRec);
-    procedure DoSortDbGrid(anObj: TObject; aData: PSortDbGridRec);
+    procedure DoSortDbGrid(anObj: TObject; {%H-}aData: PSortDbGridRec);
     procedure DoRetrieveCSVData(anObj: TObject; aData: PRetrieveCSVDataRec);
     procedure HandleObsNotify(aReason: ptrint; aNotifyObj: TObject; aData: pointer);
   public
@@ -906,7 +906,7 @@ end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
-  setFormFonts_Default(frmMain);
+//  setFormFonts_Default(frmMain);
 end;
 
 procedure TfrmMain.pnlDataSettingsResize(Sender : TObject);
@@ -1041,7 +1041,7 @@ begin { in case of extended status object present }
   end
 end;
 
-procedure TfrmMain.DoCreateDir(anObj : TObject; aData : PNewDirectoriesRec);
+procedure TfrmMain.DoCreateDir(anObj: TObject; aData: PNewDirectoriesRec);
 begin
   With PNewDirectoriesRec(aData)^ do begin
     fCanContinue:= dirSucces;
@@ -1051,7 +1051,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.DoAppSettings(anObj : TObject; aData : PSettingsRec);
+procedure TfrmMain.DoAppSettings(anObj: TObject; aData: PSettingsRec);
 begin
   With PSettingsRec(aData)^ do begin
     if not setSucces then begin
@@ -1225,7 +1225,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.DoFormState(anObj : TObject; Settings : PSettingsRec);
+procedure TfrmMain.DoFormState(anObj: TObject; Settings: PSettingsRec);
 var
   lastWindowState: TWindowstate;
 begin
@@ -1256,18 +1256,19 @@ begin
   end;
 end;
 
-procedure TfrmMain.DoStbPanelWidth(anObj : TObject; aData : pointer);
+procedure TfrmMain.DoStbPanelWidth(anObj: TObject; aData: pointer);
 begin
   with PStbPanelsSize(aData)^ do begin
     TStatusbar(anObj).Panels[1].Width:= mpWidth;
   end;
 end;
 
-procedure TfrmMain.DoDbConnection(anObj: TObject; aData : PDbConnectRec);
+procedure TfrmMain.DoDbConnection(anObj: TObject; aData: PDbConnectRec);
 var
   lMsg: string;
   Parts: TStringArray;
   i: Integer;
+  lSetting: String;
 begin
   With aData^ do begin
     btnGetData.Enabled:= HasConnection;
@@ -1278,10 +1279,14 @@ begin
       fPresenter.SetStatusbarText('', 0);
       memReportProgress.Clear;
       memReportError.Clear;
+      lblProgress.Caption:= '';
+      lSetting:= fPresenter.GetSingleSetting('KeepLastOrganization');
+      if lSetting = '0' then cbOrganizationName.Text:= '';  // Als de organisatie naam niet onthouden hoeft te worden dan ook leeg maken bij een disconnecct
     end;
 
     if Message = 'Success' then begin
       fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'DbConnEstablished'), 0);
+      edtPassword.Text:= '';  // Wachtwoord veld leeg maken
     end
     else begin
       Parts:= aData^.Message.Split('|');
@@ -1299,7 +1304,7 @@ begin
   Screen.Cursor:= crDefault;
 end;
 
-procedure TfrmMain.DoRetrieveData(anObj: TObject; aData : PRetrieveDataRec);
+procedure TfrmMain.DoRetrieveData(anObj: TObject; aData: PRetrieveDataRec);
 var
   lDbGrid: TDBGrid;
   i: Integer;
@@ -1329,7 +1334,7 @@ begin
   Screen.Cursor:= crDefault;
 end;
 
-procedure TfrmMain.DoExportToOroxTtlFile(anObj : TObject; aData : PExportToOroxTtlFileRec);
+procedure TfrmMain.DoExportToOroxTtlFile(anObj: TObject; aData: PExportToOroxTtlFileRec);
 var
   OpenFile: Boolean;
 begin
@@ -1357,7 +1362,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.DoExportProgress(anObj : TObject; aData : PExportToOroxTtlFileRec);
+procedure TfrmMain.DoExportProgress(anObj: TObject; aData: PExportToOroxTtlFileRec);
 var
   Msg: string;
   Parts: TStringArray;
@@ -1387,7 +1392,7 @@ begin
 //  Application.ProcessMessages;
 end;
 
-procedure TfrmMain.DoReportProgressCount(anObj : TObject; aData : pointer);
+procedure TfrmMain.DoReportProgressCount(anObj: TObject; aData: pointer);
 var
   lMsg: string;
   Parts: TStringArray;
@@ -1417,7 +1422,7 @@ begin
   Application.ProcessMessages;  // Force UI update
 end;
 
-procedure TfrmMain.DoExportError(anObj : TObject; aData : PExportToOroxTtlFileRec);
+procedure TfrmMain.DoExportError(anObj: TObject; aData: PExportToOroxTtlFileRec);
 var
   Msg: string;
   Parts: TStringArray;
@@ -1445,7 +1450,7 @@ begin
 //  Application.ProcessMessages;  // Force UI update
 end;
 
-procedure TfrmMain.DoUniqueStringlist(anObj : TObject; aData : PUniqueStringlistRec);
+procedure TfrmMain.DoUniqueStringlist(anObj: TObject; aData: PUniqueStringlistRec);
 var
   combo: TComboBox;
 begin
@@ -1507,7 +1512,7 @@ begin
     fCurrentCSVDataSet:= lDataSet;
 
     // Connect to DBGrid
-    dbgSewerData.DataSource := lDataSource;
+    dbgSewerData.DataSource:= lDataSource;
 
     // Markeer dat we ownership hebben overgenomen
     aData^.DataSource:= nil;
@@ -1656,14 +1661,15 @@ begin
   inherited BeforeDestruction;
 end;
 
-function TfrmMain.CheckLanguageFiles : Boolean;
+function TfrmMain.CheckLanguageFiles: Boolean;
 var
   aRoot: String;
 begin
   // Please note, language files must be present. If they are not found, the application crashes with an access violation and memory leak.
   aRoot:= ExtractFilePath(ParamStr(0));  // Get he location where the executable is located. This is where the language files should be.
 
-  if FileExists(format(mvpTexts,[aRoot,Lang])) then begin  // Default Lang = 'en'. // mvpTexts = '%sILmain_text.%s'
+  // .en of .nl moet aanwezig zijn.
+  if (FileExists(format(mvpTexts,[aRoot,Lang]))) or (FileExists(format(mvpTexts,[aRoot,'nl'])))then begin   // Default Lang = 'en'. // mvpTexts = '%sILmain_text.%s'
     Result:= True;
   end
   else begin
@@ -1684,7 +1690,7 @@ begin
     Lang:= 'en';  // The default comes to the rescue when the settingsfile is (not) found but language is empty.
 end;
 
-function TfrmMain.GetSettingsFile : String;
+function TfrmMain.GetSettingsFile: String;
 var
   UserName: String;
 begin
@@ -1751,7 +1757,7 @@ end;
 
 procedure TfrmMain.ReadFormState;
 var
-  lTrx : TSettingsTrx;
+  lTrx: TSettingsTrx;
 begin
   lTrx:= fPresenter.TrxMan.StartTransaction(prFormState) as TSettingsTrx;
   try
@@ -1769,7 +1775,7 @@ end;
 
 procedure TfrmMain.StoreFormstate;
 var
-  lTrx : TSettingsTrx;
+  lTrx: TSettingsTrx;
 begin
   lTrx:= fPresenter.TrxMan.StartTransaction(prAppSettings) as TSettingsTrx;
   try
@@ -1803,7 +1809,7 @@ begin
   fPresenter.StartLogging;
 end;
 
-procedure TfrmMain.WriteSingleSetting(Setting, Section, aValue : String);
+procedure TfrmMain.WriteSingleSetting(Setting, Section, aValue: String);
 var
   lTrx: TSingleSettingTrx;
 begin
@@ -1821,7 +1827,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.AddCbListItem(sender : TObject);
+procedure TfrmMain.AddCbListItem(sender: TObject);
 var
   lTrx: TUniqueStringlistTrx;
 begin
@@ -1860,7 +1866,7 @@ begin
   cbOrganizationName.Sorted:= True;  { #todo : Instelbaar maken }
 end;
 
-procedure TfrmMain.ExportInProgress(IsInProgress : Boolean);
+procedure TfrmMain.ExportInProgress(IsInProgress: Boolean);
 var
   lRec: TExportInProgressRec;
 begin
@@ -1870,12 +1876,12 @@ begin
   fPresenter.ExportInProgress(lRec);
 end;
 
-procedure TfrmMain.miProgramCloseOnClick(Sender : TObject);
+procedure TfrmMain.miProgramCloseOnClick(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TfrmMain.OnFormShow(Sender : TObject);
+procedure TfrmMain.OnFormShow(Sender: TObject);
 begin
   if fCanContinue then ReadFormState;
   if fCanContinue then ReadSettings;
@@ -1883,22 +1889,22 @@ begin
     cbDatabaseName.SetFocus;
 
   // Prevent the text from being selected and put cursor behind any text
-  cbDatabaseName.SelStart := Length(cbDatabaseName.Text);
+  cbDatabaseName.SelStart:= Length(cbDatabaseName.Text);
   cbDatabaseName.SelLength:= 0;
 end;
 
-procedure TfrmMain.OnFormResize(Sender : TObject);
+procedure TfrmMain.OnFormResize(Sender: TObject);
 begin
   fPresenter.SetStatusbarPanelsWidth(stbInfo, stbInfo.Width, stbInfo.Panels[0].Width, stbInfo.Panels[2].Width);
 end;
 
-procedure TfrmMain.miOptionsOptionsOnClick(Sender : TObject);
+procedure TfrmMain.miOptionsOptionsOnClick(Sender: TObject);
 begin
   SetUpConfigureView(FPresenter);
   ReadSettings;  // Read the settings, they can be changed in the configure view.
 end;
 
-procedure TfrmMain.miOptionsLanguageENOnClick(Sender : TObject);
+procedure TfrmMain.miOptionsLanguageENOnClick(Sender: TObject);
 begin
   Lang:= 'en';
   fPresenter.SwitchLanguage(UnitName);
@@ -1913,7 +1919,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.miOptionsLanguageNLOnClick(Sender : TObject);
+procedure TfrmMain.miOptionsLanguageNLOnClick(Sender: TObject);
 begin
   Lang:= 'nl';
   fPresenter.SwitchLanguage(UnitName);
@@ -2001,13 +2007,13 @@ begin
   end;
 end;
 
-procedure TfrmMain.setFormFonts_Default(F: TForm);
+{procedure TfrmMain.setFormFonts_Default(F: TForm);
 begin
   {$IFDEF LINUX}
      F.Font.Name:='Noto Sans';
      F.Font.Height:=12;
   {$ENDIF}
-end;
+end;      }
 
 procedure TfrmMain.CleanupCurrentCSVData;
 var

@@ -1016,7 +1016,7 @@ begin
       ReportError('Leiding: "Wion thema" veld is leeg.', eetFieldIsEmpty, Leiding^.GUID)
     end
     else if Leiding^.WibonUri = 'Mapping_error' then begin
-      Leiding^.WibonUri := '';
+      Leiding^.WibonUri:= '';
       ReportError('Leiding: "Wion thema" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
     end
   end
@@ -1434,10 +1434,11 @@ else
   WKTGeometryStr:= '';
 
   if DataProvider.FieldExists('WKT_GEOMETRY') then begin
-    WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');
+    WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');  // streng met coordinatne is hier nog goed. (type is Variant)
 
     if not VarIsNull(WKTGeometry) and (Trim(VarToStr(WKTGeometry)) <> '') then begin
       WKTGeometryStr:= Trim(VarToStr(WKTGeometry));
+
       Persleiding^.WKTGeometry:= WKTGeometryStr;
       Persleiding^.HasWKTGeometry:= True;
 
@@ -1546,7 +1547,7 @@ begin
     WKTGeometry:= DataProvider.GetFieldValue('WKT_GEOMETRY');
 
     if WKTGeometry <> '' then begin
-      Kolk^.WKTGeometry:= Trim(VarToStr(WKTGeometry));;
+      Kolk^.WKTGeometry:= Trim(VarToStr(WKTGeometry));
       Kolk^.HasWKTGeometry:= True;
 
       // Parse ook naar X,Y,Z voor backward compatibility
@@ -1962,7 +1963,7 @@ begin
             '</gml:posList></gml:LineString>';
 end;
 
-procedure TOroxExport.ParsePersleidingGeometry(Persleiding : PGWSWPersleiding);
+procedure TOroxExport.ParsePersleidingGeometry(Persleiding: PGWSWPersleiding);
 var
   WKT: string;
   StartPos, EndPos: Integer;
@@ -1972,7 +1973,7 @@ var
   FS: TFormatSettings;
   x, y, z: Double;
 begin
-  WKT:= UpperCase(Persleiding^.WKTGeometry);
+  WKT:= UpperCase(Persleiding^.WKTGeometry);     // Deze gaat fout. Kapt de string af
 
   if Pos('LINESTRING', WKT) = 0 then
     Exit;

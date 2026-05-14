@@ -7,33 +7,104 @@ uses
   SysUtils, Classes, SQLDB, variants, uIGWSWDataProvider;
 
 type
-
-  { TQueryDataProvider }
+  { TQueryDataProvider
+    Implements the IGWSWDataProvider interface for TSQLQuery-based data access.
+    Provides database query operations with accurate record counting capabilities,
+    SQL query manipulation for COUNT operations, and safe error handling.
+    Used as an adapter between TSQLQuery components and the GWSW data provider interface. }
   TQueryDataProvider = class(TInterfacedObject, IGWSWDataProvider)
   private
-    fQuery: TSQLQuery;
-    fCurrentRecord: Integer;
+    fQuery: TSQLQuery;           // Reference to the underlying SQL query component
+    fCurrentRecord: Integer;     // Current record position (for tracking navigation)
 
+    { Removes SQL comments from query text for COUNT query generation
+      Handles both inline comments (--) and block comments (/* ... */)
+      Parameters:
+        SQL: Original SQL query text
+      Returns:
+        SQL text without comments, trimmed and consolidated }
     function RemoveSQLComments(const SQL: string): string;
+
+    { Removes ORDER BY, LIMIT, OFFSET and other clauses for COUNT query preparation
+      Strips clauses that would affect row counting but not the actual result set
+      Parameters:
+        SQL: SQL query text (preferably without comments)
+      Returns:
+        SQL text without sorting, limiting, or pagination clauses }
     function RemoveQueryClauses(const SQL: string): string;
+
   public
+    { Creates a new query data provider instance
+      Parameters:
+        AQuery: TSQLQuery object to wrap (must not be nil)
+        DisableControles: If True, disables UI control updates during operations }
     constructor Create(AQuery: TObject; DisableControles: Boolean = True);
+
+    { Destroys the instance and re-enables UI controls if they were disabled }
     destructor Destroy; override;
 
-    // IGWSWDataProvider methods
+    // IGWSWDataProvider interface implementation
+
+    { Opens the underlying query if not already active and resets record position }
     procedure Open;
+
+    { Resets the current record position but does not close the query }
     procedure Close;
+
+    { Moves to the first record in the query result set
+      Returns:
+        True if successful (query contains data), False if query is empty }
     function First: Boolean;
-    function Last: Boolean;
+
+    { Moves to the last record in the query result set
+      Returns:
+        True if successful (query contains data), False if query is empty }
+    function Last : Boolean;
+
+    { Advances to the next record in the query result set
+      Returns:
+        True if successful, False if already at end of result set }
     function Next: Boolean;
+
+    { Checks if cursor is at end of the query result set
+      Returns:
+        True if no more records available, False otherwise }
     function EOF: Boolean;
 
+    { Retrieves the value of a specified field from the current record
+      Parameters:
+        FieldName: Name of the field to retrieve
+      Returns:
+        Variant containing field value or Null if field doesn't exist or is null }
     function GetFieldValue(const FieldName: string): Variant;
+
+    { Checks if a field exists in the query result set
+      Parameters:
+        FieldName: Name of the field to check
+      Returns:
+        True if field exists, False otherwise }
     function FieldExists(const FieldName: string): Boolean;
+
+    { Retrieves the OBJECT_TYPE value from the current record
+      Returns:
+        OBJECT_TYPE field value or 'ONBEKEND' (unknown) if field doesn't exist or is empty }
     function GetObjectType: string;
 
+    { Gets the approximate record count from TSQLQuery.RecordCount
+      Note: May not be accurate for large datasets or before full traversal
+      Returns:
+        Approximate number of records in the result set }
     function GetRecordCount: Integer;
+
+    { Gets an accurate record count by executing a modified COUNT query
+      Creates a separate query to count rows without sorting/limiting clauses
+      Returns:
+        Exact number of records that match the query criteria }
     function GetAccurateRecordCount: Integer;
+
+    { Identifies the data provider type
+      Returns:
+        Constant string 'TQuery' }
     function GetProviderType: string;
   end;
 
@@ -53,20 +124,20 @@ begin
       Line:= Lines[i];
 
       // Delete inline comment (-- to end of line)
-      CommentPos := Pos('--', Line);
+      CommentPos:= Pos('--', Line);
       if CommentPos > 0 then
-        Line := Copy(Line, 1, CommentPos - 1);
+        Line:= Copy(Line, 1, CommentPos - 1);
 
       // Remove block comment /*... */
       while Pos('/*', Line) > 0 do begin
         CommentPos:= Pos('/*', Line);
         if Pos('*/', Line) > CommentPos then begin
-          // Commentaar sluit op dezelfde regel
+          // Comment closes on the same line
           Line:= Copy(Line, 1, CommentPos - 1) +
                  Copy(Line, Pos('*/', Line) + 2, MaxInt);
         end
         else begin
-          // Commentaar gaat over meerdere regels
+          // Multi-line comment
           Line:= Copy(Line, 1, CommentPos - 1);
           Break;
         end;
@@ -81,7 +152,7 @@ begin
 
     // Remove blank lines and combine
     Result:= '';
-    for i := 0 to Lines.Count - 1 do begin
+    for i:= 0 to Lines.Count - 1 do begin
       if Lines[i] <> '' then begin
         if Result <> '' then
           Result:= Result + ' ';
@@ -98,7 +169,7 @@ var
   UpperSQL, ResultSQL: string;
   ClausePos: Integer;
   i: Integer;
-// List of clauses to remove
+// List of clauses to remove (affect row selection/sorting but not COUNT result)
 const Clauses: array[0..8] of string = (
   'ORDER BY', 'LIMIT', 'OFFSET', 'FETCH FIRST', 'FETCH NEXT',
   'TOP ', 'ROWNUM', 'ROW_NUMBER()', 'FOR UPDATE'
@@ -143,7 +214,7 @@ end;
 
 destructor TQueryDataProvider.Destroy;
 begin
-  // Zorg dat controls weer geactiveerd worden
+  // Ensure controls are re-enabled when provider is destroyed
   if Assigned(fQuery) then
     fQuery.EnableControls;
 
@@ -215,7 +286,7 @@ begin
   Result:= Trim(VarToStr(GetFieldValue('OBJECT_TYPE')));
 
   if Result = '' then
-    Result:= 'ONBEKEND';
+    Result:= 'ONBEKEND';  // Unknown
 end;
 
 function TQueryDataProvider.GetRecordCount: Integer;
@@ -238,7 +309,7 @@ begin
     MainSQL:= fQuery.SQL.Text;
     CleanSQL:= RemoveSQLComments(MainSQL);
 
-    // Remove ORDER BY/LIMIT/OFFSET voor COUNT query
+    // Remove ORDER BY/LIMIT/OFFSET clauses for COUNT query
     CleanSQL:= RemoveQueryClauses(CleanSQL);
 
     // Trim and clean
@@ -269,8 +340,9 @@ begin
   except
     on E: Exception do
     begin
-      // Fallback naar normale RecordCount
-      { #todo : Hier moet een raise komen, Get recordcount is niet handig want resultaat is onjuist zolang er geen queryl.last is gedaan (traag) }
+      // Fallback to standard RecordCount
+      { #todo : This should raise an exception, GetRecordCount is not reliable
+        without calling Query.Last first (which is slow for large datasets) }
       Result:= GetRecordCount;
     end;
   end;
@@ -280,6 +352,5 @@ function TQueryDataProvider.GetProviderType: string;
 begin
   Result:= 'TQuery';
 end;
-
 
 end.

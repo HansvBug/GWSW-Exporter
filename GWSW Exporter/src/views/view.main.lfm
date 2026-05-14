@@ -8,7 +8,7 @@ object frmMain: TfrmMain
   ClientWidth = 1429
   DesignTimePPI = 144
   Menu = MainMenu1
-  LCLVersion = '4.4.0.0'
+  LCLVersion = '4.6.0.0'
   OnCreate = FormCreate
   object stbInfo: TStatusBar
     Left = 0
@@ -1531,7 +1531,7 @@ object frmMain: TfrmMain
                 '    l.std_stelseltype as STELSEL_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
                 '    s.STELSELNAAM as STELSEL_NAAM, '#9#9#9#9#9#9#9'--> type = string / varchar.'
                 '    --l.STD_STRENGTYPE as LEIDING_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
-                '    COALESCE(l.VRIJVERVAL_LEIDINGSUBTYPE, l.VRIJVERVAL_LEIDINGTYPE, l.STD_STRENGTYPE)  as LEIDING_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
+                '    COALESCE(l.VRIJVERVAL_LEIDINGTYPE, l.VRIJVERVAL_LEIDINGSUBTYPE, l.STD_STRENGTYPE)  as LEIDING_TYPE,'#9#9#9#9#9#9'--> type = string / varchar.'
                 '    l.beginput_id as BEGINPUT_ID,'#9#9#9#9#9#9#9'--> type = string / varchar.'
                 '    l.eindput_id as EINDPUT_ID,'#9#9#9#9#9#9#9#9'--> type = string / varchar.'
                 '    l.lengte as LENGTE,'#9#9#9#9#9#9#9#9#9#9'--> type = double.'

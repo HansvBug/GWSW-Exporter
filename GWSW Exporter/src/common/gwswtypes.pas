@@ -1,7 +1,7 @@
 { Copyright ©2025-2026 Hans van Buggenum }
 unit GWSWTypes;
 
-{$mode objfpc}
+{$mode objfpc} {$H+}
 {$modeswitch advancedrecords}
 
 interface

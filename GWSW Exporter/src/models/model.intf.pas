@@ -50,7 +50,7 @@ type
     function GetSetting_AskToOpenExportFile: Boolean;
     procedure DisableChildControls(aData : TExportInProgressRec);
     function GetSingleSetting(const SettingName: String): String;
-    function SortDbGrid(Data: PSortDbGridRec): TSortDbGridRec;
+    procedure SortDbGrid(Data: PSortDbGridRec);
     function LoadCSVData(aRec: PRetrieveCSVDataRec): TRetrieveCSVDataRec;  { #todo : aRec is een betere naam dan Data. OVERAL hernoemen }
   end; { IModelMain }
 

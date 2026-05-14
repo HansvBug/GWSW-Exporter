@@ -70,8 +70,8 @@ type
     // databasebeheer
     function GetDatabaseModule: TDatabaseModule;
     function IsConnected: Boolean;
-    procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
-    procedure DbDisconnect(DbConnectionData : PDbConnectRec);
+    procedure MakeDbConnection(DbConnectionData: PDbConnectRec);
+    procedure DbDisconnect(DbConnectionData: PDbConnectRec);
 
     // Execute query and get data
     function RetrieveData(data: PRetrieveDataRec): TRetrieveDataRec;
@@ -83,7 +83,7 @@ type
     function GetSetting_AskToOpenExportFile: Boolean;
     procedure DisableChildControls(aData : TExportInProgressRec);
     function GetSingleSetting(const SettingName: String): String;
-    function SortDbGrid(Data: PSortDbGridRec): TSortDbGridRec;
+    procedure SortDbGrid(Data: PSortDbGridRec);
     function LoadCSVData(aRec: PRetrieveCSVDataRec): TRetrieveCSVDataRec;
   end;
 
@@ -541,7 +541,7 @@ begin
   end
   else begin // firt run, there is no settingsfile
      if not assigned(FSettings) then begin
-       fSettings := TSettings.Create;
+       fSettings:= TSettings.Create;
        fSettings.SettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
        fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
        fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
@@ -549,6 +549,48 @@ begin
 
        fSettings.ActivateLogging:= True;
        fSettings.AppendLogFile:= True;
+
+       // default
+       fSettings.IncludePutVorm:= True;
+       fSettings.IncludePutLengte:= True;
+       fSettings.IncludePutBreedte:= True;
+       fSettings.IncludePutHoogte:= True;
+       fSettings.IncludePutMateriaal:= True;
+       fSettings.IncludePutFundering:= True;
+       fSettings.IncludePutBegindatum:= True;
+       fSettings.IncludePutEinddatum:= False;
+       fSettings.IncludePutDiameter:= True;
+       fSettings.IncludePersleidingBegindatum:= True;
+       fSettings.IncludePersleidingStatusFunctioneren:= True;
+       fSettings.IncludePersleidingMateriaal:= True;
+       fSettings.IncludePersleidingVorm:= True;
+       fSettings.IncludePersleidingDiameter:= True;
+       fSettings.IncludePersleidingHoogte:= True;
+       fSettings.IncludePersleidingLengte:= True;
+       fSettings.IncludeKolkLengte:= True;
+       fSettings.IncludeKolkDiameter:= True;
+       fSettings.IncludeKolkVorm:= True;
+       fSettings.IncludeKolkMateriaal:= True;
+       fSettings.IncludeKolkBegindatum:= True;
+       fSettings.IncludeKolkHoogte:= True;
+       fSettings.IncludeKolkBreedte:= True;
+       fSettings.IncludeLeidingLengte:= True;
+       fSettings.IncludeLeidingBreedte:= True;
+       fSettings.IncludeLeidingHoogte:= True;
+       fSettings.IncludeLeidingDiameter:= True;
+       fSettings.IncludeLeidingVorm:= True;
+       fSettings.IncludeLeidingMateriaal:= True;
+       fSettings.IncludeLeidingFundering:= True;
+       fSettings.IncludeLeidingStatusFunctioneren:= True;
+       fSettings.IncludeLeidingBegindatum:= True;
+       fSettings.IncludeLeidingBobBegin:= True;
+       fSettings.IncludeLeidingBobEind:= True;
+       fSettings.IncludeLeidingWIBONThema:= False;
+       fSettings.IncludeKolkEinddatum:= False;
+       fSettings.IncludePutMaaiveldhoogte:= True;
+       fSettings.IncludePersleidingBobBegin:= True;
+       fSettings.IncludePersleidingBobEind:= True;
+
 
        fSettings.WriteSettings;
      end;
@@ -704,7 +746,7 @@ begin
   end;
 end;
 
-function TModelMain.RetrieveData(data : PRetrieveDataRec) : TRetrieveDataRec;    { #todo : Rename naar RetrieveOraData }
+function TModelMain.RetrieveData(data: PRetrieveDataRec): TRetrieveDataRec;    { #todo : Rename naar RetrieveOraData }
 var
   lResult: TDataSetResult;
 begin
@@ -719,7 +761,7 @@ begin
     Result.DataSource:= Nil;
 end;
 
-function TModelMain.ExportToOroxTtlFile(Data : PExportToOroxTtlFileRec) : TExportToOroxTtlFileRec;
+function TModelMain.ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
 var
   DataProviderOraExp: IGWSWDataProvider;
   DataProviderCSVExp: IGWSWDataProvider;
@@ -768,7 +810,7 @@ begin
   end;
 end;
 
-function TModelMain.GetSQLfileLocation : String;
+function TModelMain.GetSQLfileLocation: String;
 begin
   Result:= fSettings.SqlFileLocation;
 end;
@@ -783,12 +825,12 @@ begin
   Result:= fSettings.LastUsedOrganization;
 end;
 
-function TModelMain.GetSetting_AskToOpenExportFile : Boolean;
+function TModelMain.GetSetting_AskToOpenExportFile: Boolean;
 begin
   Result:= fSettings.AskToOpenExportFile;
 end;
 
-procedure TModelMain.DisableChildControls(aData : TExportInProgressRec);
+procedure TModelMain.DisableChildControls(aData: TExportInProgressRec);
 begin
   if aData.IsInProgress then
     common.utils.DisableChildControls(aData.aParent)
@@ -799,12 +841,13 @@ end;
 function TModelMain.GetSingleSetting(const SettingName: String): String;
 begin { #todo : Als dit er meer gaan worden dan anders opzetten. Dan een settings object in de view maken. }
   case SettingName of
-    'MappingFile' : Result:= fSettings.MappingFile;
-    'GWSWVersion' : Result:= fSettings.GWSWVersion;
+    'MappingFile': Result:= fSettings.MappingFile;
+    'GWSWVersion': Result:= fSettings.GWSWVersion;
+    'KeepLastOrganization': Result:= fSettings.KeepLastOrganization.ToString();
   end;
 end;
 
-function TModelMain.SortDbGrid(Data: PSortDbGridRec): TSortDbGridRec;
+procedure TModelMain.SortDbGrid(Data: PSortDbGridRec);
 begin
   if data^.DataType = dtORA then begin
     Data^.DataProvider:= fDatabaseModule.CurrentQuery;
@@ -828,7 +871,7 @@ begin
   Result.DataSource:= nil;
   Result.DataSet:= nil;
 
-  csvDataProvider := TCSVDataProvider.Create(
+  csvDataProvider:= TCSVDataProvider.Create(
     aRec^.FilePath,
     aRec^.Delimiter,
     aRec^.QuoteChar,

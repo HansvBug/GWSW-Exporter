@@ -36,7 +36,7 @@ type
     procedure WriteToLog(const aSection, LogType, LogText: String);
     procedure SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
 
-    procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
+    procedure MakeDbConnection(DbConnectionData: PDbConnectRec);
     procedure DbDisconnect(DbConnectionData: PDbConnectRec);
     function GetSQLfileLocation: String;
     function GetKeepLastOrganization: Boolean;
@@ -165,9 +165,9 @@ begin
   if aText <> '' then
     panelText:= fInternalMsg.Values[aText];
   if panelText <> '' then
-    lstbRec := fModel.SetStatusbartext(panelText, panel)
+    lstbRec:= fModel.SetStatusbartext(panelText, panel)
   else
-    lstbRec := fModel.SetStatusbartext(aText, panel);
+    lstbRec:= fModel.SetStatusbartext(aText, panel);
 
   fProvider.NotifySubscribers(prStatusBarPanelText, Self, @lstbRec);
 end;
@@ -216,7 +216,7 @@ begin
   fProvider.NotifySubscribers(prStatusBarPanelWidth, Sender, @lRec);
 end;
 
-procedure TPresenterMain.MakeDbConnection(DbConnectionData : PDbConnectRec);
+procedure TPresenterMain.MakeDbConnection(DbConnectionData: PDbConnectRec);
 begin
   fModel.MakeDbConnection(DbConnectionData);
 
@@ -229,7 +229,7 @@ begin
   fProvider.NotifySubscribers(prDbConnection, Nil, DbConnectionData);
 end;
 
-function TPresenterMain.GetSQLfileLocation : String;
+function TPresenterMain.GetSQLfileLocation: String;
 begin
   Result:= fModel.GetSQLfileLocation;
 end;
@@ -244,7 +244,7 @@ begin
   Result:= fModel.GetLastUsedOrganization;
 end;
 
-procedure TPresenterMain.ExportInProgress(aData : TExportInProgressRec);
+procedure TPresenterMain.ExportInProgress(aData: TExportInProgressRec);
 begin
   fModel.DisableChildControls(aData);
 end;

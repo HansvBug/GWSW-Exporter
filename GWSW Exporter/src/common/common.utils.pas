@@ -116,7 +116,7 @@ begin
   end;
 end;
 
-procedure EnableChildControls(Parent : TObject);
+procedure EnableChildControls(Parent: TObject);
 var
   i: Integer;
   lParent: TWinControl;

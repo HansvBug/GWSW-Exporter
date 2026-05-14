@@ -54,9 +54,9 @@ type
   { TDirInfo is the actual implementor of our interface }
   TDirInfo = class
     { i figured it would work with a class-function }
-    class function DirAge(const aDirName: rawbytestring; out asDaTi: TDateTime): ptrint;
+    class function DirAge(const {%H-}aDirName: rawbytestring; out asDaTi: TDateTime): ptrint;
     { but that it *also* works, without the class-part, that baffles me a bit %) }
-    function FileAge(const aFileName: rawbytestring; out asDaTi: TDateTime): ptrint;
+    function FileAge(const {%H-}aFileName: rawbytestring; out asDaTi: TDateTime): ptrint;
     { returns a stringlist with the directory-names (only) found in directory; NO files & NO recursion }
     function GetDirs(aDirName: string;IncludeFullPath: boolean = false): IStringList;
     { returns a stringlist with the filenames (only) found in directory; NO dirs & NO recursion }
