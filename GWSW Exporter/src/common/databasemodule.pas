@@ -127,8 +127,7 @@ begin
     // Configure connection parameters
     with fConnection do begin
       // Set performance parameters (only if not already connected)
-      if not Connected then
-      begin
+      if not Connected then begin
         Params.Clear;
 
         // Performance parameters
@@ -207,8 +206,7 @@ begin
       fIsConnected:= False;
 
       // Ensure connection is closed on error
-      if fConnection.Connected then
-      begin
+      if fConnection.Connected then begin
         try
           fConnection.Connected:= False;
         except
@@ -241,8 +239,7 @@ begin
       Result.Message:= ErrorMsg;
 
       // Ensure connection is closed on error
-      if fConnection.Connected then
-      begin
+      if fConnection.Connected then begin
         try
           fConnection.Connected:= False;
         except

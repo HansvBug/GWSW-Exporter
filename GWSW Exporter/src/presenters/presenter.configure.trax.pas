@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
+  https://gitlab.com/cdbc-public/releases/mvp-setup
+}
 unit presenter.configure.trax;
 {$mode objfpc}{$H+}
 {.$define dbg}

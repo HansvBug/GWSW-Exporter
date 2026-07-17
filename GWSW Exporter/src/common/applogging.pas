@@ -134,8 +134,8 @@ uses
 constructor TLog_File.Create;
 begin
   InitCriticalSection(FLock);         // Initialize critical section for thread safety.
-  FStringList := TStringList.Create;  // Create string list for log buffering.
-  FUserName := StringReplace(GetEnvironmentVariable('USERNAME'), ' ', '_',
+  FStringList:= TStringList.Create;  // Create string list for log buffering.
+  FUserName:= StringReplace(GetEnvironmentVariable('USERNAME'), ' ', '_',
     [rfIgnoreCase, rfReplaceAll]);    // Get current username for log file naming.
 end;
 
@@ -156,17 +156,17 @@ end;
 
 function TLog_File.GetAppendCurrentLogfile: Boolean;
 begin
-  Result := FAppendCurrentLogfile;
+  Result:= FAppendCurrentLogfile;
 end;
 
 procedure TLog_File.SetAppendCurrentLogfile(AValue: Boolean);
 begin
-  FAppendCurrentLogfile := AValue;
+  FAppendCurrentLogfile:= AValue;
 end;
 
 procedure TLog_File.UpdateCurrentTime;
 begin
-  FCurrentTime := FormatDateTime('hh:mm:ss', Now) + ' --> | ';
+  FCurrentTime:= FormatDateTime('hh:mm:ss', Now) + ' --> | ';
 end;
 
 function TLog_File.CurrentDate: String;
@@ -174,9 +174,9 @@ var
   Present: TDateTime;
   Year, Month, Day: Word;
 begin
-  Present := Now;
+  Present:= Now;
   DecodeDate(Present, Year, Month, Day);
-  Result := Format('%.2d-%.2d-%.4d', [Day, Month, Year]);
+  Result:= Format('%.2d-%.2d-%.4d', [Day, Month, Year]);
 end;
 
 procedure TLog_File.FlushLog;
@@ -204,7 +204,7 @@ begin
             Length(LogEntry + LineEnding) * SizeOf(Char));
         end;
         FStringList.Clear;
-        Success := True;
+        Success:= True;
       except
         on E: EInOutError do
         begin
@@ -234,14 +234,14 @@ begin
   EnterCriticalSection(FLock);
   try
     // Construct full log file path.
-    FullPath := IncludeTrailingPathDelimiter(FLogFolder) +
+    FullPath:= IncludeTrailingPathDelimiter(FLogFolder) +
       FUserName + '_' + FLogFileName;
 
     // Open or create log file based on append mode.
     if FAppendCurrentLogfile and FileExists(FullPath) then
-      FFileStream := TFileStream.Create(FullPath, fmOpenReadWrite or fmShareDenyNone)
+      FFileStream:= TFileStream.Create(FullPath, fmOpenReadWrite or fmShareDenyNone)
     else
-      FFileStream := TFileStream.Create(FullPath, fmCreate or fmShareDenyNone);
+      FFileStream:= TFileStream.Create(FullPath, fmCreate or fmShareDenyNone);
 
     try
       // Write log header.
@@ -409,7 +409,7 @@ begin
 end;
 
 initialization
-  Logging := TLog_File.Create;  // Create global logging instance .
+  Logging:= TLog_File.Create;  // Create global logging instance .
 
 finalization
   FinalizeLogging;  // Ensure proper cleanup.

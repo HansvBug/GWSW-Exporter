@@ -8,7 +8,8 @@ interface
 uses
   SysUtils, Classes, TypInfo, Variants, Math, DateUtils, StrUtils,
   model.intf, uIGWSWDataProvider, GWSWTypes, MappingManager,
-  exportprogressreporter.intf, GWSWValidationConfig, GWSWValidation, ExportConfig;
+  exportprogressreporter.intf, GWSWValidationConfig, GWSWValidation, ExportConfig,
+  StelselIndex;
 
 type
   { TOroxExport }
@@ -28,6 +29,7 @@ type
       fPersleidingList: TList;
       fMappingManager: TMappingManager;
       fExportConfig: TExportConfig;  // Export settings
+      fStelselIndex: TStelselIndex;
 
       procedure ClearAllLists;
       procedure ClearPutList;
@@ -35,25 +37,25 @@ type
       procedure ClearStelselList;
       procedure ClearKolkList;
       procedure ClearPersleidingList;
-      function MapDatabaseToGWSW(DataProvider : IGWSWDataProvider; TotalRecords : Integer) : Boolean;  // Map de BOR data naar de GWSW domeinlijsten
-      function GenerateOroxTurtle(const FileName, Version : string) : Boolean;  // Bouw de ttl op
+      function MapDatabaseToGWSW(DataProvider: IGWSWDataProvider; TotalRecords: Integer): Boolean;  // Map de BOR data naar de GWSW domeinlijsten
+      function GenerateOroxTurtle(const FileName, Version: string): Boolean;  // Bouw de ttl op
       function MapStelselFromProvider(DataProvider: IGWSWDataProvider): PGWSWStelsel;
       function InitializeStelsel(var Stelsel: PGWSWStelsel): Boolean;
       function MapPutFromProvider(DataProvider: IGWSWDataProvider): PGWSWPut;
-      function InitializePut(var Put : PGWSWPut) : Boolean;
+      function InitializePut(var Put: PGWSWPut): Boolean;
       function MapLeidingFromProvider(DataProvider: IGWSWDataProvider): PGWSWLeiding;
-      function InitializeLeiding(var Leiding : PGWSWLeiding) : Boolean;
+      function InitializeLeiding(var Leiding: PGWSWLeiding): Boolean;
       function MapPersleidingFromProvider(DataProvider: IGWSWDataProvider): PGWSWPersleiding;
-      function InitializePersleiding(var Persleiding : PGWSWPersleiding) : Boolean;
+      function InitializePersleiding(var Persleiding: PGWSWPersleiding): Boolean;
       function MapKolkFromProvider(DataProvider: IGWSWDataProvider): PGWSWKolk;
-      function InitializeKolk(var Kolk : PGWSWKolk) : Boolean;
+      function InitializeKolk(var Kolk: PGWSWKolk): Boolean;
 
       function ParseWKTPoint(const WKT: string; out X, Y, Z: Double): Boolean;
       function GetDateFromYearField(DataProvider: IGWSWDataProvider; const FieldName: string;
                                                 DefaultDay: Integer = 1;
                                                 DefaultMonth: Integer = 1): TDateTime;
-      procedure SplitString(const Input: string; const Delimiter: Char; Strings: TStrings);
-      function DateToOroxFormat(DateValue: TDateTime): string;  // OROX/RDF has date as time in format: YYYY-MM-DD
+//      procedure SplitString(const Input: string; const Delimiter: Char; Strings: TStrings);  --> = overbodig geworden
+      function DateToOroxFormat(DateValue: TDateTime): string; inline;  // OROX/RDF has date as time in format: YYYY-MM-DD
       function ConvertWKTToGML(const WKT: string): string;
       function ConvertWKTToGMLLineString(const WKT: string): string;
       function CreateGMLPoint(X, Y, Z: Double): string;
@@ -70,8 +72,8 @@ type
       procedure AddKolkKenmerken(SL: TStringList; const Kolk: PGWSWKolk);
       procedure AddKolkOrientatie(SL: TStringList; const Kolk: PGWSWKolk);
 
-      function FloatToOrox(Value : Double; Decimals : Integer) : String; // Ongeacht de landinstelling, het Orox ttl bestand verwacht een "." als decimaal scheidingsteken. (en geen ",")
-      function FormatOrox(const FormatStr: string; const Args: array of const): string;// Regardless of the locale, the Orox ttl file expects a "." as a decimal separator. (and not ",")
+      function FloatToOrox(Value: Double; Decimals: Integer): String; inline; // Ongeacht de landinstelling, het Orox ttl bestand verwacht een "." als decimaal scheidingsteken. (en geen ",")
+      function FormatOrox(const FormatStr: string; const Args: array of const): string; inline;// Regardless of the locale, the Orox ttl file expects a "." as a decimal separator. (and not ",")
 
       procedure ExportStelselToTurtle(SL: TStringList; const Stelsel: PGWSWStelsel);
       procedure ExportPutToTurtle(SL: TStringList; const Put: PGWSWPut);
@@ -85,9 +87,10 @@ type
       procedure ReportError(const ErrMsg: string; const ErrorType: Integer = 0; const Guid: string = '');
       procedure UpdateProgressCount(Current, Total: Integer);
 
+      procedure FinishTurtleBlock(SL: TStringList);
 
     public
-      constructor Create(ADataProvider : IGWSWDataProvider; const FileName, OrganizationName, MappingsFile : String; AProgressReporter: IExportProgressReporter;
+      constructor Create(ADataProvider: IGWSWDataProvider; const FileName, OrganizationName, MappingsFile: String; AProgressReporter: IExportProgressReporter;
                          const ExportConfig: TExportConfig);
       destructor Destroy; override;
       procedure ExportToOrox(const GWSWversion: String);
@@ -108,6 +111,8 @@ begin
   ClearStelselList;
   ClearKolkList;
   ClearPersleidingList;
+  if fStelselIndex <> nil then
+    fStelselIndex.Clear;
 end;
 
 procedure TOroxExport.ClearPutList;
@@ -175,7 +180,7 @@ begin
   fPersleidingList.Clear;
 end;
 
-function TOroxExport.MapDatabaseToGWSW(DataProvider : IGWSWDataProvider; TotalRecords : Integer) : Boolean;
+function TOroxExport.MapDatabaseToGWSW(DataProvider: IGWSWDataProvider; TotalRecords: Integer): Boolean;
 var
   Stelsel, Put, Leiding, Persleiding, Kolk: Boolean;
   StelselObj: PGWSWStelsel;
@@ -197,6 +202,7 @@ begin
 
   try
     ClearAllLists;
+
     DataProvider.Open;
     try
       if DataProvider.First then begin
@@ -217,33 +223,46 @@ begin
               if StelselObj <> nil then
                 FStelselList.Add(StelselObj);
             end;
+
             'PUT': begin
               if not Put then begin
                 Put:= True;
                 ReportProgress('MappingManhole');
               end;
               PutObj:= MapPutFromProvider(DataProvider);
-              if PutObj <> nil then
+              if PutObj <> nil then begin
                 FPutList.Add(PutObj);
+                // <-- NIEUW: Indexeer voor snelle stelsel-lookup
+                fStelselIndex.AddPart(PutObj^.StelselID, ':' + PutObj^.GUID);
+              end;
             end;
+
             'LEIDING': begin
               if not Leiding then begin
                 Leiding:= True;
                 ReportProgress('MappingPipeline');
               end;
               LeidingObj:= MapLeidingFromProvider(DataProvider);
-              if LeidingObj <> nil then
+              if LeidingObj <> nil then begin
                 FLeidingList.Add(LeidingObj);
+                // <-- NIEUW: Indexeer voor snelle stelsel-lookup
+                fStelselIndex.AddPart(LeidingObj^.StelselID, ':' + LeidingObj^.GUID);
+              end;
             end;
+
             'PERSLEIDING': begin
               if not Persleiding then begin
                 Persleiding:= True;
                 ReportProgress('MappingMechanicalPipeline');
               end;
               PersleidingObj:= MapPersleidingFromProvider(DataProvider);
-              if PersleidingObj <> nil then
+              if PersleidingObj <> nil then begin
                 FPersLeidingList.Add(PersleidingObj);
+                // <-- NIEUW: Indexeer voor snelle stelsel-lookup
+                fStelselIndex.AddPart(PersleidingObj^.StelselID, ':' + PersleidingObj^.GUID);
+              end;
             end;
+
             'KOLK': begin
               if not Kolk then begin
                 Kolk:= True;
@@ -252,7 +271,9 @@ begin
               KolkObj:= MapKolkFromProvider(DataProvider);
               if KolkObj <> nil then
                 FKolkList.Add(KolkObj);
+              // Kolken hebben geen stelselrelatie in de huidige code, dus geen index
             end
+
             else begin
               ReportError('Onbekend Object type aangetroffen.');
               ReportError('Dit is: ' + UpperCase(DataProvider.GetObjectType));
@@ -365,7 +386,7 @@ begin
   end;
 end;
 
-function TOroxExport.MapStelselFromProvider(DataProvider : IGWSWDataProvider) : PGWSWStelsel;
+function TOroxExport.MapStelselFromProvider(DataProvider: IGWSWDataProvider): PGWSWStelsel;
 var
   Stelsel: PGWSWStelsel;
   lValue: Variant;
@@ -436,7 +457,7 @@ begin
   Result:= Stelsel;
 end;
 
-function TOroxExport.InitializeStelsel(var Stelsel : PGWSWStelsel) : Boolean;
+function TOroxExport.InitializeStelsel(var Stelsel: PGWSWStelsel): Boolean;
 begin
   Result:= False;
   if Stelsel = nil then Exit;
@@ -451,7 +472,7 @@ begin
   Result:= True;
 end;
 
-function TOroxExport.MapPutFromProvider(DataProvider : IGWSWDataProvider) : PGWSWPut;
+function TOroxExport.MapPutFromProvider(DataProvider: IGWSWDataProvider): PGWSWPut;
 var
   Put: PGWSWPut;
   lVal: TGWSWValidationResult;
@@ -744,7 +765,7 @@ begin
   Result:= Put;
 end;
 
-function TOroxExport.InitializePut(var Put : PGWSWPut) : Boolean;
+function TOroxExport.InitializePut(var Put: PGWSWPut): Boolean;
 begin
   Result:= False;
   if Put = nil then Exit;
@@ -776,7 +797,7 @@ begin
    Result:= True;
 end;
 
-function TOroxExport.MapLeidingFromProvider(DataProvider : IGWSWDataProvider) : PGWSWLeiding;
+function TOroxExport.MapLeidingFromProvider(DataProvider: IGWSWDataProvider): PGWSWLeiding;
 var
   Leiding: PGWSWLeiding;
   lVal: TGWSWValidationResult;
@@ -1101,7 +1122,7 @@ begin
   Result:= Leiding;
 end;
 
-function TOroxExport.InitializeLeiding(var Leiding : PGWSWLeiding) : Boolean;
+function TOroxExport.InitializeLeiding(var Leiding: PGWSWLeiding): Boolean;
 begin
   Result:= False;
   if Leiding = nil then Exit;
@@ -1466,7 +1487,7 @@ else
   Result:= Persleiding;
 end;
 
-function TOroxExport.InitializePersleiding(var Persleiding : PGWSWPersleiding) : Boolean;
+function TOroxExport.InitializePersleiding(var Persleiding: PGWSWPersleiding): Boolean;
 begin
   Result:= False;
   if Persleiding = nil then Exit;
@@ -1500,7 +1521,7 @@ begin
   Result:= True;
 end;
 
-function TOroxExport.MapKolkFromProvider(DataProvider : IGWSWDataProvider) : PGWSWKolk;
+function TOroxExport.MapKolkFromProvider(DataProvider: IGWSWDataProvider): PGWSWKolk;
 var
   Kolk: PGWSWKolk;
   lVal: TGWSWValidationResult;
@@ -1509,8 +1530,7 @@ var
   lValue: Variant;
 begin
   New(Kolk);
-  if not InitializeKolk(Kolk) then
-  begin
+  if not InitializeKolk(Kolk) then begin
     Dispose(Kolk);
     ReportError('Kolk: Initialisatie mislukt!');
     Exit(nil);
@@ -1695,7 +1715,7 @@ begin
   Result:= Kolk;
 end;
 
-function TOroxExport.InitializeKolk(var Kolk : PGWSWKolk) : Boolean;
+function TOroxExport.InitializeKolk(var Kolk: PGWSWKolk): Boolean;
 begin
   Result:= False;
   if Kolk = nil then Exit;
@@ -1718,7 +1738,7 @@ begin
   Result:= True;
 end;
 
-function TOroxExport.ParseWKTPoint(const WKT : string; out X, Y, Z : Double) : Boolean;
+function TOroxExport.ParseWKTPoint(const WKT: string; out X, Y, Z: Double): Boolean;
 var
   CleanWKT, CoordStr: string;
   StartPos, EndPos: Integer;
@@ -1730,10 +1750,18 @@ begin
   Y:= 0;
   Z:= 0;
 
-  if Trim(WKT) = '' then
+  if Trim(WKT) = '' then begin
+    ReportError('WKT geometry is empty.');  { #todo : Taalinstelling }
     Exit;
+  end;
 
   CleanWKT:= Trim(WKT);
+
+  // Check voor correct type (POINT)
+  if Pos('POINT', UpperCase(CleanWKT)) <> 1 then begin
+    ReportError('Invalid WKT type, expected POINT');  { #todo : Taalinstelling }
+    Exit;
+  end;
 
   // Keep the old decimal separator and temporarily change to point
   OldDecimalSeparator:= FormatSettings.DecimalSeparator;
@@ -1750,7 +1778,7 @@ begin
 
         Coords:= TStringList.Create;
         try
-          SplitString(CoordStr, ' ', Coords);
+          ExtractStrings([' '], [], PChar(CoordStr), Coords);
 
           if Coords.Count >= 3 then begin
             X:= StrToFloatDef(Trim(Coords[0]), 0);
@@ -1773,7 +1801,7 @@ begin
 
         Coords:= TStringList.Create;
         try
-          SplitString(CoordStr, ' ', Coords);
+          ExtractStrings([' '], [], PChar(CoordStr), Coords);
 
           if Coords.Count >= 2 then begin
             X:= StrToFloatDef(Trim(Coords[0]), 0);
@@ -1855,7 +1883,8 @@ begin
   end;
 end;
 
-procedure TOroxExport.SplitString(const Input : string; const Delimiter : Char; Strings : TStrings);
+{
+procedure TOroxExport.SplitString(const Input: string; const Delimiter: Char; Strings: TStrings);
 var
   i, StartPos: Integer;
   Token: string;
@@ -1879,9 +1908,9 @@ begin
     if Token <> '' then
       Strings.Add(Token);
   end;
-end;
+end;}
 
-function TOroxExport.DateToOroxFormat(DateValue : TDateTime) : string;
+function TOroxExport.DateToOroxFormat(DateValue: TDateTime): string;
 begin
   if DateValue = 0 then
     Result:= ''
@@ -1889,7 +1918,7 @@ begin
     Result:= FormatDateTime('yyyy-mm-dd', DateValue);
 end;
 
-function TOroxExport.ConvertWKTToGML(const WKT : string) : string;
+function TOroxExport.ConvertWKTToGML(const WKT: string): string;
 var
   X, Y, Z: Double;
 begin
@@ -1906,24 +1935,30 @@ begin
   end;
 end;
 
-function TOroxExport.CreateGMLPoint(X, Y, Z : Double) : string;
+function TOroxExport.CreateGMLPoint(X, Y, Z: Double): string;
 var
   srsDimension: string;
   coordString: string;
+  HasValidZ: Boolean;
 begin
-  if Z > Default_Z_Value then
-    srsDimension:= '3'
-  else
+  HasValidZ:= (not IsNaN(Z)) and (Z > Default_Z_Value);
+
+  if HasValidZ then begin
+    srsDimension:= '3';
+    coordString:= FormatOrox('%.3f %.3f %.3f', [X, Y, Z]);
+  end
+  else begin
     srsDimension:= '2';
+    coordString:= FormatOrox('%.3f %.3f', [X, Y]);
+  end;
 
-  coordString:= FormatOrox('%.3f %.3f %.3f', [X, Y, Z]);
-
-  Result:= '<gml:Point xmlns:gml=\"http://www.opengis.net/gml/3.2\"><gml:pos srsDimension=\"' + srsDimension + '\">' +
-            coordString +
-            '</gml:pos></gml:Point>';
+  Result:= '<gml:Point xmlns:gml=\"http://www.opengis.net/gml/3.2\">' +
+           '<gml:pos srsDimension=\"' + srsDimension + '\">' +
+           coordString +
+           '</gml:pos></gml:Point>';
 end;
 
-function TOroxExport.CreateGMLLineString(const Points : array of Double) : string;
+function TOroxExport.CreateGMLLineString(const Points: array of Double): string;
 var
   I: Integer;
   PosList: string;
@@ -1972,20 +2007,56 @@ var
   i: Integer;
   FS: TFormatSettings;
   x, y, z: Double;
+
+  function FindContentStart(const S: string): Integer;
+  var
+    j: Integer;
+  begin
+    Result:= 0;
+    for j:= 1 to Length(S) do
+      if S[j] = '(' then begin
+        Result:= j;
+        Exit;
+      end;
+  end;
+
+  function FindMatchingClose(const S: string; OpenPos: Integer): Integer;
+  var
+    j, Depth: Integer;
+  begin
+    Result:= 0;
+    Depth:= 1;
+    for j:= OpenPos + 1 to Length(S) do begin
+      if S[j] = '(' then
+        Inc(Depth)
+      else if S[j] = ')' then begin
+        Dec(Depth);
+        if Depth = 0 then begin
+          Result:= j;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+
 begin
-  WKT:= UpperCase(Persleiding^.WKTGeometry);     // Deze gaat fout. Kapt de string af
+  WKT:= Persleiding^.WKTGeometry;
 
-  if Pos('LINESTRING', WKT) = 0 then
+  if Trim(WKT) = '' then Exit;
+
+  // Case-insensitieve type check op originele string
+  if Pos('LINESTRING', UpperCase(WKT)) = 0 then
     Exit;
 
-  // Find the coordinates string
-  StartPos:= Pos('(', WKT);
-  EndPos:= LastDelimiter(')', WKT);
+  // Vind de EERSTE open haak — dit is de start van de coördinaten
+  StartPos:= FindContentStart(WKT);
+  if StartPos = 0 then Exit;
 
-  if (StartPos = 0) or (EndPos <= StartPos) then
-    Exit;
+  // Vind de bijbehorende sluitende haak (rekening houdend met nesting)
+  EndPos:= FindMatchingClose(WKT, StartPos);
+  if EndPos = 0 then Exit;
 
-  InnerStr:= Copy(Persleiding^.WKTGeometry, StartPos + 1, EndPos - StartPos - 1);
+  InnerStr:= Copy(WKT, StartPos + 1, EndPos - StartPos - 1);
   InnerStr:= Trim(InnerStr);
 
   FS.DecimalSeparator:= '.';
@@ -1994,23 +2065,23 @@ begin
   PointTokens:= TStringList.Create;
   CoordTokens:= TStringList.Create;
   try
-    // Split points by comma
+    // Split punten op komma
     PointTokens.StrictDelimiter:= True;
     PointTokens.Delimiter:= ',';
     PointTokens.DelimitedText:= InnerStr;
 
-    // Calculate number of vertices
+    // Bepaal aantal vertices
     SetLength(Persleiding^.Vertices, PointTokens.Count);
 
     for i:= 0 to PointTokens.Count - 1 do begin
       CoordStr:= Trim(PointTokens[i]);
 
-      // Remove double spaces and tabs
+      // Verwijder dubbele spaties en tabs
       while Pos('  ', CoordStr) > 0 do
         CoordStr:= StringReplace(CoordStr, '  ', ' ', [rfReplaceAll]);
       CoordStr:= StringReplace(CoordStr, #9, ' ', [rfReplaceAll]);
 
-      // Split coordinate
+      // Split coördinaten op spatie
       CoordTokens.Clear;
       ExtractStrings([' '], [], PChar(CoordStr), CoordTokens);
 
@@ -2097,7 +2168,7 @@ begin
              srsDimension + '\">' + PosList + '</gml:posList></gml:LineString>';
 end;
 
-function TOroxExport.ConvertWKTToGMLLineString(const WKT : string) : string;
+function TOroxExport.ConvertWKTToGMLLineString(const WKT: string): string;
 var
   Inner: string;
   i: Integer;
@@ -2107,6 +2178,8 @@ var
   x, y, z: Double;
   FS: TFormatSettings;
   PosList: string;
+  HasZValues: Boolean;
+  FirstPointTokens: Integer;
 
   function TrimAndCollapseSpaces(const S: string): string;
   var
@@ -2118,43 +2191,85 @@ var
     Result:= tmp;
   end;
 
+  function FindContentStart(const S: string): Integer;
+  var
+    j: Integer;
+  begin
+    Result:= 0;
+    for j:= 1 to Length(S) do
+      if S[j] = '(' then begin
+        Result:= j;
+        Exit;
+      end;
+  end;
+
+  function FindMatchingClose(const S: string; OpenPos: Integer): Integer;
+  var
+    j, Depth: Integer;
+  begin
+    Result:= 0;
+    Depth:= 1;
+    for j:= OpenPos + 1 to Length(S) do begin
+      if S[j] = '(' then
+        Inc(Depth)
+      else if S[j] = ')' then begin
+        Dec(Depth);
+        if Depth = 0 then begin
+          Result:= j;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+
 begin
   Result:= '';
 
   if Trim(WKT) = '' then Exit;
 
-  StartPos:= Pos('(', WKT);
-  EndPos:= LastDelimiter(')', WKT);
-  if (StartPos = 0) or (EndPos <= StartPos) then Exit;
+  // Case-insensitieve type check
+  if Pos('LINESTRING', UpperCase(WKT)) = 0 then Exit;
+
+  // Vind de eerste open haak — start van coördinaten
+  StartPos:= FindContentStart(WKT);
+  if StartPos = 0 then Exit;
+
+  // Vind bijbehorende sluitende haak
+  EndPos:= FindMatchingClose(WKT, StartPos);
+  if EndPos = 0 then Exit;
 
   Inner:= Copy(WKT, StartPos + 1, EndPos - StartPos - 1);
   Inner:= Trim(Inner);
 
   FS.DecimalSeparator:= '.';
-  FS.ThousandSeparator:= #0;   // belangrijk: duizendtallen mogen niet herkend worden
+  FS.ThousandSeparator:= #0;
 
   PointTokens:= TStringList.Create;
   CoordTokens:= TStringList.Create;
   try
-    // punten splitsen
+    // Split punten op komma
     PointTokens.StrictDelimiter:= True;
     PointTokens.Delimiter:= ',';
     PointTokens.DelimitedText:= Inner;
 
     PosList:= '';
+    HasZValues:= False;
+    FirstPointTokens:= 0;
 
     for i:= 0 to PointTokens.Count - 1 do begin
       pTok:= TrimAndCollapseSpaces(PointTokens[i]);
       if pTok = '' then Continue;
 
-      // tabs → spatie
+      // Tabs → spatie
       pTok:= StringReplace(pTok, #9, ' ', [rfReplaceAll]);
       pTok:= TrimAndCollapseSpaces(pTok);
 
       CoordTokens.Clear;
       ExtractStrings([' '], [], PChar(pTok), CoordTokens);
 
-      x:= 0; y:= 0; z:= 0;
+      x:= 0;
+      y:= 0;
+      z:= 0;
 
       if CoordTokens.Count >= 1 then
         TryStrToFloat(CoordTokens[0], x, FS);
@@ -2162,25 +2277,41 @@ begin
       if CoordTokens.Count >= 2 then
         TryStrToFloat(CoordTokens[1], y, FS);
 
-      if CoordTokens.Count >= 3 then
+      if CoordTokens.Count >= 3 then begin
         TryStrToFloat(CoordTokens[2], z, FS);
+        if i = 0 then
+          FirstPointTokens:= CoordTokens.Count;
+      end;
 
       if PosList <> '' then
         PosList:= PosList + ' ';
 
-      PosList:=
-        PosList +
-        FormatFloat('0.000', x, FS) + ' ' +
-        FormatFloat('0.000', y, FS) + ' ' +
-        FormatFloat('0.000', z, FS);
+      // Bepaal dynamisch of we 2D of 3D schrijven
+      // Alleen 3D als het eerste punt 3 coördinaten had
+      if FirstPointTokens >= 3 then
+        PosList:= PosList +
+          FloatToOrox(x, 3) + ' ' +
+          FloatToOrox(y, 3) + ' ' +
+          FloatToOrox(z, 3)
+      else
+        PosList:= PosList +
+          FloatToOrox(x, 3) + ' ' +
+          FloatToOrox(y, 3);
     end;
 
     if PosList = '' then Exit;
 
-    Result:=
-      '<gml:LineString xmlns:gml=\"http://www.opengis.net/gml/3.2\">' +
-      '<gml:posList srsDimension=\"3\">' + PosList + '</gml:posList>' +
-      '</gml:LineString>';
+    // Bepaal srsDimension op basis van eerste punt
+    if FirstPointTokens >= 3 then
+      Result:=
+        '<gml:LineString xmlns:gml=\"http://www.opengis.net/gml/3.2\">' +
+        '<gml:posList srsDimension=\"3\">' + PosList + '</gml:posList>' +
+        '</gml:LineString>'
+    else
+      Result:=
+        '<gml:LineString xmlns:gml=\"http://www.opengis.net/gml/3.2\">' +
+        '<gml:posList srsDimension=\"2\">' + PosList + '</gml:posList>' +
+        '</gml:LineString>';
 
   finally
     PointTokens.Free;
@@ -2617,7 +2748,7 @@ begin
   SL.Add('');
 end;
 
-function TOroxExport.FormatOrox(const FormatStr : string; const Args : array of const) : string;
+function TOroxExport.FormatOrox(const FormatStr: string; const Args: array of const): string;
 begin
   Result:= Format(FormatStr, Args);
 
@@ -2629,45 +2760,22 @@ begin
   Result:= StringReplace(Result, DefaultFormatSettings.DecimalSeparator, '.', [rfReplaceAll]);
 end;
 
-function TOroxExport.FloatToOrox(Value : Double; Decimals : Integer) : String;
+function TOroxExport.FloatToOrox(Value: Double; Decimals: Integer): String;
 var
   FormatStr: string;
 begin
-  // Bouw formatstring zoals %.2f, %.3f, etc.
-  FormatStr:= '%.' + IntToStr(Decimals) + 'f';
-
-  Result:= Format(FormatStr, [Value]);
-
-  // Verwijder duizendtallen
-  if DefaultFormatSettings.ThousandSeparator <> #0 then
-    Result:= StringReplace(
-      Result,
-      DefaultFormatSettings.ThousandSeparator,
-      '',
-      [rfReplaceAll]
-    );
-
-  // Zet decimaal naar punt
-  Result:= StringReplace(
-    Result,
-    DefaultFormatSettings.DecimalSeparator,
-    '.',
-    [rfReplaceAll]
-  );
+  Result:= FormatOrox('%.*f', [Decimals, Value]);
 end;
 
-procedure TOroxExport.ExportStelselToTurtle(SL : TStringList; const Stelsel : PGWSWStelsel);
+procedure TOroxExport.ExportStelselToTurtle(SL: TStringList; const Stelsel: PGWSWStelsel);
 var
-  i: Integer;
-  Put: PGWSWPut;
-  Leiding: PGWSWLeiding;
-  HasParts: Boolean;
   PartsList: TStringList;
-  Persleiding: PGWSWPersleiding;
+  i: Integer;
 begin
-  if Stelsel = Nil then begin
+  if Stelsel = nil then
+  begin
     ReportError('Leeg Stelsel object aangetroffen in functie: ExportStelselToTurtle');
-    exit;
+    Exit;
   end;
 
   // Stelsel definitie
@@ -2680,63 +2788,29 @@ begin
   else
     SL.Add('  rdfs:label    "Onbekend stelsel" ;');
 
-  // Zoek onderdelen van dit stelsel
-  HasParts:= False;
-  PartsList:= TStringList.Create;
-  try
-    // Putten die bij dit stelsel horen
-    for i:= 0 to FPutList.Count - 1 do begin
-      Put:= PGWSWPut(FPutList[i]);
-      if Put^.StelselID = Stelsel^.GUID then begin
-        PartsList.Add('    :' + Put^.GUID);
-        HasParts:= True;
-      end;
-    end;
+  PartsList:= fStelselIndex.GetParts(Stelsel^.GUID);
 
-    // Leidingen die bij dit stelsel horen
-    for i:= 0 to FLeidingList.Count - 1 do begin
-      Leiding:= PGWSWLeiding(FLeidingList[i]);
-      if Leiding^.StelselID = Stelsel^.GUID then begin
-        PartsList.Add('    :' + Leiding^.GUID);
-        HasParts:= True;
-      end;
+  if (PartsList <> nil) and (PartsList.Count > 0) then
+  begin
+    SL.Add('  gwsw:hasPart');
+    for i:= 0 to PartsList.Count - 1 do
+    begin
+      if i < PartsList.Count - 1 then
+        SL.Add(PartsList[i] + ' ,')
+      else
+        SL.Add(PartsList[i] + ' .');
     end;
-
-    for i:= 0 to FPersleidingList.Count - 1 do begin
-      Persleiding:= PGWSWPersleiding(FPersleidingList[i]);
-      if Persleiding^.StelselID = Stelsel^.GUID then begin
-        PartsList.Add('    :' + Persleiding^.GUID);
-        HasParts:= True;
-      end;
-    end;
-
-    // Voeg hasPart relaties toe indien er onderdelen zijn
-    if HasParts and (PartsList.Count > 0) then begin
-      SL.Add('  gwsw:hasPart');
-      for i:= 0 to PartsList.Count - 1 do begin
-        if i < PartsList.Count - 1 then
-          SL.Add(PartsList[i] + ' ,')
-        else
-          SL.Add(PartsList[i] + ' .');
-      end;
-    end else begin
-      // Geen delen, sluit af met .
-      if SL.Count > 0 then begin
-        if Copy(SL[SL.Count - 1], Length(SL[SL.Count - 1]), 1) = ';' then
-          SL[SL.Count - 1]:= Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
-        else
-          SL[SL.Count - 1]:= SL[SL.Count - 1] + ' .';
-      end;
-    end;
-
-  finally
-    PartsList.Free;
+  end
+  else
+  begin
+    // Geen delen, sluit af met .
+    FinishTurtleBlock(SL);
   end;
 
   SL.Add('');
 end;
 
-procedure TOroxExport.ExportPutToTurtle(SL : TStringList; const Put : PGWSWPut);
+procedure TOroxExport.ExportPutToTurtle(SL: TStringList; const Put: PGWSWPut);
 begin
   if Put = Nil then begin
     ReportError('Leeg Put object aangetroffen in functie: ExportPutToTurtle');
@@ -2756,15 +2830,7 @@ begin
     SL.Add('  gwsw:isPartOf   :' + Put^.StelselID + ' ;');
 
   AddPutKenmerken(SL, Put);
-
-  // Verwijder laatste ; en vervang door .
-  if SL.Count > 0 then begin
-    if Copy(SL[SL.Count - 1], Length(SL[SL.Count - 1]), 1) = ';' then
-      SL[SL.Count - 1]:= Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
-    else
-      SL[SL.Count - 1]:= SL[SL.Count - 1] + ' .';
-  end;
-
+  FinishTurtleBlock(SL);
   SL.Add('');
 
   // TWEEDE ORIENTATIE TOEVOEGING - DIT IS DE DEFINITIE VAN DE ORIENTATIE ZELF
@@ -2772,7 +2838,7 @@ begin
     AddPutOrientatie(SL, Put);
 end;
 
-procedure TOroxExport.ExportLeidingToTurtle(SL : TStringList; const Leiding : PGWSWLeiding);
+procedure TOroxExport.ExportLeidingToTurtle(SL: TStringList; const Leiding: PGWSWLeiding);
 var
   GMLString: string;
   Points: array of Double = Nil;
@@ -2794,15 +2860,7 @@ begin
   SL.Add('  gwsw:hasAspect  :' + Leiding^.GUID + '_ori ;');
 
   AddLeidingKenmerken(SL, Leiding);  // ZONDER BOB waarden
-
-  // Verwijder laatste ; en vervang door .
-  if SL.Count > 0 then begin
-    if Copy(SL[SL.Count - 1], Length(SL[SL.Count - 1]), 1) = ';' then
-      SL[SL.Count - 1]:= Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
-    else
-      SL[SL.Count - 1]:= SL[SL.Count - 1] + ' .';
-  end;
-
+  FinishTurtleBlock(SL);
   SL.Add('');
 
   // Leiding oriëntatie MET BOB waarden genest in de eindpunten
@@ -2846,18 +2904,12 @@ begin
     SL.Add('    gwsw:hasValue "' + CreateGMLLineString(Points) + '"^^geo:gmlLiteral ] ;');
   end;
 
-  // Verwijder laatste ; en vervang door .
-  if SL.Count > 0 then begin
-    if Copy(SL[SL.Count - 1], Length(SL[SL.Count - 1]), 1) = ';' then
-      SL[SL.Count - 1]:= Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
-    else
-      SL[SL.Count - 1]:= SL[SL.Count - 1] + ' .';
-  end;
+  FinishTurtleBlock(SL);
 
   SL.Add('');
 end;
 
-procedure TOroxExport.ExportPersleidingToTurtle(SL : TStringList; const Persleiding : PGWSWPersleiding);
+procedure TOroxExport.ExportPersleidingToTurtle(SL: TStringList; const Persleiding: PGWSWPersleiding);
 begin
   if Persleiding = Nil then begin
     ReportError('Leeg Persleiding object aangetroffen in functie: ExportPersleidingToTurtle');
@@ -2875,22 +2927,14 @@ begin
   SL.Add('  gwsw:hasAspect  :' + Persleiding^.GUID + '_ori ;');
 
   AddPersleidingKenmerken(SL, Persleiding);
-
-  // Verwijder laatste ; en vervang door .
-  if SL.Count > 0 then begin
-    if Copy(SL[SL.Count - 1], Length(SL[SL.Count - 1]), 1) = ';' then
-      SL[SL.Count - 1]:= Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
-    else
-      SL[SL.Count - 1]:= SL[SL.Count - 1] + ' .';
-  end;
-
+  FinishTurtleBlock(SL);
   SL.Add('');
 
   // Persleiding oriëntatie
   ExportPersleidingOrientatie(SL, Persleiding);
 end;
 
-procedure TOroxExport.ExportKolkToTurtle(SL : TStringList; const Kolk : PGWSWKolk);
+procedure TOroxExport.ExportKolkToTurtle(SL: TStringList; const Kolk: PGWSWKolk);
 begin
   if Kolk = Nil then begin
     ReportError('Leeg kolk object aangetroffen in functie: ExportKolkToTurtle');
@@ -2906,15 +2950,7 @@ begin
     SL.Add('  gwsw:hasAspect  :' + Kolk^.GUID + '_ori ;');
 
   AddKolkKenmerken(SL, Kolk);
-
-  // Verwijder laatste ; en vervang door .
-  if SL.Count > 0 then begin
-    if Copy(SL[SL.Count - 1], Length(SL[SL.Count - 1]), 1) = ';' then
-      SL[SL.Count - 1]:= Copy(SL[SL.Count - 1], 1, Length(SL[SL.Count - 1]) - 1) + ' .'
-    else
-      SL[SL.Count - 1]:= SL[SL.Count - 1] + ' .';
-  end;
-
+  FinishTurtleBlock(SL);
   SL.Add('');
 
   // Oriëntatie definitie toevoegen
@@ -2970,7 +3006,7 @@ begin
   end;
 end;
 
-procedure TOroxExport.ReportProgress(const Msg : string);
+procedure TOroxExport.ReportProgress(const Msg: string);
 begin
   if Assigned(fProgressReporter) then
   begin
@@ -2991,10 +3027,30 @@ begin
   end;
 end;
 
-procedure TOroxExport.UpdateProgressCount(Current, Total : Integer);
+procedure TOroxExport.UpdateProgressCount(Current, Total: Integer);
 begin
   if Assigned(fProgressReporter) then
     fProgressReporter.ReportProgressCount(Current, Total);
+end;
+
+procedure TOroxExport.FinishTurtleBlock(SL: TStringList);
+var
+  LastLine: string;
+  LastChar: Char;
+begin
+  if SL.Count = 0 then Exit;
+
+  LastLine:= SL[SL.Count - 1];
+  if LastLine = '' then Exit;
+
+  LastChar:= LastLine[Length(LastLine)];
+
+  if LastChar = ';' then
+    // Vervang laatste ; door .
+    SL[SL.Count - 1]:= Copy(LastLine, 1, Length(LastLine) - 1) + ' .'
+  else if LastChar <> '.' then
+    // Voeg . toe als er nog geen is
+    SL[SL.Count - 1]:= LastLine + ' .';
 end;
 
 constructor TOroxExport.Create(ADataProvider: IGWSWDataProvider;
@@ -3013,6 +3069,7 @@ begin
   fStelselList:= TList.Create;
   fKolkList:= TList.Create;
   fPersleidingList:= TList.Create;
+  fStelselIndex:= TStelselIndex.Create;
 
   fMappingManager:= TMappingManager.Create(MappingsFile);
   fExportConfig:= ExportConfig;
@@ -3021,6 +3078,7 @@ end;
 destructor TOroxExport.Destroy;
 begin
   ClearAllLists;
+  fStelselIndex.Free;
   fMappingManager.Free;
   FPutList.Free;
   FLeidingList.Free;
@@ -3031,7 +3089,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TOroxExport.ExportToOrox(const GWSWversion : String);
+procedure TOroxExport.ExportToOrox(const GWSWversion: String);
 var
   TotalRecords: Integer;
   lVersion: String;

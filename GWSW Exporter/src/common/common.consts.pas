@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
+  https://gitlab.com/cdbc-public/releases/mvp-setup
+}
 unit common.consts;
 {$mode objfpc}{$H+}
 interface (* this unit collects nearly all constants & is referenced in most units *)
@@ -7,7 +9,7 @@ const
   { Application constants }
   Application_version            = '0.5.0.0';
   Application_initial_start_date = '12-12-2025';
-  Application_build_date         = '10-01-2026';
+  Application_build_date         = '14-05-2026';
 
   DefaultOroXFileExt = 'orox.ttl'; // Is prescribed in this way.
 
@@ -77,9 +79,9 @@ const
 
   { targettexts below lets you use 1 handler in view, 1 result record and differentiate on target-id }
   TargetTexts: TStringArray = ('Directories', 'Resources', 'Models', 'Presenters', 'Views'); // example
-
-  { (a)pplication (d)irectories }
+                                          { (a)pplication (d)irectories }
   adSettings   = 'Settings';
+
   adLogging    = 'Logging';
   adDomainlist = 'Domainlist';
   adExport     = 'Export';

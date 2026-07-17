@@ -8,7 +8,7 @@ object frmMain: TfrmMain
   ClientWidth = 1429
   DesignTimePPI = 144
   Menu = MainMenu1
-  LCLVersion = '4.6.0.0'
+  LCLVersion = '4.8.0.0'
   OnCreate = FormCreate
   object stbInfo: TStatusBar
     Left = 0
@@ -134,9 +134,9 @@ object frmMain: TfrmMain
               Height = 528
               Top = 8
               Width = 370
-              ActivePage = tsCsv
+              ActivePage = tsOracle
               Anchors = [akTop, akLeft, akRight]
-              TabIndex = 1
+              TabIndex = 0
               TabOrder = 1
               object tsOracle: TTabSheet
                 Caption = 'tsOracle'

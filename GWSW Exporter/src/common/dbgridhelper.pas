@@ -140,7 +140,7 @@ begin
   if fIndexList.Count < 98 then Exit;
 
   // Find the least recently used (LRU) index from the internal cache
-  Oldest := FindOldestIndex;
+  Oldest:= FindOldestIndex;
   if not Assigned(Oldest) then Exit;
 
   try
@@ -151,12 +151,12 @@ begin
       UpdateIndexes(Query);
 
       // Find the index in the query's IndexDefs
-      Idx := Query.IndexDefs.IndexOf(Oldest.IndexName);
+      Idx:= Query.IndexDefs.IndexOf(Oldest.IndexName);
       if Idx <> -1 then
       begin
         // If this index is currently active, deactivate it first
         if Query.IndexName = Oldest.IndexName then
-          Query.IndexName := '';
+          Query.IndexName:= '';
 
         // Actually delete the index definition from the query
         Query.IndexDefs.Delete(Idx);
@@ -327,12 +327,12 @@ begin
   if not (AColumn is TColumn) then Exit;
 
   BufDS:= TBufDataset(ADataset);
-  Col  := TColumn(AColumn);
+  Col:= TColumn(AColumn);
 
   if not BufDS.Active then Exit;
   if not Assigned(Col.Field) then Exit;
 
-  AscIdx := 'ASC_'  + Col.FieldName;
+  AscIdx:= 'ASC_'  + Col.FieldName;
   DescIdx:= 'DESC_' + Col.FieldName;
 
   // Free space dynamically if approaching index limit

@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, Forms, StdCtrls, Controls, ExtCtrls
   {$IFDEF WINDOWS}, Windows {$ENDIF};
 
-function CheckFormIsEntireVisible(Rect : TRect) : TRect;
+function CheckFormIsEntireVisible(Rect: TRect): TRect;
 function SetStatusbarPnlWidth(stbWidth, lpWidth, rpWidth: Integer): Integer;
 function IsFileInUse(FileName: TFileName): Boolean;
 procedure DisableChildControls(Parent: TObject);
@@ -17,7 +17,7 @@ procedure EnableChildControls(Parent: TObject);
 
 implementation
 
-function CheckFormIsEntireVisible(Rect : TRect) : TRect;
+function CheckFormIsEntireVisible(Rect: TRect): TRect;
 var
   aWidth: Integer;
   aHeight: Integer;
@@ -44,12 +44,12 @@ begin
   end;
 end;
 
-function SetStatusbarPnlWidth(stbWidth, lpWidth, rpWidth : Integer) : Integer;
+function SetStatusbarPnlWidth(stbWidth, lpWidth, rpWidth: Integer): Integer;
 begin
   Result:= stbWidth - lpWidth - rpWidth;
 end;
 
-function IsFileInUse(FileName : TFileName) : Boolean;
+function IsFileInUse(FileName: TFileName): Boolean;
 {$IFDEF WINDOWS}
 var
   HFileRes: HFILE;
@@ -78,13 +78,11 @@ begin
   // Probeer het bestand exclusief te openen voor lezen/schrijven
   FileHandle:= FileOpen(FileName, fmOpenReadWrite or fmShareExclusive);
 
-  if FileHandle = THandle(-1) then
-  begin
+  if FileHandle = THandle(-1) then begin
     // Bestand is in gebruik of kan niet worden geopend
     Result:= True;
   end
-  else
-  begin
+  else begin
     // Bestand is niet in gebruik, sluit het handle
     FileClose(FileHandle);
     Result:= False;
@@ -92,7 +90,7 @@ begin
 end;
 {$ENDIF}
 
-procedure DisableChildControls(Parent : TObject);
+procedure DisableChildControls(Parent: TObject);
 var
   i: Integer;
   lParent: TWinControl;
@@ -102,8 +100,7 @@ begin
 
   lParent:= TWinControl(Parent);
 
-  for i:= 0 to lParent.ControlCount - 1 do
-  begin
+  for i:= 0 to lParent.ControlCount - 1 do begin
     if lParent.Controls[i] is TButton then
       lParent.Controls[i].Enabled:= False;
 
@@ -126,8 +123,7 @@ begin
 
   lParent:= TWinControl(Parent);
 
-  for i:= 0 to lParent.ControlCount - 1 do
-  begin
+  for i:= 0 to lParent.ControlCount - 1 do begin
     if lParent.Controls[i] is TButton then
       lParent.Controls[i].Enabled:= True;
 

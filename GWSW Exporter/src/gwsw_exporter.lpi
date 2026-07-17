@@ -19,7 +19,7 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <MinorVersionNr Value="5"/>
-      <RevisionNr Value="2"/>
+      <RevisionNr Value="3"/>
       <BuildNr Value="1"/>
       <StringTable Comments="GWSW OroX export naar ttl bestand." CompanyName="Hans van Buggenum" FileDescription="GWSW OroX export naar ttl bestand." InternalName="GWSW-Bridge" LegalCopyright="Hans van Buggenum" OriginalFilename="GWSW-OroX-Exporter" ProductName="GWSW Exporter" ProductVersion="1.0.0"/>
     </VersionInfo>
@@ -252,13 +252,9 @@
         <UnitName Value="CSVDataProvider"/>
       </Unit>
       <Unit>
-        <Filename Value="common\uleakcheck.pas"/>
+        <Filename Value="common\stelselindex.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uLeakCheck"/>
-      </Unit>
-      <Unit>
-        <Filename Value="common\csvdataset.pas"/>
-        <IsPartOfProject Value="True"/>
+        <UnitName Value="stelselIndex"/>
       </Unit>
     </Units>
   </ProjectOptions>

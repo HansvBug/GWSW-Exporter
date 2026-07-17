@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Variants, StrUtils, uIGWSWDataProvider,
-  DB, csvdataset;
+  DB, BufDataset;
 
 type
   { TCSVDataProvider
@@ -190,28 +190,23 @@ begin
     I:= 1;
     Len:= Length(Line);
 
-    while I <= Len do
-    begin
+    while I <= Len do begin
       Ch:= Line[I];
 
-      if Ch = fQuoteChar then
-      begin
-        if InQuotes and (I < Len) and (Line[I+1] = fQuoteChar) then
-        begin
+      if Ch = fQuoteChar then begin
+        if InQuotes and (I < Len) and (Line[I+1] = fQuoteChar) then begin
           // Escaped quote - add one quote to the field
           CurrentField:= CurrentField + Ch;
           Inc(I); // Skip the next quote character
         end;
         InQuotes:= not InQuotes;
       end
-      else if (Ch = fDelimiter) and not InQuotes then
-      begin
+      else if (Ch = fDelimiter) and not InQuotes then begin
         // End of field
         Result.Add(CurrentField);
         CurrentField:= '';
       end
-      else
-      begin
+      else begin
         CurrentField:= CurrentField + Ch;
       end;
 
@@ -233,6 +228,7 @@ begin
   if (Length(Result) > 0) and (Result[1] = fQuoteChar) and
      (Result[Length(Result)] = fQuoteChar) then
     Result:= Copy(Result, 2, Length(Result) - 2);
+
   Result:= Trim(Result);
 end;
 
@@ -244,10 +240,8 @@ begin
   CleanName:= CleanFieldName(FieldName);
 
   // Fast search using case-insensitive comparison
-  for I:= 0 to fFieldNames.Count - 1 do
-  begin
-    if SameText(CleanFieldName(fFieldNames[I]), CleanName) then
-    begin
+  for I:= 0 to fFieldNames.Count - 1 do begin
+    if SameText(CleanFieldName(fFieldNames[I]), CleanName) then begin
       Result:= I;
       Exit;
     end;
@@ -313,8 +307,7 @@ begin
     Exit;
 
   // Fast check for special cases
-  if (CleanStr = '0') or (CleanStr = '-0') then
-  begin
+  if (CleanStr = '0') or (CleanStr = '-0') then begin
     NumValue:= 0;
     Result:= True;
     Exit;
@@ -334,12 +327,10 @@ begin
     CleanStr:= StringReplace(CleanStr, FormatSettings.ThousandSeparator, '', [rfReplaceAll]);
 
   // Quick check for scientific notation
-  if (Pos('e', LowerCase(CleanStr)) > 0) or (Pos('E', CleanStr) > 0) then
-  begin
+  if (Pos('e', LowerCase(CleanStr)) > 0) or (Pos('E', CleanStr) > 0) then begin
     FS:= DefaultFormatSettings;
     FS.DecimalSeparator:= '.';
-    if TryStrToFloat(CleanStr, FloatValue, FS) then
-    begin
+    if TryStrToFloat(CleanStr, FloatValue, FS) then begin
       NumValue:= FloatValue;
       Result:= True;
     end;
@@ -359,28 +350,22 @@ begin
   FS.ThousandSeparator:= #0;
 
   // Try as integer first if no decimal point
-  if not HasDecimal then
-  begin
-    if TryStrToInt64(CleanStr, IntValue) then
-    begin
+  if not HasDecimal then begin
+    if TryStrToInt64(CleanStr, IntValue) then begin
       NumValue:= IntValue;
       Result:= True;
       Exit;
     end;
   end
-  else
-  begin
+  else begin
     // Has decimal, check if it ends with .0 or .00 etc.
     DotPos:= Pos('.', CleanStr);
-    if DotPos > 0 then
-    begin
+    if DotPos > 0 then begin
       // Check if everything after the decimal point are only zeros
-      if StrToIntDef(Copy(CleanStr, DotPos + 1, Length(CleanStr)), -1) = 0 then
-      begin
+      if StrToIntDef(Copy(CleanStr, DotPos + 1, Length(CleanStr)), -1) = 0 then begin
         // It's a whole number like 256.0
         CleanStr:= Copy(CleanStr, 1, DotPos - 1);
-        if TryStrToInt64(CleanStr, IntValue) then
-        begin
+        if TryStrToInt64(CleanStr, IntValue) then begin
           NumValue:= IntValue;
           Result:= True;
           Exit;
@@ -390,8 +375,7 @@ begin
   end;
 
   // Try as floating point number
-  if TryStrToFloat(CleanStr, FloatValue, FS) then
-  begin
+  if TryStrToFloat(CleanStr, FloatValue, FS) then begin
     // Check if it's actually a whole number
     if Abs(FloatValue - Trunc(FloatValue)) < 0.00000001 then
       NumValue:= Trunc(FloatValue)  // Return as integer
@@ -421,8 +405,7 @@ begin
   if FieldValues = nil then
     Exit;
 
-  if FieldIndex < FieldValues.Count then
-  begin
+  if FieldIndex < FieldValues.Count then begin
     ValueStr:= FieldValues[FieldIndex];
 
     // Quick check for empty string
@@ -440,8 +423,7 @@ begin
       Exit;
 
     // Try to convert to number
-    if not TryConvertToNumber(ValueStr, Result) then
-    begin
+    if not TryConvertToNumber(ValueStr, Result) then begin
       // Not a number, return as string
       Result:= ValueStr;
     end;
@@ -485,8 +467,7 @@ begin
   fCurrentLine:= 0;
   ClearCache; // Clear old cache
 
-  if fHasHeader and (fCSVLines.Count > 0) then
-  begin
+  if fHasHeader and (fCSVLines.Count > 0) then begin
     // Parse header line (cache for reuse)
     TempList:= ParseCSVLine(fCSVLines[0]);
     try
@@ -496,8 +477,7 @@ begin
     end;
     fCurrentLine:= 1; // Start after header
   end
-  else if fCSVLines.Count > 0 then
-  begin
+  else if fCSVLines.Count > 0 then begin
     // Generate field names (FIELD1, FIELD2, ...)
     fFieldNames.Clear;
     // Parse first line to determine number of fields
@@ -596,58 +576,110 @@ end;
 
 function TCSVDataProvider.LoadCSVData(out ADataSource: TObject; out ADataSet: TObject): Boolean;
 var
-  CSVDataSet: TCSVDataset = nil;
+  BufDataset: TBufDataset;
   lDataSource: TDataSource;
+  i, j: Integer;
+  FieldValues: TStringList;
+  StartRow: Integer;
+  GeometryFields: TStringList;
 begin
   Result:= False;
   ADataSource:= nil;
   ADataSet:= nil;
 
-  CSVDataSet:= TCSVDataset.Create(nil);
-  CSVDataSet.MaxIndexesCount:= 100;  // Required to enable sorting functionality
+  if (fCSVLines = nil) or (fCSVLines.Count = 0) then begin
+    raise Exception.Create('CSV bestand is niet geladen of is leeg');
+  end;
+
+  // Zorg dat de veldnamen geladen zijn
+  if fFieldNames.Count = 0 then
+    Open;   // Dit vult fFieldNames op basis van de header
+  Close;    // Sluit direct weer (we willen alleen de veldnamen)
+
+  BufDataset:= TBufDataset.Create(nil);
   try
-    // Configure TCSVDataset
-    CSVDataSet.CSVOptions.FirstLineAsFieldNames:= fHasHeader;
-    CSVDataSet.CSVOptions.Delimiter:= fDelimiter;
-    CSVDataSet.CSVOptions.QuoteChar:= fQuoteChar;
-    CSVDataSet.CSVOptions.IgnoreOuterWhitespace:= True;
+    // Bepaal welke velden geometry velden zijn (hoofdletterongevoelig)
+    GeometryFields:= TStringList.Create;
+    try
+      GeometryFields.Add('WKT_GEOMETRY');
+      GeometryFields.Add('WKT_GEOMETRIE');
+      GeometryFields.Add('GEOMETRY');
+      GeometryFields.Add('SHAPE');
+      GeometryFields.Add('THE_GEOM');
 
-    CSVDataSet.FileName:= fFileName;
-
-    { Note: This triggers a known memory leak in current Pascal version
-      This has been solved by including csvdataset.pas from the pascal fixes version in this project.
-      --> So Activie:= true can be safely applied here
-    }
-    CSVDataSet.Active:= True;
-
-    if CSVDataSet.FieldCount = 0 then
-    begin
-      CSVDataSet.Free;
-      Exit;
+      // Bouw velddefinities op
+      for i:= 0 to fFieldNames.Count - 1 do
+      begin
+        // Controleer of dit een geometry veld is
+        if GeometryFields.IndexOf(UpperCase(fFieldNames[i])) >= 0 then
+        begin
+          // Geometry velden: ftMemo (geen lengtebeperking)
+          BufDataset.FieldDefs.Add(fFieldNames[i], ftMemo, 0); //<--- het geometrie veld wordt hier op ftMemo gezet zodat het onbeperkt groot is.
+                                                               { #todo : Dit zou ook voor een Opmerking-, Omschrijving- of Commentaarveld kunnen. }
+        end
+        else
+        begin
+          // Normale velden: ftString met ruime marge (bijv. 1000 tekens)
+          // Maar pas op: Bepaal de maximale lengte dynamisch?
+          BufDataset.FieldDefs.Add(fFieldNames[i], ftString, 1000);
+        end;
+      end;
+    finally
+      GeometryFields.Free;
     end;
 
-    // Create DataSource
+    // Creëer en open de dataset
+    BufDataset.CreateDataset;
+    BufDataset.Open;
+
+    // Bepaal startrij (skip header als die er is)
+    if fHasHeader then
+      StartRow:= 1
+    else
+      StartRow:= 0;
+
+    // Voeg alle records toe
+    for j:= StartRow to fCSVLines.Count - 1 do
+    begin
+      FieldValues:= GetCachedLine(j);
+      if FieldValues = nil then Continue;
+
+      BufDataset.Append;
+
+      for i:= 0 to BufDataset.FieldDefs.Count - 1 do
+      begin
+        if i < FieldValues.Count then
+        begin
+          if BufDataset.FieldDefs[i].DataType = ftMemo then
+            BufDataset.Fields[i].AsString:= FieldValues[i]   // Geen truncatie voor geometry
+          else
+            BufDataset.Fields[i].AsString:= FieldValues[i];  // String velden
+        end;
+      end;
+
+      BufDataset.Post;
+    end;
+
+    BufDataset.First;
+
     lDataSource:= TDataSource.Create(nil);
-    lDataSource.DataSet:= CSVDataSet;
+    lDataSource.DataSet:= BufDataset;
 
-    // Return as TObject
     ADataSource:= lDataSource;
-    ADataSet:= CSVDataSet;
-
+    ADataSet:= BufDataset;
     Result:= True;
 
   except
     on E: Exception do
     begin
-      // Cleanup on error
       if Assigned(lDataSource) then
         lDataSource.Free
-      else if Assigned(CSVDataSet) then
-        CSVDataSet.Free;
-
+      else if Assigned(BufDataset) then
+        BufDataset.Free;
       ADataSource:= nil;
       ADataSet:= nil;
       Result:= False;
+      raise;  // Voor debugging
     end;
   end;
 end;

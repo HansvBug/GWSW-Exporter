@@ -6,20 +6,20 @@ uses Classes, SysUtils, Forms, StdCtrls, Controls, Graphics, Dialogs, ComCtrls,
   ExtCtrls, Menus, DBGrids, Buttons, DBCtrls, fpspreadsheetctrls,
   SynEdit, LCLIntf,
   SynHighlighterSQL, istrlist, model.intf, model.decl, presenter.main,
-  presenter.trax, DB, fpcsvexport, oracleconnection, SQLDB, csvdataset;
+  presenter.trax, DB, oracleconnection, SQLDB, BufDataset;
 
 type
   { TfrmMain }
 
   TfrmMain = class(TForm, IViewMain)
     btnConnect: TButton;
-    btnExportDbgridToCsv : TButton;
+    btnExportDbgridToCsv: TButton;
     btnExportToFileOra: TButton;
     btnExportToFileCSV: TButton;
     btnGetData: TButton;
-    btnSaveQuery : TButton;
-    btnOpenQuery : TButton;
-    btnClose : TButton;
+    btnSaveQuery: TButton;
+    btnOpenQuery: TButton;
+    btnClose: TButton;
     btnSaveErrorLog: TButton;
     btnSelectCsvFile: TButton;
     btnDisconnect: TButton;
@@ -69,16 +69,16 @@ type
     chkIncludePutBegindatum: TCheckBox;
     chkIncludePutEinddatum: TCheckBox;
     chkIncludePutVorm: TCheckBox;
-    dbgSewerData : TDBGrid;
-    DBNavigator : TDBNavigator;
+    dbgSewerData: TDBGrid;
+    DBNavigator: TDBNavigator;
     edtCsvFile: TEdit;
     edtPassword: TEdit;
     gbConnection: TGroupBox;
     gbExport: TGroupBox;
     gbExport1: TGroupBox;
     gbGetData: TGroupBox;
-    gbQuery : TGroupBox;
-    gbManholes : TGroupBox;
+    gbQuery: TGroupBox;
+    gbManholes: TGroupBox;
     gbPipelines: TGroupBox;
     gbMechanicalPipeline: TGroupBox;
     gbGully: TGroupBox;
@@ -88,62 +88,62 @@ type
     lblOrganizationNameCsv: TLabel;
     lblPassword: TLabel;
     lblProgress: TLabel;
-    lblSQLFileLocation : TLabel;
-    lblError : TLabel;
-    lblProgressTitle : TLabel;
+    lblSQLFileLocation: TLabel;
+    lblError: TLabel;
+    lblProgressTitle: TLabel;
     lblUserName: TLabel;
-    MainMenu1 : TMainMenu;
-    miOptionsLanguageNL : TMenuItem;
-    miOptionsLanguageEN : TMenuItem;
-    mioptionsAbout : TMenuItem;
-    miOptionsLanguage : TMenuItem;
-    miOptionsOptions : TMenuItem;
-    miOptions : TMenuItem;
-    miProgramClose : TMenuItem;
-    miProgram : TMenuItem;
-    memReportError : TMemo;
-    memReportProgress : TMemo;
-    PageControl1 : TPageControl;
+    MainMenu1: TMainMenu;
+    miOptionsLanguageNL: TMenuItem;
+    miOptionsLanguageEN: TMenuItem;
+    mioptionsAbout: TMenuItem;
+    miOptionsLanguage: TMenuItem;
+    miOptionsOptions: TMenuItem;
+    miOptions: TMenuItem;
+    miProgramClose: TMenuItem;
+    miProgram: TMenuItem;
+    memReportError: TMemo;
+    memReportProgress: TMemo;
+    PageControl1: TPageControl;
     PageControl2: TPageControl;
     Panel1: TPanel;
     Panel2: TPanel;
-    pnlDataSettings : TPanel;
-    pnlProgress : TPanel;
-    pnlError : TPanel;
-    pnlProgressExport : TPanel;
-    pnlDataGrid : TPanel;
-    pnlSettings : TPanel;
-    pnlQuery : TPanel;
-    pnlPrepareData : TPanel;
-    pnlPrepareMain : TPanel;
-    pnlMainTop : TPanel;
-    pnlBottom : TPanel;
-    pnlMainAllClient : TPanel;
+    pnlDataSettings: TPanel;
+    pnlProgress: TPanel;
+    pnlError: TPanel;
+    pnlProgressExport: TPanel;
+    pnlDataGrid: TPanel;
+    pnlSettings: TPanel;
+    pnlQuery: TPanel;
+    pnlPrepareData: TPanel;
+    pnlPrepareMain: TPanel;
+    pnlMainTop: TPanel;
+    pnlBottom: TPanel;
+    pnlMainAllClient: TPanel;
     ProgressBar: TProgressBar;
-    SplitterDataSettings : TSplitter;
-    SplitterdataGrid : TSplitter;
-    SplitterMemos : TSplitter;
-    stbInfo : TStatusBar;
-    SynEditSqlQuery : TSynEdit;
-    SynSQLSyn1 : TSynSQLSyn;
+    SplitterDataSettings: TSplitter;
+    SplitterdataGrid: TSplitter;
+    SplitterMemos: TSplitter;
+    stbInfo: TStatusBar;
+    SynEditSqlQuery: TSynEdit;
+    SynSQLSyn1: TSynSQLSyn;
     tsOracle: TTabSheet;
     tsCsv: TTabSheet;
-    tsQuery : TTabSheet;
-    tsPrepare : TTabSheet;
-    tsExportSettings : TTabSheet;
-    procedure btnConnectClick(Sender : TObject);
+    tsQuery: TTabSheet;
+    tsPrepare: TTabSheet;
+    tsExportSettings: TTabSheet;
+    procedure btnConnectClick(Sender: TObject);
     procedure btnDisconnectClick(Sender: TObject);
-    procedure btnExportDbgridToCsvClick(Sender : TObject);
+    procedure btnExportDbgridToCsvClick(Sender: TObject);
     procedure btnExportToFileCSVClick(Sender: TObject);
-    procedure btnExportToFileOraClick(Sender : TObject);
-    procedure btnGetDataClick(Sender : TObject);
-    procedure btnOpenQueryClick(Sender : TObject);
+    procedure btnExportToFileOraClick(Sender: TObject);
+    procedure btnGetDataClick(Sender: TObject);
+    procedure btnOpenQueryClick(Sender: TObject);
     procedure btnSaveErrorLogClick(Sender: TObject);
-    procedure btnSaveQueryClick(Sender : TObject);
+    procedure btnSaveQueryClick(Sender: TObject);
     procedure btnSelectCsvFileClick(Sender: TObject);
-    procedure cbDatabaseNameExit(Sender : TObject);
-    procedure cbOrganizationNameExit(Sender : TObject);
-    procedure cbUserNameExit(Sender : TObject);
+    procedure cbDatabaseNameExit(Sender: TObject);
+    procedure cbOrganizationNameExit(Sender: TObject);
+    procedure cbUserNameExit(Sender: TObject);
     procedure chkIncludeKolkBegindatumChange(Sender: TObject);
     procedure chkIncludeKolkBreedteChange(Sender: TObject);
     procedure chkIncludeKolkDiameterChange(Sender: TObject);
@@ -187,12 +187,12 @@ type
     procedure chkIncludePutMateriaalChange(Sender: TObject);
     procedure chkIncludePutVormChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure pnlDataSettingsResize(Sender : TObject);
-    procedure pnlPrepareDataResize(Sender : TObject);
-    procedure pnlProgressExportResize(Sender : TObject);
-    procedure SplitterdataGridMoved(Sender : TObject);
-    procedure SplitterDataSettingsMoved(Sender : TObject);
-    procedure SplitterMemosMoved(Sender : TObject);
+    procedure pnlDataSettingsResize(Sender: TObject);
+    procedure pnlPrepareDataResize(Sender: TObject);
+    procedure pnlProgressExportResize(Sender: TObject);
+    procedure SplitterdataGridMoved(Sender: TObject);
+    procedure SplitterDataSettingsMoved(Sender: TObject);
+    procedure SplitterMemosMoved(Sender: TObject);
   private
     fPresenter: IPresenterMain;
     fSubscriber: IobsSubscriber;
@@ -200,7 +200,7 @@ type
     fCanContinue: Boolean;
 
     fCurrentCSVDataSource: TDataSource;
-    fCurrentCSVDataSet: TCSVDataset;
+    fCurrentCSVDataSet: TBufDataset;
 
     function get_Observer: IobsSubscriber;
     function get_Presenter: IPresenterMain;
@@ -222,12 +222,12 @@ type
     procedure ExportInProgress(IsInProgress: Boolean);
 
     { Event handlers }
-    procedure miProgramCloseOnClick(Sender : TObject);
+    procedure miProgramCloseOnClick(Sender: TObject);
     procedure OnFormShow(Sender: TObject);
-    procedure OnFormResize(Sender : TObject);
-    procedure miOptionsOptionsOnClick(Sender : TObject);
-    procedure miOptionsLanguageENOnClick(Sender : TObject);
-    procedure miOptionsLanguageNLOnClick(Sender : TObject);
+    procedure OnFormResize(Sender: TObject);
+    procedure miOptionsOptionsOnClick(Sender: TObject);
+    procedure miOptionsLanguageENOnClick(Sender: TObject);
+    procedure miOptionsLanguageNLOnClick(Sender: TObject);
     procedure dbgSewerDataTitleClick(Column: TColumn);
     procedure LoadCsvData(const FileName: String);
 
@@ -271,7 +271,7 @@ uses obs_prosu, common.consts, common.utils, view.configure;
 { TfrmMain }
 {$Region 'getter/setter'}
 
-procedure TfrmMain.btnConnectClick(Sender : TObject);
+procedure TfrmMain.btnConnectClick(Sender: TObject);
 var
   lRec: TDbConnectRec;
 begin
@@ -294,21 +294,41 @@ begin
   fPresenter.DbDisconnect(@lRec);
 end;
 
-procedure TfrmMain.btnExportDbgridToCsvClick(Sender : TObject);
+procedure TfrmMain.btnExportDbgridToCsvClick(Sender: TObject);
 var
-  csvExporter: TCSVExporter;
   saveDialog: TSaveDialog;
   Success: Boolean;
+  DataSet: TDataSet;
+  FS: TFileStream;
+  i: Integer;
+  Line: string;
+  LineBytes: TBytes;
+  FieldValue: string;
+  NeedQuotes: Boolean;
+  HeaderLine: string;
+  RecordCount: Integer;
+  CurrentRecord: Integer;
+  LastProgressUpdate: Integer;
 begin
-  csvExporter:= nil;
   saveDialog:= nil;
   Success:= False;
+  DataSet:= nil;
+  FS:= nil;
+
+  if not Assigned(dbgSewerData.DataSource) or
+     not Assigned(dbgSewerData.DataSource.DataSet) then
+  begin
+    MessageDlg(fPresenter.GetstaticText(UnitName, 'Warning'),
+               fPresenter.GetstaticText(UnitName, 'NoDataToExport'),
+               mtWarning, [mbOK], 0);
+    Exit;
+  end;
+
+  DataSet:= dbgSewerData.DataSource.DataSet;
+
   try
     try
-      csvExporter:= TCSVExporter.Create(Nil);
       saveDialog:= TSaveDialog.Create(Nil);
-
-      csvExporter.Dataset:= dbgSewerData.DataSource.DataSet;  // Configureer exporter
 
       saveDialog.Title:= fPresenter.GetstaticText(UnitName, 'SaveCSVFile');
       saveDialog.Filter:= fPresenter.GetstaticText(UnitName, 'DlgCSVFilesFilter');
@@ -323,53 +343,123 @@ begin
       saveDialog.Options:= saveDialog.Options + [ofOverwritePrompt, ofPathMustExist];
 
       if not saveDialog.Execute then
-        Exit; // User has canceled
+        Exit;
 
-      // Check if file is available for writing BEFORE we try to export
       if FileExists(saveDialog.FileName) and IsFileInUse(saveDialog.FileName) then
       begin
         MessageDlg(fPresenter.GetstaticText('view.main.statusbartexts', 'CsvFileInUse') + sLineBreak +
-                   saveDialog.FileName, mtError, [mbOK], 0); { #todo : Mischien een view.main.messages maken }
+                   saveDialog.FileName, mtError, [mbOK], 0);
         Exit;
       end;
 
-      // Start the export
       fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'SavingFile'), 0);
       Screen.Cursor:= crHourGlass;
 
-      csvExporter.FileName:= saveDialog.FileName;
+      // Toon voortgangsbalk
+      ProgressBar.Visible:= True;
+      ProgressBar.Position:= 0;
 
-      csvExporter.Execute;  // Run the export
+      // Bepaal aantal records voor voortgang (indien mogelijk)
+      RecordCount:= DataSet.RecordCount;
+      if RecordCount <= 0 then
+        RecordCount:= 1;  // Fallback
+
+      CurrentRecord:= 0;
+      LastProgressUpdate:= 0;
+
+      FS:= TFileStream.Create(saveDialog.FileName, fmCreate);
+      try
+        // Header
+        HeaderLine:= '';
+        for i:= 0 to DataSet.FieldCount - 1 do
+        begin
+          if i > 0 then HeaderLine:= HeaderLine + ',';
+          HeaderLine:= HeaderLine + '"' +
+                        StringReplace(DataSet.Fields[i].FieldName, '"', '""', [rfReplaceAll]) +
+                        '"';
+        end;
+        LineBytes:= TEncoding.UTF8.GetBytes(HeaderLine + sLineBreak);
+        FS.WriteBuffer(LineBytes[0], Length(LineBytes));
+
+        // Data
+        DataSet.DisableControls;
+        try
+          DataSet.First;
+          while not DataSet.EOF do
+          begin
+            Line:= '';
+            for i:= 0 to DataSet.FieldCount - 1 do
+            begin
+              if i > 0 then Line:= Line + ',';
+
+              FieldValue:= DataSet.Fields[i].AsString;
+
+              NeedQuotes:= (Pos(',', FieldValue) > 0) or
+                            (Pos('"', FieldValue) > 0) or
+                            (Pos(#10, FieldValue) > 0) or
+                            (Pos(#13, FieldValue) > 0);
+
+              if NeedQuotes then
+              begin
+                FieldValue:= StringReplace(FieldValue, '"', '""', [rfReplaceAll]);
+                Line:= Line + '"' + FieldValue + '"';
+              end
+              else
+                Line:= Line + FieldValue;
+            end;
+
+            LineBytes:= TEncoding.UTF8.GetBytes(Line + sLineBreak);
+            FS.WriteBuffer(LineBytes[0], Length(LineBytes));
+
+            Inc(CurrentRecord);
+            // Update voortgang elke 100 records of bij laatste record
+            if (CurrentRecord - LastProgressUpdate >= 100) or (CurrentRecord >= RecordCount) then
+            begin
+              ProgressBar.Position:= Round((CurrentRecord / RecordCount) * 100);
+              LastProgressUpdate:= CurrentRecord;
+              Application.ProcessMessages;  // Houd UI responsief
+            end;
+
+            DataSet.Next;
+          end;
+        finally
+          DataSet.EnableControls;
+        end;
+
+      finally
+        FS.Free;
+      end;
+
       Success:= True;
-
       fPresenter.SetStatusbarText(fPresenter.GetstaticText('view.main.statusbartexts', 'FileSaved'), 0);
+
     except
-      on E: EFOpenError do
-      begin
-        // Komt hier nooit want dit wordt al afgevangen met IsFileInUse(saveDialog.FileName).
+      on E: EFOpenError do begin
         MessageDlg(Format(fPresenter.GetstaticText('view.main.statusbartexts', 'FileLockedError'),
                   [saveDialog.FileName]), mtError, [mbOK], 0);
-        fPresenter.WriteToLog(UnitName, ltWarning, fPresenter.GetstaticText('view.main.statusbartexts', 'FileLockedError') + ': '+ saveDialog.FileName + ' - ' + E.Message);
-
+        fPresenter.WriteToLog(UnitName, ltWarning,
+          fPresenter.GetstaticText('view.main.statusbartexts', 'FileLockedError') + ': ' +
+          saveDialog.FileName + ' - ' + E.Message);
       end;
-      on E: EStreamError do
-      begin
+      on E: EStreamError do begin
         MessageDlg(Format(fPresenter.GetstaticText('view.main.statusbartexts', 'StreamError'),
                   [E.Message]), mtError, [mbOK], 0);
-        fPresenter.WriteToLog(UnitName, ltWarning, fPresenter.GetstaticText('view.main.statusbartexts', 'StreamError') + ': ' + E.Message);
+        fPresenter.WriteToLog(UnitName, ltWarning,
+          fPresenter.GetstaticText('view.main.statusbartexts', 'StreamError') + ': ' + E.Message);
       end;
-      on E: Exception do
-      begin
+      on E: Exception do begin
         MessageDlg(fPresenter.GetstaticText('view.main.statusbartexts', 'UnexpectedExportError') +
                   sLineBreak + E.ClassName + ': ' + E.Message,
                   mtError, [mbOK], 0);
-        fPresenter.WriteToLog(UnitName, ltWarning, fPresenter.GetstaticText('view.main.statusbartexts', 'UnexpectedExportError') + ': ' + E.ClassName + ' - ' + E.Message);
+        fPresenter.WriteToLog(UnitName, ltWarning,
+          fPresenter.GetstaticText('view.main.statusbartexts', 'UnexpectedExportError') + ': ' +
+          E.ClassName + ' - ' + E.Message);
       end;
     end;
 
   finally
-    if Assigned(csvExporter) then csvExporter.Free;
     if Assigned(saveDialog) then saveDialog.Free;
+    ProgressBar.Visible:= False;
     if Success then fPresenter.SetStatusbarText('', 0);
     Screen.Cursor:= crDefault;
   end;
@@ -1476,7 +1566,7 @@ end;
 procedure TfrmMain.DoRetrieveCSVData(anObj: TObject; aData: PRetrieveCSVDataRec);
 var
   lDataSource: TDataSource;
-  lDataSet: TCSVDataset;
+  lDataSet: TBufDataset;
   lDbGrid: TDBGrid;
   i: Integer;
 begin
@@ -1493,7 +1583,7 @@ begin
   if (aData^.DataSource <> Nil) and (aData^.DataSet <> Nil) then
   begin
     lDataSource:= TDataSource(aData^.DataSource);
-    lDataSet:= TCSVDataset(aData^.DataSet);
+    lDataSet:= TBufDataset(aData^.DataSet);
 
     for i:= 0 to lDbGrid.Columns.Count -1 do begin
       lDbGrid.Columns[i].Width:= lDbGrid.Columns[i].Width + ExtraColumnWidthForImage;
@@ -1624,7 +1714,6 @@ begin
   PageControl1.ActivePageIndex:= 0;
   btnDisconnect.Enabled:= False;
   PageControl2.ActivePageIndex:= 0;
-
 end;
 
 procedure TfrmMain.BeforeDestruction;
@@ -1965,7 +2054,7 @@ begin
     if dbgSewerData.DataSource.DataSet is TSQLQuery then begin
       lTrx.DataType:= dtORA;
     end
-    else if dbgSewerData.DataSource.DataSet is TCSVDataset then begin
+    else if dbgSewerData.DataSource.DataSet is TBufDataset then begin
       lTrx.DataType:= dtCSV;
       lTrx.DataProvider:= dbgSewerData.DataSource.DataSet;  // zou voor Ora ook zo kunnen.
     end;

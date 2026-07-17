@@ -1,4 +1,6 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
+  https://gitlab.com/cdbc-public/releases/mvp-setup
+}
 unit model.main;
 {$mode ObjFPC}{$H+}
 {$WARN 6058 off : Call to subroutine "$1" marked as inline is not inlined}
@@ -763,10 +765,8 @@ end;
 
 function TModelMain.ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
 var
-  DataProviderOraExp: IGWSWDataProvider;
-  DataProviderCSVExp: IGWSWDataProvider;
+  DataProvider: IGWSWDataProvider;
   OroxExport: TOroxExport;
-  ExportConfig: TExportConfig;
 begin
   Result.Success:= False;
   Result.Message:= '';
@@ -779,17 +779,23 @@ begin
   if data^.DataType = '' then Exit;
 
   try
-    fSettings.LoadExportConfigFromIni;
-    ExportConfig:= fSettings.ExportConfig;
+    fSettings.LoadExportConfigFromIni;  // Get all the export checkbox settings
 
     if data^.DataType = dtORA then begin
-      DataProviderOraExp:= CreateORADataProvider(fDatabaseModule.CurrentQuery, True);  // Create a data provider. This is the query that retrieved the data.
-      OroxExport:= TOroxExport.Create(DataProviderOraExp, Data^.FileNameExportFile, Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter, ExportConfig  );
+      DataProvider:= CreateORADataProvider(fDatabaseModule.CurrentQuery, True);  // Create a data provider. This is the query that retrieved the data.
     end
     else if data^.DataType = dtCSV then begin
-      DataProviderCSVExp:= CreateCSVDataProvider(Data^.FileNameCsvFile, ',', '"', True);  { #todo : Let nu nog hard in de code maar moet naar de configuratie }
-      OroxExport:= TOroxExport.Create(DataProviderCSVExp, Data^.FileNameExportFile, Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter, ExportConfig  );
+      DataProvider:= CreateCSVDataProvider(Data^.FileNameCsvFile, ',', '"', True);  { #todo : Let nu nog hard in de code maar moet naar de configuratie }
     end;
+
+    if DataProvider = nil then begin
+      raise Exception.Create('Could not create data provider');
+      Exit;
+    end;
+
+    OroxExport:= TOroxExport.Create(DataProvider, Data^.FileNameExportFile,
+          Data^.OrganizationName, Data^.MappingFile, Self as IExportProgressReporter,
+          fSettings.ExportConfig);
 
     try
       fSettings.ReadFile; // Kan vervelend worden. leest het hele settingsbestand opnieuw terwijl maar 1 setting nodig is.

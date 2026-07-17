@@ -1,4 +1,6 @@
-{ Copyright ©2025 Hans van Buggenum }
+{ The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
+  https://gitlab.com/cdbc-public/releases/mvp-setup
+}
 unit model.decl;
 {$mode ObjFPC}{$H+}
 interface 
@@ -26,12 +28,12 @@ type
 
     function get_ActiveTrx: ITransaction;
     function get_Model: IModelMain;
-    function get_ModelConfig : IModelConfigure;
+    function get_ModelConfig: IModelConfigure;
     function get_Owner: IPresenterMain;
-    function get_OwnerConfig : IPresenterConfigure;
+    function get_OwnerConfig: IPresenterConfigure;
     function Obj: TObject;
-    procedure set_ModelConfig(AValue : IModelConfigure);
-    procedure set_OwnerConfig(AValue : IPresenterConfigure);
+    procedure set_ModelConfig(AValue: IModelConfigure);
+    procedure set_OwnerConfig(AValue: IPresenterConfigure);
   public
     constructor Create(anOwner: IPresenterMain;aModel: IModelMain);
     destructor Destroy; override;
