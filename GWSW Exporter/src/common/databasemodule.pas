@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit DatabaseModule;
 
 {$mode ObjFPC}{$H+}
@@ -267,7 +269,7 @@ begin
     Close;
     SQL.Clear;
     SQL.Text:= SqlText;
-    PacketRecords:= -1;  // Fetch all records. { #todo : Kan nu niet worden gewijzigd zondeer dbgrid sortren kapot te maken. }
+    PacketRecords:= -1;  // Fetch all records. { #todo : Kan nu niet worden gewijzigd zonder dbgrid sortren kapot te maken. }
     Prepared;  // Prepare the query for execution
     UniDirectional:= False;
     try

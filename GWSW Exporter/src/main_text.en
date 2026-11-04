@@ -8,6 +8,7 @@ miOptionsOptions=&Options...
 miOptionsLanguage=&Language
 miOptionsLanguageEN=&English
 miOptionsLanguageNL=&Dutch
+mioptionsAbout=About GWSW-Exporter
 
 tsPrepare=Prepare
 tsExportSettings=Export settings
@@ -31,6 +32,7 @@ btnDisconnect=Disconnect
 btnGetData=Retrieve data
 btnExportDbgridToCsv=Save
 btnExportToFileOra=Export
+lblSelectedVersion=Selected GWSW version: 
 btnExportToFileCSV=Export
 btnClose=Close
 MappingsFileIsMissing=Mapping is missing. Go to settings tab.
@@ -52,6 +54,7 @@ Warning=Warning
 Information=Information
 QueryNotActive=Query is not running. First, activate the query.
 MissingMappingFile=Missing mapping file.
+MissingGWSWVersion=GWSW setting missing (options)
 QueryFileNotLoaded=SQL file is not loaded.
 OrganizationNameIsBlank=Organization name can't be blank. 
 EnterDasetName=Enter the dataset name as it is known on the GWSW server.
@@ -206,3 +209,16 @@ SwitchlanguageNL=Language adapted to Dutch.
 SwitchlanguageEN=Language changed to English.
 DbConnEstablished=Database connection established
 DbConnFailed=Database connection failed
+
+
+
+[view.about]
+btnClose=Close
+Caption=GWSW-Exporter
+lblVersion=Version: 
+lblCredits=Credits
+Description=Convert sewer data to GWSW OroX TTL files.
+SourceCode=Source code: 
+BuildWith=Built with Free Pascal & Lazarus
+SpecialThanks=Thanks to: Benny Christensen (MVP-Setup) and the FPC community
+DevelopedBy=Developed by

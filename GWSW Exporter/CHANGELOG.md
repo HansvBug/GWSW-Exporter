@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
@@ -8,13 +9,24 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 ### Fixed
-## [0.5.2] - 2025-05-14
+
+## [0.5.3] - 2026-11-04
+### Added
+- GWSW 1.7 URIs can be generated.
+
+### Changed
+- Settings refactored.
+- Minor improvements in the code. Not visible during use.
+
+## [0.5.2] - 2026-05-14
+### Fixed
 - The Geometry text string was truncated at 256 characters.
 
-## [0.5.1] - 2025-02-07
+## [0.5.1] - 2026-02-07
+### Added
 - First units equipped with AI-generated documentation.
 
-## [0.5.0] - 2025-02-06
+## [0.5.0] - 2026-02-06
 ### Added
 - Initial implementation of data validation framework.
 - CSV to TTL conversion and export functionality.
@@ -24,10 +36,8 @@ All notable changes to this project will be documented in this file.
 - Improved user interface with various minor updates and enhancements.
 
 ### Fixed
-- 
 
-
-## [0.4.0] - 2025-01-10
+## [0.4.0] - 2026-01-10
 ### Added
 - First workable version with some validation.
 - Initial validation framework for geometry and attribute constraints.

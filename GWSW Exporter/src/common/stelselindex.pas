@@ -1,4 +1,6 @@
-{ Copyright ©2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit stelselIndex;
 
 {$mode ObjFPC}{$H+}
@@ -68,7 +70,7 @@ var
 begin
   for i:= 0 to fParts.Count - 1 do
     TStringList(fParts[i]).Free;
-    //TStringList(fParts[i]).Clear;
+
   fParts.Clear;
 end;
 

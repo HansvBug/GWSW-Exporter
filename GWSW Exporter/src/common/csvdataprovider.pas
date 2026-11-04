@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit CSVDataProvider;
 
 {$mode ObjFPC}{$H+}
@@ -72,6 +74,9 @@ type
       Returns:
         True if successful conversion to number, False if string is not numeric }
     function TryConvertToNumber(const ValueStr: string; out NumValue: Variant): Boolean;
+
+    procedure EnsureFieldNamesLoaded;
+    function ParseLineUncached(LineIndex: Integer): TStringList;
 
   public
     { Creates a new CSV data provider instance and loads the specified file
@@ -282,6 +287,7 @@ begin
   for i:= 0 to Length(fParsedLines) - 1 do
     if fParsedLines[i] <> nil then
       FreeAndNil(fParsedLines[i]);
+
   SetLength(fParsedLines, 0);
   fCacheInitialized:= False;
 end;
@@ -385,6 +391,33 @@ begin
   end;
 end;
 
+procedure TCSVDataProvider.EnsureFieldNamesLoaded;
+var
+  TempList: TStringList;
+  i: Integer;
+begin
+  if fFieldNames.Count > 0 then Exit;
+  if (fCSVLines = nil) or (fCSVLines.Count = 0) then Exit;
+
+  TempList:= ParseCSVLine(fCSVLines[0]);
+  try
+    if fHasHeader then
+      fFieldNames.Assign(TempList)
+    else
+      for i:= 0 to TempList.Count - 1 do
+        fFieldNames.Add('FIELD' + IntToStr(i + 1));
+  finally
+    TempList.Free;
+  end;
+end;
+
+function TCSVDataProvider.ParseLineUncached(LineIndex: Integer): TStringList;
+begin
+  if (LineIndex < 0) or (LineIndex >= fCSVLines.Count) then
+    Exit(nil);
+  Result:= ParseCSVLine(fCSVLines[LineIndex]);
+end;
+
 function TCSVDataProvider.GetFieldValue(const FieldName: string): Variant;
 var
   FieldIndex: Integer;
@@ -400,7 +433,7 @@ begin
   if FieldIndex = -1 then
     Exit;
 
-  // Use cached line - this is the key performance optimization!
+  // Use cached line
   FieldValues:= GetCachedLine(fCurrentLine);
   if FieldValues = nil then
     Exit;
@@ -460,37 +493,15 @@ begin
 end;
 
 procedure TCSVDataProvider.Open;
-var
-  i: Integer;
-  TempList: TStringList;
 begin
-  fCurrentLine:= 0;
-  ClearCache; // Clear old cache
+  ClearCache;
+  EnsureFieldNamesLoaded;
 
-  if fHasHeader and (fCSVLines.Count > 0) then begin
-    // Parse header line (cache for reuse)
-    TempList:= ParseCSVLine(fCSVLines[0]);
-    try
-      fFieldNames.Assign(TempList);
-    finally
-      TempList.Free;
-    end;
-    fCurrentLine:= 1; // Start after header
-  end
-  else if fCSVLines.Count > 0 then begin
-    // Generate field names (FIELD1, FIELD2, ...)
-    fFieldNames.Clear;
-    // Parse first line to determine number of fields
-    TempList:= ParseCSVLine(fCSVLines[0]);
-    try
-      for i:= 0 to TempList.Count - 1 do
-        fFieldNames.Add('FIELD' + IntToStr(i+1));
-    finally
-      TempList.Free;
-    end;
-  end;
+  if fHasHeader then
+    fCurrentLine:= 1
+  else
+    fCurrentLine:= 0;
 
-  // Initialize cache
   InitializeCache;
 end;
 
@@ -547,7 +558,7 @@ begin
 
   // Try to get OBJECT_TYPE from CSV
   if FieldExists('OBJECT_TYPE') then
-    Result:= Trim(VarToStr(GetFieldValue('OBJECT_TYPE')))
+    Result:= Trim(VarToStr(GetFieldValue('OBJECT_TYPE')))  { #todo : const van maken }
   else if FieldExists('OBJECTTYPE') then
     Result:= Trim(VarToStr(GetFieldValue('OBJECTTYPE')))
   else if FieldExists('TYPE') then
@@ -586,15 +597,19 @@ begin
   Result:= False;
   ADataSource:= nil;
   ADataSet:= nil;
+  lDataSource:= nil;
 
-  if (fCSVLines = nil) or (fCSVLines.Count = 0) then begin
+  if (fCSVLines = nil) or (fCSVLines.Count = 0) then
     raise Exception.Create('CSV bestand is niet geladen of is leeg');
-  end;
 
-  // Zorg dat de veldnamen geladen zijn
+  // Veldnamen zijn nodig om de FieldDefs op te bouwen.
+  EnsureFieldNamesLoaded;
   if fFieldNames.Count = 0 then
-    Open;   // Dit vult fFieldNames op basis van de header
-  Close;    // Sluit direct weer (we willen alleen de veldnamen)
+    raise Exception.Create('CSV bestand bevat geen velden');
+
+  // De cache is niet nodig voor LoadCSVData. Geef eventueel aanwezig
+  // geheugen vrij zodat we niet onnodig 2× de data vasthouden.
+  ClearCache;
 
   BufDataset:= TBufDataset.Create(nil);
   try
@@ -607,57 +622,49 @@ begin
       GeometryFields.Add('SHAPE');
       GeometryFields.Add('THE_GEOM');
 
-      // Bouw velddefinities op
-      for i:= 0 to fFieldNames.Count - 1 do
-      begin
-        // Controleer of dit een geometry veld is
+      for i:= 0 to fFieldNames.Count - 1 do begin
         if GeometryFields.IndexOf(UpperCase(fFieldNames[i])) >= 0 then
-        begin
-          // Geometry velden: ftMemo (geen lengtebeperking)
-          BufDataset.FieldDefs.Add(fFieldNames[i], ftMemo, 0); //<--- het geometrie veld wordt hier op ftMemo gezet zodat het onbeperkt groot is.
-                                                               { #todo : Dit zou ook voor een Opmerking-, Omschrijving- of Commentaarveld kunnen. }
-        end
+          BufDataset.FieldDefs.Add(fFieldNames[i], ftMemo, 0)
         else
-        begin
-          // Normale velden: ftString met ruime marge (bijv. 1000 tekens)
-          // Maar pas op: Bepaal de maximale lengte dynamisch?
           BufDataset.FieldDefs.Add(fFieldNames[i], ftString, 1000);
-        end;
       end;
     finally
       GeometryFields.Free;
     end;
 
-    // Creëer en open de dataset
+    // CreateDataset opent de dataset al; Open is hier dus overbodig.
     BufDataset.CreateDataset;
-    BufDataset.Open;
 
-    // Bepaal startrij (skip header als die er is)
     if fHasHeader then
       StartRow:= 1
     else
       StartRow:= 0;
 
-    // Voeg alle records toe
-    for j:= StartRow to fCSVLines.Count - 1 do
-    begin
-      FieldValues:= GetCachedLine(j);
-      if FieldValues = nil then Continue;
-
-      BufDataset.Append;
-
-      for i:= 0 to BufDataset.FieldDefs.Count - 1 do
-      begin
-        if i < FieldValues.Count then
-        begin
-          if BufDataset.FieldDefs[i].DataType = ftMemo then
-            BufDataset.Fields[i].AsString:= FieldValues[i]   // Geen truncatie voor geometry
-          else
-            BufDataset.Fields[i].AsString:= FieldValues[i];  // String velden
+    // DisableControls voorkomt onnodige notificaties per Append/Post.
+    // Bij 100k+ rijen is dat een merkbare snelheidswinst.
+    BufDataset.DisableControls;
+    try
+      for j:= StartRow to fCSVLines.Count - 1 do begin
+        // Direct parsen, geen cache. Elke regel wordt toch maar
+        // één keer gebruikt tijdens het vullen van de dataset.
+        FieldValues:= ParseLineUncached(j);
+        if FieldValues = nil then Continue;
+        try
+          BufDataset.Append;
+          try
+            for i:= 0 to BufDataset.FieldDefs.Count - 1 do begin
+              if i < FieldValues.Count then
+                BufDataset.Fields[i].AsString:= FieldValues[i];
+            end;
+          finally
+            BufDataset.Post;
+          end;
+        finally
+          FieldValues.Free;
         end;
       end;
-
-      BufDataset.Post;
+    finally
+      BufDataset.EnableControls;
     end;
 
     BufDataset.First;
@@ -668,18 +675,20 @@ begin
     ADataSource:= lDataSource;
     ADataSet:= BufDataset;
     Result:= True;
-
   except
-    on E: Exception do
-    begin
+    on E: Exception do begin
+      // Volgorde: eerst DataSource, dan DataSet. Als lDataSource
+      // assigned is, is BufDataset daar eigenaar van en wordt hij
+      // via lDataSource.Free opgeruimd.
       if Assigned(lDataSource) then
         lDataSource.Free
       else if Assigned(BufDataset) then
         BufDataset.Free;
+
       ADataSource:= nil;
       ADataSet:= nil;
       Result:= False;
-      raise;  // Voor debugging
+      raise;
     end;
   end;
 end;

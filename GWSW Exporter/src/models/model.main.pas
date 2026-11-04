@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -9,8 +12,7 @@ interface
 uses classes, sysutils, istrlist, model.decl, model.intf,
   LazFileUtils,
   Settings, AppLogging, DatabaseModule, uIGWSWDataProvider,
-  exportProgressReporter.intf, DbGridHelper,
-  ExportConfig;
+  exportProgressReporter.intf, DbGridHelper;
 //const
 
 type
@@ -32,7 +34,7 @@ type
     procedure ReportError(const ErrMsg: string; const ErrorType: Integer = 0;const Guid: string = '');
     procedure ReportProgressCount(const Current, Total: Integer);
 
-  const Sects: TStringArray = ('[view.main]', '[view.main.statusbartexts]', '[view.main.hints]', '[view.main.logging]'); { very necessary, because we need it at idx 0 }
+  const Sects: TStringArray = ('[view.main]', '[view.main.statusbartexts]', '[view.main.hints]', '[view.main.logging]', '[view.about]'); { very necessary, because we need it at idx 0 }
   var                                              
     fInSection: boolean; { used while searching static text sections }
     fSecId: integer; { tmp id while searching }
@@ -57,13 +59,13 @@ type
     procedure SwitchLanguage;
     function IsDirWritable(const aRootDir: string): Boolean;
     function CreateDirs(const aRootDir, AppDir: string; const aDirList: string = ''): TNewDirectoriesRec;
-    function SetStatusbarText(const aText: string; panel : Word): TStatusbarPanelText;
+    function SetStatusbarText(const aText: string; panel: Word): TStatusbarPanelText;
     function DoesFileExists(const FullFileName: String): Boolean;
     function ReadFormState(Settingsdata: PSettingsRec): TSettingsRec;
     function ReadSettings(Settingsdata: PSettingsRec): TSettingsRec;
     function StoreFormState(Settingsdata: PSettingsRec): TSettingsRec;
     function WriteSettings(Settingsdata: PSettingsRec): TSettingsRec;
-    procedure WriteSingleSetting(SettingData : PSingleSettingRec);
+    procedure WriteSingleSetting(SettingData: PSingleSettingRec);
     procedure StartLogging;
     procedure StopLogging;
     procedure WriteToLog(const LogType, LogText: String);
@@ -83,7 +85,7 @@ type
     function GetLastUsedOrganization: String;
 
     function GetSetting_AskToOpenExportFile: Boolean;
-    procedure DisableChildControls(aData : TExportInProgressRec);
+    procedure DisableChildControls(aData: TExportInProgressRec);
     function GetSingleSetting(const SettingName: String): String;
     procedure SortDbGrid(Data: PSortDbGridRec);
     function LoadCSVData(aRec: PRetrieveCSVDataRec): TRetrieveCSVDataRec;
@@ -124,7 +126,7 @@ begin
   Result := TCSVDataProvider.Create(FileName, Delimiter, QuoteChar, HasHeader);
 end;
 
-procedure TModelMain.ReportProgressMsg(const Message : string);
+procedure TModelMain.ReportProgressMsg(const Message: string);
 begin
   fPresenter.Provider.NotifySubscribers(prReportProgress, Self, Str2Pch('ReportInfo' + '|' + Message));
 end;
@@ -144,34 +146,34 @@ begin
     end;
     1: begin
          lErrorType:= 'Mapping: --> ';
-         if fSettings.RapportMappingError then UpdateView:= True;
+         if fSettings.AllSettings.setRapportMappingError then UpdateView:= True;
     end;
     2: begin
          lErrorType:= 'Fatal: --> ';
-         if fSettings.RapportFatalError then UpdateView:= True;
+         if fSettings.AllSettings.setRapportFatalError then UpdateView:= True;
     end;
     3: begin
          lErrorType:= 'Empty Field: --> ';
-         if fSettings.RapportFieldIsEmpty then UpdateView:= True;
+         if fSettings.AllSettings.setRapportFieldIsEmpty then UpdateView:= True;
     end;
     4: begin
          lErrorType:= 'Field is missing: --> ';
-         if fSettings.RapportFieldIsMissing then UpdateView:= True;
+         if fSettings.AllSettings.setRapportFieldIsMissing then UpdateView:= True;
     end;
     5: begin
          lErrorType:= 'Value out of range: --> ';
-         if fSettings.RapportOutOfRange then UpdateView:= True;
+         if fSettings.AllSettings.setRapportOutOfRange then UpdateView:= True;
     end;
   end;
 
   lMsg:= lErrorType + '|'+ ErrMsg + '|' + ' {'+ Guid + ').';
 
   if UpdateView then
-    { #note : Let op moet aangepast worden!!!!!!!!!!!!!!!! }
+    { todo : Let op moet aangepast worden!!!!!!!!!!!!!!!! }
     fPresenter.Provider.NotifySubscribers(prReportError, Self, Str2Pch('ReportError' + '|' + lMsg)); // "ReportError=ERROR: "     is niet meer juist
 end;
 
-procedure TModelMain.ReportProgressCount(const Current, Total : Integer);
+procedure TModelMain.ReportProgressCount(const Current, Total: Integer);
 begin
   fPresenter.Provider.NotifySubscribers(prReportProgressCount, Self, Str2Pch(Format('%d|%d', [Current, Total])));
 end;
@@ -269,7 +271,7 @@ begin
   fTextCache:= CreStrListFromFile(format(mvpTexts,['',Lang]));
 end;
 
-function TModelMain.IsDirWritable(const aRootDir : string) : Boolean;
+function TModelMain.IsDirWritable(const aRootDir: string): Boolean;
 begin
   Result:= False;
   if DirectoryIsWritable(aRootDir) then begin  // add to uses: LazFileUtils
@@ -277,7 +279,7 @@ begin
   end;
 end;
 
-function TModelMain.CreateDirs(const aRootDir, AppDir : string; const aDirList : string) : TNewDirectoriesRec;
+function TModelMain.CreateDirs(const aRootDir, AppDir: string; const aDirList: string): TNewDirectoriesRec;
 var
   lDirList: TStringList;
   s: string;
@@ -293,8 +295,7 @@ begin
 
   try
     // Check if root directory is writable.
-    if not DirectoryIsWritable(aRootDir) then
-    begin
+    if not DirectoryIsWritable(aRootDir) then begin
       Result.dirSucces:= False;
       Result.dirSuccesMsg:= 'Root directory is not writable: ' + aRootDir;
       Exit;
@@ -304,35 +305,29 @@ begin
     currentPath:= IncludeTrailingPathDelimiter(aRootDir) + AppDir;
     currentPath:= IncludeTrailingPathDelimiter(currentPath);
     // Create root directory if needed.
-    if not DirectoryExists(CurrentPath) then
-    begin
-      if not ForceDirectories(currentPath) then
-      begin
+    if not DirectoryExists(CurrentPath) then begin
+      if not ForceDirectories(currentPath) then begin
         Result.dirSucces:= False;
         Result.dirSuccesMsg:= 'Failed to create root directory: ' + currentPath;
         Exit;
       end;
     end;
     // Process subdirectories if provided.
-    if aDirList <> '' then
-    begin
-      lDirList := TStringList.Create;
+    if aDirList <> '' then begin
+      lDirList:= TStringList.Create;
       try
         lDirList.Text:= aDirList;
-        for s in lDirList do
-        begin
+        for s in lDirList do begin
           if s = '' then
             Continue;
           try
-            if not ForceDirectories(currentPath + s) then
-            begin
+            if not ForceDirectories(currentPath + s) then begin
               Result.dirSucces:= False;
               Result.dirSuccesMsg:= 'Failed to create subdirectory: ' + s;
               // Continue trying other directories rather than exiting.
             end;
           except
-            on E: Exception do
-            begin
+            on E: Exception do begin
               Result.dirSucces:= False;
               Result.dirSuccesMsg:= 'Error creating subdirectory ' + s + ': ' + E.Message;
             end;
@@ -345,15 +340,14 @@ begin
     // Update result with final path.
     Result.dirRoot:= currentPath;
   except
-    on E: Exception do
-    begin
+    on E: Exception do begin
       Result.dirSucces:= False;
       Result.dirSuccesMsg:= 'Unexpected error: ' + E.Message;
     end;
   end;
 end;
 
-function TModelMain.SetStatusbarText(const aText : string; panel : Word) : TStatusbarPanelText;
+function TModelMain.SetStatusbarText(const aText: string; panel: Word): TStatusbarPanelText;
 begin
   with Result do begin
     stbPanelText:= ' ' + aText;  // Add one space.
@@ -361,262 +355,188 @@ begin
   end;
 end;
 
-function TModelMain.DoesFileExists(const FullFileName : String) : Boolean;
+function TModelMain.DoesFileExists(const FullFileName: String): Boolean;
 begin
   Result:= FileExists(FullFileName);
 end;
 
-function TModelMain.ReadFormState(Settingsdata : PSettingsRec) : TSettingsRec;
+function TModelMain.ReadFormState(Settingsdata: PSettingsRec): TSettingsRec;
 begin
-  if assigned(fSettings) then FreeAndNil(fSettings);
+  if not Assigned(fSettings) then
+    fSettings:= TSettings.Create;
 
-  fSettings := TSettings.Create;
-  try
-    with PSettingsRec(Settingsdata)^ do begin
-      //  Transferring the variables to settings object.
-      fSettings.FormName:= setFrmName;
-      fSettings.SettingsFile:= setSettingsFile;
-    end;
-
-    fsettings.ReadFormState;
-  finally
+  if Settingsdata <> nil then begin
+    if PSettingsRec(Settingsdata)^.setSettingsFile <> '' then
+      fSettings.SettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
+    if PSettingsRec(Settingsdata)^.setFrmName <> '' then
+      fSettings.FormName:= PSettingsRec(Settingsdata)^.setFrmName;
   end;
 
-  with Result do begin
-    try
-      setSettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
-      setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
-      setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
-
-      setFrmName:= fSettings.FormName;
-      setFrmWindowState:= fSettings.FormWindowstate;
-      setFrmTop:= fSettings.FormTop;
-      setFrmLeft:= fSettings.FormLeft;
-      setFrmHeight:= fSettings.FormHeight;
-      setFrmWidth:= fSettings.FormWidth;
-      setFrmRestoredTop:= fSettings.FormRestoredTop;
-      setFrmRestoredLeft:= fSettings.FormRestoredLeft;
-      setFrmRestoredHeight:= fSettings.FormRestoredHeight;
-      setFrmRestoredWidth:= fSettings.FormRestoredWidth;
-      setSucces:= FSettings.Succes;
-    except on E:Exception do
-      setSucces := False;
-    end;
-  end;
+  fSettings.ReadFormState;
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
 end;
 
-function TModelMain.ReadSettings(Settingsdata : PSettingsRec) : TSettingsRec;
+function TModelMain.ReadSettings(Settingsdata: PSettingsRec): TSettingsRec;
 begin
-  if assigned(fSettings) then FreeAndNil(fSettings);
-  fSettings := TSettings.Create;
+  if not Assigned(fSettings) then
+    fSettings:= TSettings.Create;
 
-  try
-    with PSettingsRec(Settingsdata)^ do begin
-      fSettings.FormName:= setFrmName;
-      fSettings.SettingsFile:= setSettingsFile;
-      fSettings.AppName:= setApplicationName;
-      fSettings.AppVersion:= setApplicationVersion;
-      fSettings.AppBuildDate:= setApplicationBuildDate;
-    end;
-    fsettings.ReadFile;
-  finally
-    //...
+  if Settingsdata <> nil then begin
+    if PSettingsRec(Settingsdata)^.setSettingsFile <> '' then
+      fSettings.SettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
+    if PSettingsRec(Settingsdata)^.setFrmName <> '' then
+      fSettings.FormName:= PSettingsRec(Settingsdata)^.setFrmName;
+    if PSettingsRec(Settingsdata)^.setApplicationName <> '' then
+      fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
+    if PSettingsRec(Settingsdata)^.setApplicationVersion <> '' then
+      fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
+    if PSettingsRec(Settingsdata)^.setApplicationBuildDate <> '' then
+      fSettings.AppBuildDate:= PSettingsRec(Settingsdata)^.setApplicationBuildDate;
   end;
 
-  with Result do try
-    setSettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
-    setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
-    setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
-
-    setApplicationName:= fSettings.AppName;
-    setActivateLogging := fSettings.ActivateLogging;
-    setAppendLogging:= fSettings.AppendLogFile;
-    setLanguage:= fSettings.Language;
-    setMappingFile:= fSettings.MappingFile;
-    setSplitterDataSettings:= fSettings.SplitterDataSettings;
-    setSplitterdataGrid:= fSettings.SplitterdataGrid;
-    setSplitterMemos:= fSettings.SplitterMemos;
-    setDbGridRowHighlight:= fSettings.DbGridRowHighlight;
-    setAskToOpenExportFile:= fSettings.AskToOpenExportFile;
-    setLastUsedOrganization:= fSettings.LastUsedOrganization;
-    //Export settings
-    // Put
-    setIncludePutLengte:= fSettings.IncludePutLengte;
-    setIncludePutBreedte:= fSettings.IncludePutBreedte;
-    setIncludePutHoogte:= fSettings.IncludePutHoogte;
-    setIncludePutDiameter:= fSettings.IncludePutDiameter;
-    setIncludePutVorm:= fSettings.IncludePutVorm;
-    setIncludePutMateriaal:= fSettings.IncludePutMateriaal;
-    setIncludePutFundering:= fSettings.IncludePutFundering;
-    setIncludePutBegindatum:= fSettings.IncludePutBegindatum;
-    setIncludePutEinddatum:= fSettings.IncludePutEinddatum;
-    setIncludePutMaaiveldhoogte:= fSettings.IncludePutMaaiveldhoogte;
-    //Leiding
-    setIncludeLeidingLengte:= fSettings.IncludeLeidingLengte;
-    setIncludeLeidingBreedte:= fSettings.IncludeLeidingBreedte;
-    setIncludeLeidingHoogte:= fSettings.IncludeLeidingHoogte;
-    setIncludeLeidingDiameter:= fSettings.IncludeLeidingDiameter;
-    setIncludeLeidingVorm:= fSettings.IncludeLeidingVorm;
-    setIncludeLeidingMateriaal:= fSettings.IncludeLeidingMateriaal;
-    setIncludeLeidingFundering:= fSettings.IncludeLeidingFundering;
-    setIncludeLeidingStatusFunctioneren:= fSettings.IncludeLeidingStatusFunctioneren;
-    setIncludeLeidingWIBONThema:= fSettings.IncludeLeidingWIBONThema;
-    setIncludeLeidingBegindatum:= fSettings.IncludeLeidingBegindatum;
-    setIncludeLeidingEinddatum:= fSettings.IncludeLeidingEinddatum;
-    setIncludeLeidingBobBegin:= fSettings.IncludeLeidingBobBegin;
-    setIncludeLeidingBobEind:= fSettings.IncludeLeidingBobEind;
-    // Persleiding
-    setIncludePersleidingLengte:= fSettings.IncludePersleidingLengte;
-    setIncludePersleidingHoogte:= fSettings.IncludePersleidingHoogte;
-    setIncludePersleidingDiameter:= fSettings.IncludePersleidingDiameter;
-    setIncludePersleidingVorm:= fSettings.IncludePersleidingVorm;
-    setIncludePersleidingMateriaal:= fSettings.IncludePersleidingMateriaal;
-    setIncludePersleidingStatusFunctioneren:= fSettings.IncludePersleidingStatusFunctioneren;
-    setIncludePersleidingBegindatum:= fSettings.IncludePersleidingBegindatum;
-    setIncludePersleidingEinddatum:= fSettings.IncludePersleidingEinddatum;
-    setIncludePersleidingBobBegin:= fSettings.IncludePersleidingBobBegin;
-    setIncludePersleidingBobEind:= fSettings.IncludePersleidingBobEind;
-    // Kolk
-    setIncludeKolkLengte:= fSettings.IncludeKolkLengte;
-    setIncludeKolkBreedte:= fSettings.IncludeKolkBreedte;
-    setIncludeKolkHoogte:= fSettings.IncludeKolkHoogte;
-    setIncludeKolkDiameter:= fSettings.IncludeKolkDiameter;
-    setIncludeKolkVorm:= fSettings.IncludeKolkVorm;
-    setIncludeKolkMateriaal:= fSettings.IncludeKolkMateriaal;
-    setIncludeKolkWanddikte:= fSettings.IncludeKolkWanddikte;
-    setIncludeKolkBegindatum:= fSettings.IncludeKolkBegindatum;
-    setIncludeKolkEinddatum:= fSettings.IncludeKolkEinddatum;
-
-    setSucces:= fSettings.Succes;
-    setSucces:= True;
-
-  except on E:Exception do
-    setSucces:= False;
-  end;
+  fSettings.Load;
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
 end;
 
-function TModelMain.StoreFormState(Settingsdata : PSettingsRec) : TSettingsRec;
+function TModelMain.StoreFormState(Settingsdata: PSettingsRec): TSettingsRec;
+var
+  lMerged: TSettingsRec;
 begin
-  if assigned(fSettings) then begin
-    with PSettingsRec(Settingsdata)^ do begin
-      fSettings.SettingsFile:= setSettingsFile;
-      fSettings.FormName:= setFrmName;
-      fSettings.FormWindowstate:= setFrmWindowState;
-      fSettings.FormTop:= setFrmTop;
-      fSettings.FormLeft:= setFrmLeft;
-      fSettings.FormHeight:= setFrmHeight;
-      fSettings.FormWidth:= setFrmWidth;
-      fSettings.FormRestoredTop:= setFrmRestoredTop;
-      fSettings.FormRestoredLeft:= setFrmRestoredLeft;
-      fSettings.FormRestoredHeight:= setFrmRestoredHeight;
-      fSettings.FormRestoredWidth:= setFrmRestoredWidth;
-      fSettings.SplitterMemos:= setSplitterMemos;
-      fSettings.SplitterDataSettings:= setSplitterDataSettings;
-      fSettings.SplitterDataGrid:= setSplitterdataGrid;
-    end;
+  if not Assigned(fSettings) then begin
+    Result.setSucces:= False;
+    Result.setMessage:= 'SettingsNotInitialized';
+    Exit;
+  end;
 
+  if Settingsdata <> nil then begin
+    lMerged:= fSettings.AllSettings;
+    with PSettingsRec(Settingsdata)^ do begin
+      if setSettingsFile <> '' then lMerged.setSettingsFile:= setSettingsFile;
+      if setFrmName <> '' then lMerged.setFrmName:= setFrmName;
+      lMerged.setFrmWindowState:= setFrmWindowState;
+      lMerged.setFrmTop:= setFrmTop;
+      lMerged.setFrmLeft:= setFrmLeft;
+      lMerged.setFrmHeight:= setFrmHeight;
+      lMerged.setFrmWidth:= setFrmWidth;
+      lMerged.setFrmRestoredTop:= setFrmRestoredTop;
+      lMerged.setFrmRestoredLeft:= setFrmRestoredLeft;
+      lMerged.setFrmRestoredHeight:= setFrmRestoredHeight;
+      lMerged.setFrmRestoredWidth:= setFrmRestoredWidth;
+      lMerged.setSplitterMemos:= setSplitterMemos;
+      lMerged.setSplitterDataSettings:= setSplitterDataSettings;
+      lMerged.setSplitterdataGrid:= setSplitterdataGrid;
+    end;
+    fSettings.AllSettings:= lMerged;
     fSettings.StoreFormState;
-
-    With result do begin
-      setSucces:= fSettings.Succes;
-      setSplitterdataGrid:= fSettings.SplitterDataGrid;
-      setSplitterMemos:= fSettings.SplitterMemos;
-      setSplitterDataSettings:= fSettings.SplitterDataSettings;
-    end;
   end;
+
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
 end;
 
-function TModelMain.WriteSettings(Settingsdata : PSettingsRec) : TSettingsRec;
+function TModelMain.WriteSettings(Settingsdata: PSettingsRec): TSettingsRec;
+var
+  lMerged: TSettingsRec;
 begin
-  if assigned(fSettings) then begin
+  if not Assigned(fSettings) then
+    fSettings:= TSettings.Create;   // defaults zitten nu in de constructor
+
+  if Settingsdata <> nil then begin
+    lMerged:= fSettings.AllSettings;
     with PSettingsRec(Settingsdata)^ do begin
-      fSettings.ActivateLogging:= setActivateLogging;
-      fSettings.AppendLogFile:= setAppendLogging;
-      if setLanguage <> '' then fSettings.Language:= setLanguage;
+      if setSettingsFile <> '' then lMerged.setSettingsFile:= setSettingsFile;
+      if setApplicationName <> '' then lMerged.setApplicationName:= setApplicationName;
+      if setApplicationVersion <> '' then lMerged.setApplicationVersion:= setApplicationVersion;
+      if setApplicationBuildDate <> '' then lMerged.setApplicationBuildDate:= setApplicationBuildDate;
+      if setFrmName <> '' then lMerged.setFrmName:= setFrmName;
+      if setLanguage <> '' then lMerged.setLanguage:= setLanguage;
 
-      //... add new settings
+      if setWriteSettings then begin
+        // Algemene settings
+        lMerged.setActivateLogging:= setActivateLogging;
+        lMerged.setAppendLogging:= setAppendLogging;
+        lMerged.setSqlFileLocation:= setSqlFileLocation;
+        lMerged.setDbGridRowHighlight:= setDbGridRowHighlight;
+        lMerged.setAskToOpenExportFile:= setAskToOpenExportFile;
+        lMerged.setKeepLastOrganization:= setKeepLastOrganization;
+        lMerged.setLastUsedOrganization:= setLastUsedOrganization;
+        lMerged.setRapportMappingError:= setRapportMappingError;
+        lMerged.setRapportFatalError:= setRapportFatalError;
+        lMerged.setRapportFieldIsEmpty:= setRapportFieldIsEmpty;
+        lMerged.setRapportFieldIsMissing:= setRapportFieldIsMissing;
+        lMerged.setRapportOutOfRange:= setRapportOutOfRange;
+        lMerged.setMappingFile:= setMappingFile;
+        lMerged.setGWSWVersion:= setGWSWVersion;
+        lMerged.setSplitterDataSettings:= setSplitterDataSettings;
+        lMerged.setSplitterdataGrid:= setSplitterdataGrid;
+        lMerged.setSplitterMemos:= setSplitterMemos;
 
-      fSettings.SettingsFile:= setSettingsFile;
+        // Export — Put
+        lMerged.setIncludePutLengte:= setIncludePutLengte;
+        lMerged.setIncludePutBreedte:= setIncludePutBreedte;
+        lMerged.setIncludePutHoogte:= setIncludePutHoogte;
+        lMerged.setIncludePutDiameter:= setIncludePutDiameter;
+        lMerged.setIncludePutVorm:= setIncludePutVorm;
+        lMerged.setIncludePutMateriaal:= setIncludePutMateriaal;
+        lMerged.setIncludePutFundering:= setIncludePutFundering;
+        lMerged.setIncludePutBegindatum:= setIncludePutBegindatum;
+        lMerged.setIncludePutEinddatum:= setIncludePutEinddatum;
+        lMerged.setIncludePutMaaiveldhoogte:= setIncludePutMaaiveldhoogte;
+
+        // Export — Leiding
+        lMerged.setIncludeLeidingLengte:= setIncludeLeidingLengte;
+        lMerged.setIncludeLeidingBreedte:= setIncludeLeidingBreedte;
+        lMerged.setIncludeLeidingHoogte:= setIncludeLeidingHoogte;
+        lMerged.setIncludeLeidingDiameter:= setIncludeLeidingDiameter;
+        lMerged.setIncludeLeidingVorm:= setIncludeLeidingVorm;
+        lMerged.setIncludeLeidingMateriaal:= setIncludeLeidingMateriaal;
+        lMerged.setIncludeLeidingFundering:= setIncludeLeidingFundering;
+        lMerged.setIncludeLeidingStatusFunctioneren:= setIncludeLeidingStatusFunctioneren;
+        lMerged.setIncludeLeidingWIBONThema:= setIncludeLeidingWIBONThema;
+        lMerged.setIncludeLeidingBegindatum:= setIncludeLeidingBegindatum;
+        lMerged.setIncludeLeidingEinddatum:= setIncludeLeidingEinddatum;
+        lMerged.setIncludeLeidingBobBegin:= setIncludeLeidingBobBegin;
+        lMerged.setIncludeLeidingBobEind:= setIncludeLeidingBobEind;
+
+        // Export — Persleiding
+        lMerged.setIncludePersleidingLengte:= setIncludePersleidingLengte;
+        lMerged.setIncludePersleidingHoogte:= setIncludePersleidingHoogte;
+        lMerged.setIncludePersleidingDiameter:= setIncludePersleidingDiameter;
+        lMerged.setIncludePersleidingVorm:= setIncludePersleidingVorm;
+        lMerged.setIncludePersleidingMateriaal:= setIncludePersleidingMateriaal;
+        lMerged.setIncludePersleidingStatusFunctioneren:= setIncludePersleidingStatusFunctioneren;
+        lMerged.setIncludePersleidingBegindatum:= setIncludePersleidingBegindatum;
+        lMerged.setIncludePersleidingEinddatum:= setIncludePersleidingEinddatum;
+        lMerged.setIncludePersleidingBobBegin:= setIncludePersleidingBobBegin;
+        lMerged.setIncludePersleidingBobEind:= setIncludePersleidingBobEind;
+
+        // Export — Kolk
+        lMerged.setIncludeKolkLengte:= setIncludeKolkLengte;
+        lMerged.setIncludeKolkBreedte:= setIncludeKolkBreedte;
+        lMerged.setIncludeKolkHoogte:= setIncludeKolkHoogte;
+        lMerged.setIncludeKolkDiameter:= setIncludeKolkDiameter;
+        lMerged.setIncludeKolkVorm:= setIncludeKolkVorm;
+        lMerged.setIncludeKolkMateriaal:= setIncludeKolkMateriaal;
+        lMerged.setIncludeKolkWanddikte:= setIncludeKolkWanddikte;
+        lMerged.setIncludeKolkBegindatum:= setIncludeKolkBegindatum;
+        lMerged.setIncludeKolkEinddatum:= setIncludeKolkEinddatum;
+      end;
+
     end;
-
-    fSettings.WriteSettings;
-  end
-  else begin // firt run, there is no settingsfile
-     if not assigned(FSettings) then begin
-       fSettings:= TSettings.Create;
-       fSettings.SettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
-       fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
-       fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
-       fSettings.AppBuildDate:= PSettingsRec(Settingsdata)^.setApplicationBuildDate;
-
-       fSettings.ActivateLogging:= True;
-       fSettings.AppendLogFile:= True;
-
-       // default
-       fSettings.IncludePutVorm:= True;
-       fSettings.IncludePutLengte:= True;
-       fSettings.IncludePutBreedte:= True;
-       fSettings.IncludePutHoogte:= True;
-       fSettings.IncludePutMateriaal:= True;
-       fSettings.IncludePutFundering:= True;
-       fSettings.IncludePutBegindatum:= True;
-       fSettings.IncludePutEinddatum:= False;
-       fSettings.IncludePutDiameter:= True;
-       fSettings.IncludePersleidingBegindatum:= True;
-       fSettings.IncludePersleidingStatusFunctioneren:= True;
-       fSettings.IncludePersleidingMateriaal:= True;
-       fSettings.IncludePersleidingVorm:= True;
-       fSettings.IncludePersleidingDiameter:= True;
-       fSettings.IncludePersleidingHoogte:= True;
-       fSettings.IncludePersleidingLengte:= True;
-       fSettings.IncludeKolkLengte:= True;
-       fSettings.IncludeKolkDiameter:= True;
-       fSettings.IncludeKolkVorm:= True;
-       fSettings.IncludeKolkMateriaal:= True;
-       fSettings.IncludeKolkBegindatum:= True;
-       fSettings.IncludeKolkHoogte:= True;
-       fSettings.IncludeKolkBreedte:= True;
-       fSettings.IncludeLeidingLengte:= True;
-       fSettings.IncludeLeidingBreedte:= True;
-       fSettings.IncludeLeidingHoogte:= True;
-       fSettings.IncludeLeidingDiameter:= True;
-       fSettings.IncludeLeidingVorm:= True;
-       fSettings.IncludeLeidingMateriaal:= True;
-       fSettings.IncludeLeidingFundering:= True;
-       fSettings.IncludeLeidingStatusFunctioneren:= True;
-       fSettings.IncludeLeidingBegindatum:= True;
-       fSettings.IncludeLeidingBobBegin:= True;
-       fSettings.IncludeLeidingBobEind:= True;
-       fSettings.IncludeLeidingWIBONThema:= False;
-       fSettings.IncludeKolkEinddatum:= False;
-       fSettings.IncludePutMaaiveldhoogte:= True;
-       fSettings.IncludePersleidingBobBegin:= True;
-       fSettings.IncludePersleidingBobEind:= True;
-
-
-       fSettings.WriteSettings;
-     end;
+    fSettings.AllSettings:= lMerged;
   end;
 
-  with Result do begin
-    setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
-    setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
-
-    setActivateLogging:= PSettingsRec(Settingsdata)^.setActivateLogging;
-    setAppendLogging:= PSettingsRec(Settingsdata)^.setAppendLogging;
-    if PSettingsRec(Settingsdata)^.setLanguage <> '' then
-      setLanguage:= PSettingsRec(Settingsdata)^.setLanguage;
-
-    //... add new settings
-
-    setSucces:= fSettings.Succes;
-  end;
+  fSettings.Save;
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
 end;
 
-procedure TModelMain.WriteSingleSetting(SettingData : PSingleSettingRec);
+procedure TModelMain.WriteSingleSetting(SettingData: PSingleSettingRec);
 begin
-  if assigned(fSettings) then begin
-    with PSingleSettingRec(Settingdata)^ do begin
+  if Assigned(fSettings) then begin
+    with PSingleSettingRec(SettingData)^ do begin
       fSettings.SettingsFile:= ssSettingsFile;
       fSettings.WriteSetting(ssName, ssSection, ssValue);
     end;
@@ -628,7 +548,7 @@ var
   userName: String;
 begin
   if assigned(fSettings) then begin
-    if fSettings.ActivateLogging then begin
+    if fSettings.AllSettings.setActivateLogging then begin
       if Logging <> Nil then begin
         { #todo : Retrieve the Location from the view. }
 
@@ -639,11 +559,11 @@ begin
         Logging.LogFolder:= GetEnvironmentVariable('appdata') + PathDelim + ApplicationName + PathDelim + adLogging + PathDelim;
         {$ENDIF}
         {$IFDEF LINUX}
-        Logging.LogFolder := IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config' + PathDelim + ApplicationName + PathDelim + adLogging + PathDelim;
+        Logging.LogFolder:= IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config' + PathDelim + ApplicationName + PathDelim + adLogging + PathDelim;
         {$ENDIF}
 
-        Logging.ActivateLogging:= fSettings.ActivateLogging;  // Readsettings must be executed before startlogging.
-        Logging.AppendLogFile:= fSettings.AppendLogFile;
+        Logging.ActivateLogging:= fSettings.AllSettings.setActivateLogging;
+        Logging.AppendLogFile:= fSettings.AllSettings.setAppendLogging;
         Logging.ApplicationName:= ApplicationName;
         Logging.AppVersion:= Application_version;
         Logging.StartLogging;
@@ -659,7 +579,7 @@ begin
   end;
 end;
 
-procedure TModelMain.WriteToLog(const LogType, LogText : String);
+procedure TModelMain.WriteToLog(const LogType, LogText: String);
 begin
   if Logging <> Nil then begin
     case LogType of
@@ -672,34 +592,34 @@ begin
   end;
 end;
 
-function TModelMain.SetStatusbarPanelsWidth(stbWidth, lpWidth, rpWidth : Integer) : TstbPanelsSize;
+function TModelMain.SetStatusbarPanelsWidth(stbWidth, lpWidth, rpWidth: Integer): TstbPanelsSize;
 var
   pWidth: Integer;
 begin
   pWidth:= common.utils.SetStatusbarPnlWidth(stbWidth, lpWidth, rpWidth);
   with Result do begin
-    mpWidth := pWidth;
+    mpWidth:= pWidth;
   end;
 end;
 
-function TModelMain.IsFileInUse(const FileName : String) : Boolean;
+function TModelMain.IsFileInUse(const FileName: String): Boolean;
 begin
   Result:= common.utils.IsFileInUse(FileName);
 end;
 
-function TModelMain.GetDatabaseModule : TDatabaseModule;
+function TModelMain.GetDatabaseModule: TDatabaseModule;
 begin
   Result:= fDatabaseModule;
 end;
 
-function TModelMain.IsConnected : Boolean;
+function TModelMain.IsConnected: Boolean;
 begin
   Result:= False;
   if Assigned(fDatabaseModule) and (fDatabaseModule.IsConnected) then
     Result:= fDatabaseModule.IsConnected;
 end;
 
-procedure TModelMain.MakeDbConnection(DbConnectionData : PDbConnectRec);
+procedure TModelMain.MakeDbConnection(DbConnectionData: PDbConnectRec);
 var
   lResult: TConnectionResult;
 begin
@@ -724,8 +644,7 @@ begin
         WriteToLog(ltError, DbConnectionData^.Message);   // { #todo 1 : Dat kan niet meer. Moet via een getstatictext! }
       end;
     except
-      on E: Exception do
-      begin
+      on E: Exception do begin
         DbConnectionData^.HasConnection:= False;
         DbConnectionData^.Message:= 'Error: ' + E.Message;
         fPresenter.WriteToLog('view.main', ltInformation, 'DbConnFailed');
@@ -779,8 +698,7 @@ begin
   if data^.DataType = '' then Exit;
 
   try
-    fSettings.LoadExportConfigFromIni;  // Get all the export checkbox settings
-
+    fSettings.Load;
     if data^.DataType = dtORA then begin
       DataProvider:= CreateORADataProvider(fDatabaseModule.CurrentQuery, True);  // Create a data provider. This is the query that retrieved the data.
     end
@@ -798,7 +716,6 @@ begin
           fSettings.ExportConfig);
 
     try
-      fSettings.ReadFile; // Kan vervelend worden. leest het hele settingsbestand opnieuw terwijl maar 1 setting nodig is.
       OroxExport.ExportToOrox(Data^.Version);
       Result.FileNameExportFile:= Data^.FileNameExportFile;
       Result.Success:= True;
@@ -818,22 +735,22 @@ end;
 
 function TModelMain.GetSQLfileLocation: String;
 begin
-  Result:= fSettings.SqlFileLocation;
+  Result:= fSettings.AllSettings.setSqlFileLocation;
 end;
 
 function TModelMain.GetKeepLastOrganization: Boolean;
 begin
-  Result:= fSettings.KeepLastOrganization;
+  Result:=fSettings.AllSettings.setKeepLastOrganization;
 end;
 
 function TModelMain.GetLastUsedOrganization: String;
 begin
-  Result:= fSettings.LastUsedOrganization;
+  Result:=fSettings.AllSettings.setLastUsedOrganization;
 end;
 
 function TModelMain.GetSetting_AskToOpenExportFile: Boolean;
 begin
-  Result:= fSettings.AskToOpenExportFile;
+  Result:= fSettings.AllSettings.setAskToOpenExportFile;
 end;
 
 procedure TModelMain.DisableChildControls(aData: TExportInProgressRec);
@@ -845,11 +762,11 @@ begin
 end;
 
 function TModelMain.GetSingleSetting(const SettingName: String): String;
-begin { #todo : Als dit er meer gaan worden dan anders opzetten. Dan een settings object in de view maken. }
+begin
   case SettingName of
-    'MappingFile': Result:= fSettings.MappingFile;
-    'GWSWVersion': Result:= fSettings.GWSWVersion;
-    'KeepLastOrganization': Result:= fSettings.KeepLastOrganization.ToString();
+    'MappingFile': Result:=fSettings.AllSettings.setMappingFile;
+    'GWSWVersion': Result:=fSettings.AllSettings.setGWSWVersion;
+    'KeepLastOrganization': Result:=fSettings.AllSettings.setKeepLastOrganization.ToString();
   end;
 end;
 
@@ -886,8 +803,7 @@ begin
 
   try
     // CSVDataProvider creëert objecten als TObject
-    if csvDataProvider.LoadCSVData(lDataSourceObj, lDataSetObj) then
-    begin
+    if csvDataProvider.LoadCSVData(lDataSourceObj, lDataSetObj) then begin
       if (lDataSourceObj <> Nil) and (lDataSetObj <> Nil) then begin
         Result.DataSource:= lDataSourceObj;
         Result.DataSet:= lDataSetObj;

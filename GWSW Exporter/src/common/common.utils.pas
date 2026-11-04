@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit common.utils;
 
 {$mode ObjFPC}{$H+}

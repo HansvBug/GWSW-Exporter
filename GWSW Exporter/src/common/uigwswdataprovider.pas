@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit uIGWSWDataProvider;
 
 interface

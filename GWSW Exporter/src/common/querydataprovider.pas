@@ -1,10 +1,12 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit QueryDataProvider;
 
 interface
 
 uses
-  SysUtils, Classes, SQLDB, variants, uIGWSWDataProvider;
+  SysUtils, Classes, SQLDB, DB, variants, uIGWSWDataProvider;
 
 type
   { TQueryDataProvider
@@ -59,7 +61,7 @@ type
     { Moves to the last record in the query result set
       Returns:
         True if successful (query contains data), False if query is empty }
-    function Last : Boolean;
+    function Last: Boolean;
 
     { Advances to the next record in the query result set
       Returns:
@@ -112,91 +114,180 @@ implementation
 
 function TQueryDataProvider.RemoveSQLComments(const SQL: string): string;
 var
-  Lines: TStringList;
-  i, CommentPos: Integer;
-  Line: string;
+  N, i: Integer;
+  InString: Boolean;
+  InBlockComment: Boolean;
+  InInlineComment: Boolean;
+  C, NextC: Char;
 begin
-  Lines:= TStringList.Create;
-  try
-    Lines.Text:= SQL;
+  Result:= '';
+  N:= Length(SQL);
+  i:= 1;
+  InString:= False;
+  InBlockComment:= False;
+  InInlineComment:= False;
 
-    for i:= 0 to Lines.Count - 1 do begin
-      Line:= Lines[i];
+  while i <= N do
+  begin
+    C:= SQL[i];
+    NextC:= #0;
+    if i < N then
+      NextC:= SQL[i + 1];
 
-      // Delete inline comment (-- to end of line)
-      CommentPos:= Pos('--', Line);
-      if CommentPos > 0 then
-        Line:= Copy(Line, 1, CommentPos - 1);
-
-      // Remove block comment /*... */
-      while Pos('/*', Line) > 0 do begin
-        CommentPos:= Pos('/*', Line);
-        if Pos('*/', Line) > CommentPos then begin
-          // Comment closes on the same line
-          Line:= Copy(Line, 1, CommentPos - 1) +
-                 Copy(Line, Pos('*/', Line) + 2, MaxInt);
-        end
-        else begin
-          // Multi-line comment
-          Line:= Copy(Line, 1, CommentPos - 1);
-          Break;
-        end;
+    { 1) Regelcommentaar: sla over tot het einde van de regel.
+         Vervang het einde van de regel door één spatie zodat
+         woordgrenzen behouden blijven. }
+    if InInlineComment then begin
+      if C in [#10, #13] then begin
+        InInlineComment:= False;
+        Result:= Result + ' ';
       end;
+      Inc(i);
+      Continue;
+    end;
 
-      // Add clean line
-      if Trim(Line) <> '' then
-        Lines[i]:= Trim(Line)
+    { 2) Blokcommentaar: wacht op '*/'. Vervang het hele commentaar door één spatie. }
+    if InBlockComment then begin
+      if (C = '*') and (NextC = '/') then begin
+        InBlockComment:= False;
+        Result:= Result + ' ';
+        Inc(i, 2);
+      end
       else
-        Lines[i]:= '';
+        Inc(i);
+      Continue;
     end;
 
-    // Remove blank lines and combine
-    Result:= '';
-    for i:= 0 to Lines.Count - 1 do begin
-      if Lines[i] <> '' then begin
-        if Result <> '' then
-          Result:= Result + ' ';
-        Result:= Result + Lines[i];
+    { 3) In een string-literal: alles tot en met de afsluitende quote
+         letterlijk overnemen. '' is een escape voor één quote. }
+    if InString then begin
+      Result:= Result + C;
+      if C = '''' then begin
+        if NextC = '''' then begin
+          Result:= Result + NextC;
+          Inc(i, 2);
+          Continue;
+        end;
+        InString:= False;
       end;
+      Inc(i);
+      Continue;
     end;
-  finally
-    Lines.Free;
+
+    { 4) Buiten alles: kijk of er een string of commentaar begint. }
+    if C = '''' then begin
+      InString:= True;
+      Result:= Result + C;
+      Inc(i);
+      Continue;
+    end;
+
+    if (C = '-') and (NextC = '-') then begin
+      InInlineComment:= True;
+      Inc(i, 2);
+      Continue;
+    end;
+
+    if (C = '/') and (NextC = '*') then begin
+      InBlockComment:= True;
+      Inc(i, 2);
+      Continue;
+    end;
+
+    { 5) Gewoon teken: overnemen. }
+    Result:= Result + C;
+    Inc(i);
   end;
+
+  { Witruimte normaliseren: tabs, CR, LF → spatie; reeksen → één spatie.
+    Dit is functioneel vergelijkbaar met het oude "regels joinen met spatie",
+    maar zonder de bijbehorende bugs. }
+  Result:= StringReplace(Result, #9,  ' ', [rfReplaceAll]);
+  Result:= StringReplace(Result, #13, ' ', [rfReplaceAll]);
+  Result:= StringReplace(Result, #10, ' ', [rfReplaceAll]);
+  while Pos('  ', Result) > 0 do
+    Result:= StringReplace(Result, '  ', ' ', [rfReplaceAll]);
+
+  Result:= Trim(Result);
 end;
 
 function TQueryDataProvider.RemoveQueryClauses(const SQL: string): string;
-var
-  UpperSQL, ResultSQL: string;
-  ClausePos: Integer;
-  i: Integer;
-// List of clauses to remove (affect row selection/sorting but not COUNT result)
-const Clauses: array[0..8] of string = (
-  'ORDER BY', 'LIMIT', 'OFFSET', 'FETCH FIRST', 'FETCH NEXT',
-  'TOP ', 'ROWNUM', 'ROW_NUMBER()', 'FOR UPDATE'
-  );
-begin
-  ResultSQL:= SQL;
-  UpperSQL:= UpperCase(ResultSQL);
 
-  // Find and remove any clause
-  for i:= 0 to High(Clauses) do begin
-    ClausePos:= Pos(Clauses[I], UpperSQL);
-    if ClausePos > 0 then begin
-      // Go back to beginning of word
-      while (ClausePos > 1) and (ResultSQL[ClausePos] <> ' ') do
-        Dec(ClausePos);
-
-      ResultSQL:= Copy(ResultSQL, 1, ClausePos - 1);
-      UpperSQL:= UpperCase(ResultSQL); // Update uppercase version
-    end;
+  function IsWordChar(C: Char): Boolean; inline;
+  begin
+    // Letters, cijfers, underscore: voldoende voor SQL-identifiers.
+    Result:= (C in ['A'..'Z', 'a'..'z', '0'..'9', '_']);
   end;
 
-  // Remove trailing semicolon
-  ResultSQL:= Trim(ResultSQL);
-  if (ResultSQL <> '') and (ResultSQL[Length(ResultSQL)] = ';') then
-    ResultSQL:= Copy(ResultSQL, 1, Length(ResultSQL) - 1);
+  function MatchesClauseAt(const UpperSQL: string; Pos: Integer;
+                           const Clause: string): Boolean;
+  var
+    k, NextPos: Integer;
+  begin
+    Result:= False;
+    if Pos + Length(Clause) - 1 > Length(UpperSQL) then Exit;
 
-  Result:= ResultSQL;
+    // Case-insensitieve vergelijking (UpperSQL is al uppercase).
+    for k:= 1 to Length(Clause) do
+      if UpperSQL[Pos + k - 1] <> Clause[k] then Exit;
+
+    // Moet op een woordgrens beginnen.
+    if (Pos > 1) and IsWordChar(UpperSQL[Pos - 1]) then Exit;
+
+    // Moet op een woordgrens eindigen.
+    NextPos:= Pos + Length(Clause);
+    if (NextPos <= Length(UpperSQL)) and IsWordChar(UpperSQL[NextPos]) then Exit;
+
+    Result:= True;
+  end;
+
+const
+  Clauses: array[0..8] of string = (
+    'ORDER BY', 'LIMIT', 'OFFSET', 'FETCH FIRST', 'FETCH NEXT',
+    'TOP', 'ROWNUM', 'ROW_NUMBER()', 'FOR UPDATE'
+    );
+var
+  UpperSQL: string;
+  i, j, N, ClausePos: Integer;
+  InString: Boolean;
+  C: Char;
+begin
+  UpperSQL:= UpperCase(SQL);
+  N:= Length(SQL);
+  InString:= False;
+  ClausePos:= 0;
+
+  i:= 1;
+  while i <= N do
+  begin
+    C:= SQL[i];
+
+    if C = '''' then begin
+      InString:= not InString;
+      Inc(i);
+      Continue;
+    end;
+
+    if not InString then begin
+      for j:= 0 to High(Clauses) do
+        if MatchesClauseAt(UpperSQL, i, Clauses[j]) then begin
+          ClausePos:= i;
+          Break;
+        end;
+      if ClausePos > 0 then Break;
+    end;
+
+    Inc(i);
+  end;
+
+  if ClausePos > 0 then
+    Result:= Copy(SQL, 1, ClausePos - 1)
+  else
+    Result:= SQL;
+
+  Result:= Trim(Result);
+  if (Result <> '') and (Result[Length(Result)] = ';') then
+    Result:= Trim(Copy(Result, 1, Length(Result) - 1));
 end;
 
 constructor TQueryDataProvider.Create(AQuery: TObject; DisableControles: Boolean);
@@ -240,7 +331,7 @@ begin
   Result:= not fQuery.EOF;
 end;
 
-function TQueryDataProvider.Last : Boolean;
+function TQueryDataProvider.Last: Boolean;
 begin
   fQuery.Last;
   fCurrentRecord:= 0;
@@ -260,16 +351,16 @@ begin
 end;
 
 function TQueryDataProvider.GetFieldValue(const FieldName: string): Variant;
+var
+  fld: TField;
 begin
-  try
-    if fQuery.FieldByName(FieldName).IsNull then
-      Result:= Null
-    else
-      Result:= fQuery.FieldByName(FieldName).AsVariant;
-  except
-    on E: Exception do
-      Result:= Null;
-  end;
+  fld:= fQuery.FindField(FieldName);   // geeft nil als niet gevonden, geen exception
+  if fld = nil then
+    Result:= Null
+  else if fld.IsNull then
+    Result:= Null
+  else
+    Result:= fld.AsVariant;
 end;
 
 function TQueryDataProvider.FieldExists(const FieldName: string): Boolean;

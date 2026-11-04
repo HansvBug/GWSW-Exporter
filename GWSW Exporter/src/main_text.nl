@@ -8,6 +8,7 @@ miOptionsOptions=&Opties...
 miOptionsLanguage=&Taal
 miOptionsLanguageEN=&Engels
 miOptionsLanguageNL=&Nederlands
+mioptionsAbout=Info GWSW-Exporter
 
 tsPrepare=Voorbereiden
 tsExportSettings=Export instellingen
@@ -31,6 +32,7 @@ btnConnect=Connect
 btnDisconnect=Disconnect
 btnGetData=Haal de data op
 btnExportToFileOra=Export
+lblSelectedVersion=Gekozen GWSW versie: 
 btnExportToFileCSV=Export
 btnClose=Sluiten
 MappingsFileIsMissing=Mappingsbestand ontbreekt. Ga naar tabblad instellingen.
@@ -52,6 +54,7 @@ Warning=Waarschuwing
 Information=Informatie
 QueryNotActive=Query is niet actief. Activeer eerst de query.
 MissingMappingFile=Mappingsbestand ontbreekt.
+MissingGWSWVersion=GWSW instellen (opties)
 QueryFileNotLoaded=Sql bestand is niet ingeladen.
 OrganizationNameIsBlank=Organisatienaam mag niet leeg zijn.
 EnterDasetName=Vul hier de datasetnaam in zoals deze op de GWSW-server bekend is.
@@ -204,3 +207,15 @@ SwitchlanguageNL=Taal aangepast naar Nederlands.
 SwitchlanguageEN=Taal aangepast naar Engels.
 DbConnEstablished=Databaseverbinding tot stand gebracht
 DbConnFailed=Databaseverbinding mislukt
+
+
+[view.about]
+btnClose=Sluiten
+Caption=GWSW-Exporter
+lblVersion=Versie: 
+lblCredits=Colofon
+Description=Converteerd rioolgegevens naar  GWSW OroX TTL-bestanden.
+SourceCode=Broncode: 
+BuildWith=Gebouwd met Free Pascal & Lazarus
+SpecialThanks=Met dank aan: Benny Christensen (MVP-Setup) en de FPC-gemeenschap
+DevelopedBy=Ontwikkeld door 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="12"/>
+    <Version Value="13"/>
     <PathDelim Value="\"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
@@ -20,7 +20,7 @@
       <UseVersionInfo Value="True"/>
       <MinorVersionNr Value="5"/>
       <RevisionNr Value="3"/>
-      <BuildNr Value="1"/>
+      <BuildNr Value="2"/>
       <StringTable Comments="GWSW OroX export naar ttl bestand." CompanyName="Hans van Buggenum" FileDescription="GWSW OroX export naar ttl bestand." InternalName="GWSW-Bridge" LegalCopyright="Hans van Buggenum" OriginalFilename="GWSW-OroX-Exporter" ProductName="GWSW Exporter" ProductVersion="1.0.0"/>
     </VersionInfo>
     <BuildModes>
@@ -255,6 +255,24 @@
         <Filename Value="common\stelselindex.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="stelselIndex"/>
+      </Unit>
+      <Unit>
+        <Filename Value="testen_op_windows.txt"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="views\view.about.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FrmAbout"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="views\view.credits.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FrmCredits"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit>
     </Units>
   </ProjectOptions>

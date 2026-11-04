@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit GWSWValidation;
 
 {$mode ObjFPC}{$H+}
@@ -61,7 +63,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidatePutLength(const Put : PGWSWPut) : TGWSWValidationResult;
+function ValidatePutLength(const Put: PGWSWPut): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Put^.Lengte >= Cfg.MinPutLength) and
@@ -74,7 +76,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidatePutHeight(const Put : PGWSWPut) : TGWSWValidationResult;
+function ValidatePutHeight(const Put: PGWSWPut): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Put^.Hoogte >= Cfg.MinPutHeight) and
@@ -87,7 +89,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidatePutDiameter(const Put : PGWSWPut) : TGWSWValidationResult;
+function ValidatePutDiameter(const Put: PGWSWPut): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Put^.Diameter >= Cfg.MinPutDiameter) and
@@ -102,7 +104,7 @@ end;
 {$EndRegion Put}
 
 {$Region Leiding}
-function ValidateLeidingWidth(const Leiding : PGWSWLeiding) : TGWSWValidationResult;
+function ValidateLeidingWidth(const Leiding: PGWSWLeiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Leiding^.Breedte >= Cfg.MinLeidingWidth) and
@@ -115,7 +117,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidateLeidingLength(const Leiding : PGWSWLeiding) : TGWSWValidationResult;
+function ValidateLeidingLength(const Leiding: PGWSWLeiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Leiding^.Lengte >= Cfg.MinLeidingLength) and
@@ -129,7 +131,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidateLeidingHeight(const Leiding : PGWSWLeiding) : TGWSWValidationResult;
+function ValidateLeidingHeight(const Leiding: PGWSWLeiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Leiding^.Hoogte >= Cfg.MinLeidingHeight) and
@@ -142,7 +144,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidateLeidingDiameter(const Leiding : PGWSWLeiding) : TGWSWValidationResult;
+function ValidateLeidingDiameter(const Leiding: PGWSWLeiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Leiding^.Diameter >= Cfg.MinLeidingDiameter) and
@@ -157,7 +159,7 @@ end;
 {$EndRegion Leiding}
 
 {$Region Perseiding}
-function ValidatePersleidingWidth(const Persleiding : PGWSWPersleiding) : TGWSWValidationResult;
+function ValidatePersleidingWidth(const Persleiding: PGWSWPersleiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Persleiding^.Breedte >= Cfg.MinPersleidingWidth) and
@@ -170,7 +172,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidatePersleidingLength(const Persleiding : PGWSWPersleiding) : TGWSWValidationResult;
+function ValidatePersleidingLength(const Persleiding: PGWSWPersleiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Persleiding^.Lengte >= Cfg.MinPersleidingLength) and
@@ -183,7 +185,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidatePersleidingHeight(const Persleiding : PGWSWPersleiding) : TGWSWValidationResult;
+function ValidatePersleidingHeight(const Persleiding: PGWSWPersleiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Persleiding^.Hoogte >= Cfg.MinPersleidingHeight) and
@@ -196,7 +198,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidatePersleidingDiameter(const Persleiding : PGWSWPersleiding) : TGWSWValidationResult;
+function ValidatePersleidingDiameter(const Persleiding: PGWSWPersleiding): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Persleiding^.Diameter >= Cfg.MinPersleidingDiameter) and
@@ -211,7 +213,7 @@ end;
 {$EndRegion Perseiding}
 
 {$Region Kolk}
-function ValidateKolkWidth(const Kolk : PGWSWKolk) : TGWSWValidationResult;
+function ValidateKolkWidth(const Kolk: PGWSWKolk): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Kolk^.Breedte >= Cfg.MinKolkWidth) and
@@ -224,7 +226,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidateKolkLength(const Kolk : PGWSWKolk) : TGWSWValidationResult;
+function ValidateKolkLength(const Kolk: PGWSWKolk): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Kolk^.Lengte >= Cfg.MinKolkLength) and
@@ -237,7 +239,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidateKolkHeight(const Kolk : PGWSWKolk) : TGWSWValidationResult;
+function ValidateKolkHeight(const Kolk: PGWSWKolk): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Kolk^.Hoogte >= Cfg.MinKolkHeight) and
@@ -250,7 +252,7 @@ begin
     Result.ErrorMsg:= '';
 end;
 
-function ValidateKolkDiameter(const Kolk : PGWSWKolk) : TGWSWValidationResult;
+function ValidateKolkDiameter(const Kolk: PGWSWKolk): TGWSWValidationResult;
 begin
   Result.IsValid:=
     (Kolk^.Diameter >= Cfg.MinPersleidingDiameter) and

@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit OroxExport;
 
 {$mode ObjFPC}{$H+}
@@ -54,8 +56,8 @@ type
       function GetDateFromYearField(DataProvider: IGWSWDataProvider; const FieldName: string;
                                                 DefaultDay: Integer = 1;
                                                 DefaultMonth: Integer = 1): TDateTime;
-//      procedure SplitString(const Input: string; const Delimiter: Char; Strings: TStrings);  --> = overbodig geworden
       function DateToOroxFormat(DateValue: TDateTime): string; inline;  // OROX/RDF has date as time in format: YYYY-MM-DD
+      function IsValidDate(const Value: TDateTime): Boolean; inline;
       function ConvertWKTToGML(const WKT: string): string;
       function ConvertWKTToGMLLineString(const WKT: string): string;
       function CreateGMLPoint(X, Y, Z: Double): string;
@@ -293,7 +295,7 @@ begin
   end;
 end;
 
-function TOroxExport.GenerateOroxTurtle(const FileName, Version : string) : Boolean;
+function TOroxExport.GenerateOroxTurtle(const FileName, Version: string): Boolean;
 var
   SL: TStringList;
   i: Integer;
@@ -341,7 +343,7 @@ begin
         UpdateProgressCount(CurrentObject, TotalObjects);
     end;
 
-    // Export Putten. Als putten zonder leidingen worden geëxporteerd dan geeft de balidatie een fout. het "netwerk" is dan niet goed.
+    // Export Putten. Als putten zonder leidingen worden geëxporteerd dan geeft de validatie een fout. Het "netwerk" is dan niet goed.
      for i:= 0 to FPutList.Count - 1 do begin
        ExportPutToTurtle(SL, PGWSWPut(FPutList[i]));
        Inc(CurrentObject);
@@ -522,7 +524,6 @@ begin
     if lValue <> '' then
       Put^.aLabel:= lValue
     else begin
-      // Put^.aLabel:= '';  = dubbel met   VarToStrDef
       ReportError('Put: "Naam" is leeg.', eetFieldIsEmpty, Put^.GUID);
       // ernstig, dit is de putcode die dan in BOR ontbreekt
     end
@@ -699,7 +700,7 @@ begin
   // Begindatum. Wordt momenteel in BOR niet gebruikt daar voor in de plaats: aanlegjaar omzetten naar een datum.
   if DataProvider.FieldExists('BEGINDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'BEGINDATUM');
-    if lDate <> 0 then
+    if IsValidDate(lDate) then
       Put^.Begindatum:= lDate
     else begin
       Put^.Begindatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
@@ -712,7 +713,7 @@ begin
   // Einddatum
   if DataProvider.FieldExists('EINDDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'EINDDATUM');
-    if lDate <> 0 then
+    if IsValidDate(lDate) then
       Put^.Einddatum:= lDate
     else begin
       Put^.Einddatum:= 0;
@@ -1068,7 +1069,7 @@ begin
   // Begindatum. Wordt momenteel in BOR niet gebruikt daar voor in de plaats: aanlegjaar omzetten naar een datum.
   if DataProvider.FieldExists('BEGINDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'BEGINDATUM');
-    if lDate <> 0 then
+    if IsValidDate(lDate) then
       Leiding^.Begindatum:= lDate
     else begin
       Leiding^.Begindatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
@@ -1081,7 +1082,7 @@ begin
   // Einddatum
   if DataProvider.FieldExists('EINDDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'EINDDATUM');
-    if lDate <> 0 then
+    if IsValidDate(lDate) then
       Leiding^.Einddatum:= lDate
     else begin
       Leiding^.Einddatum:= 0;
@@ -1129,7 +1130,6 @@ begin
 
   FillChar(Leiding^, SizeOf(TGWSWLeiding), 0);  // Zet alle velden op 0/nil/leeg
 
-
   // String velden
   Leiding^.GUID:= '';
   Leiding^.aLabel:= '';
@@ -1160,7 +1160,7 @@ begin
   Result:= True;
 end;
 
-function TOroxExport.MapPersleidingFromProvider(DataProvider : IGWSWDataProvider) : PGWSWPersleiding;
+function TOroxExport.MapPersleidingFromProvider(DataProvider: IGWSWDataProvider): PGWSWPersleiding;
 var
   Persleiding: PGWSWPersleiding;
   lVal: TGWSWValidationResult;
@@ -1249,25 +1249,8 @@ begin
   else
     ReportError('Persleiding: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
 
-{
-if DataProvider.FieldExists('LENGTE') then begin
-  lValue:= DataProvider.GetFieldValue('LENGTE');
-  if not VarIsNull(lValue) then begin
-    Persleiding^.Lengte:= VarAsType(lValue, varInteger);
-
-    lVal:= ValidatePersleidingLength(Persleiding);  // Validate
-    if not lVal.IsValid then ReportError(lVal.ErrorMsg, eetValueOutOfRange, Persleiding^.GUID);
-  end
-  else
-    ReportError('Persleiding: "Lengte" veld is leeg.', eetFieldIsEmpty, Persleiding^.GUID);
-end
-else
-  ReportError('Persleiding: "Lengte" veld ontbreekt.', eetFieldIsMissing, '');
-}
-
   // Diameter
-  if DataProvider.FieldExists('DIAMETER') then
-  begin
+  if DataProvider.FieldExists('DIAMETER') then begin
     lValue:= DataProvider.GetFieldValue('DIAMETER');
     if not VarIsNull(lValue) then begin
       Persleiding^.Diameter:= VarAsType(lValue, varInteger);
@@ -1297,8 +1280,7 @@ else
     ReportError('Persleiding: "Breedte" veld ontbreekt.', eetFieldIsMissing, '');
 
   // Hoogte
-  if DataProvider.FieldExists('HOOGTE') then
-  begin
+  if DataProvider.FieldExists('HOOGTE') then begin
     lValue:= DataProvider.GetFieldValue('HOOGTE');
     if not VarIsNull(lValue) then begin
       Persleiding^.Hoogte:= VarAsType(lValue, varInteger);
@@ -1402,7 +1384,7 @@ else
   // Datum velden
   if DataProvider.FieldExists('BEGINDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'BEGINDATUM');
-    if lDate <> 0 then
+    if IsValidDate(lDate) then
       Persleiding^.Begindatum:= lDate
     else begin
       Persleiding^.Begindatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
@@ -1414,7 +1396,7 @@ else
 
   if DataProvider.FieldExists('EINDDATUM') then begin
     lDate:= GetDateFromYearField(DataProvider, 'EINDDATUM');
-    if lDate <> 0 then
+    if IsValidDate(lDate) then
       Persleiding^.Einddatum:= lDate
     else begin
       Persleiding^.Einddatum:= 0; // mag NIET weg.  --> Dit wordt verder op afgevangen. Moet mischien al hier beter opgezet worden.
@@ -1447,7 +1429,6 @@ else
     ReportError('Persleiding: "Bob eind" veld ontbreekt.', eetFieldIsMissing, '');
 
 
-
   Persleiding^.WKTGeometry:= '';
   Persleiding^.HasWKTGeometry:= False;
   Persleiding^.HasMultipleVertices:= False;
@@ -1464,8 +1445,7 @@ else
       Persleiding^.HasWKTGeometry:= True;
 
       // Extra: specifieke verwerking voor persleiding geometrie
-      if Pos('LINESTRING', UpperCase(Persleiding^.WKTGeometry)) > 0 then
-      begin
+      if Pos('LINESTRING', UpperCase(Persleiding^.WKTGeometry)) > 0 then begin
         ParsePersleidingGeometry(Persleiding);
       end;
 
@@ -1511,8 +1491,8 @@ begin
   Persleiding^.VormURI:= '';
 
   Persleiding^.Lengte:= NaN;
-  Persleiding^.Begindatum:= NaN;
-  Persleiding^.Einddatum:= NaN;
+  Persleiding^.Begindatum:= 0;
+  Persleiding^.Einddatum:= 0;
 
   // Boolean velden
   Persleiding^.HasWKTGeometry:= False;
@@ -1593,8 +1573,7 @@ begin
   end;
 
   // Breedte
-  if DataProvider.FieldExists('BREEDTE') then      { #todo : Dit soort naamgevingen  zoals breedte, hoogte, etc moeten naar een const. }
-  begin
+  if DataProvider.FieldExists('BREEDTE') then begin     { #todo : Dit soort naamgevingen  zoals breedte, hoogte, etc moeten naar een const. }
     lValue:= DataProvider.GetFieldValue('BREEDTE');
     if not VarIsNull(lValue) then begin
       Kolk^.Breedte:= VarAsType(lValue, varInteger);
@@ -1847,22 +1826,19 @@ begin
 
   { 1) Eerst: is het al een echte datum? }
   // Probeer eerst als datum+tijd (voor strings zoals '31-12-2025 15:42:02')
-  if TryStrToDateTime(ValueStr, DateVal) then
-  begin
+  if TryStrToDateTime(ValueStr, DateVal) then begin
     Result:= DateVal;
     Exit;
   end;
 
   { 2) Probeer als alleen datum }
-  if TryStrToDate(ValueStr, DateVal) then
-  begin
+  if TryStrToDate(ValueStr, DateVal) then begin
     Result:= DateVal;
     Exit;
   end;
 
   { 3) Probeer met specifieke formaten als de locale conversie faalt }
-  if TryDifferentDateFormats(ValueStr, DateVal) then
-  begin
+  if TryDifferentDateFormats(ValueStr, DateVal) then begin
     Result:= DateVal;
     Exit;
   end;
@@ -1875,47 +1851,26 @@ begin
   try
     Result:= EncodeDate(YearInt, DefaultMonth, DefaultDay);
   except
-    on E: EConvertError do
-    begin
+    on E: EConvertError do begin
       ReportError('Ongeldige datum.');
       Result:= 0; // Ongeldige datum
     end;
   end;
 end;
 
-{
-procedure TOroxExport.SplitString(const Input: string; const Delimiter: Char; Strings: TStrings);
-var
-  i, StartPos: Integer;
-  Token: string;
-begin
-  Strings.Clear;
-  StartPos:= 1;
-
-  for i:= 1 to Length(Input) do begin
-    if Input[i] = Delimiter then begin
-      Token:= Copy(Input, StartPos, i - StartPos);
-      if Token <> '' then
-        Strings.Add(Token);
-
-      StartPos:= i + 1;
-    end;
-  end;
-
-  // Voeg de laatste token toe
-  if StartPos <= Length(Input) then begin
-    Token:= Copy(Input, StartPos, Length(Input) - StartPos + 1);
-    if Token <> '' then
-      Strings.Add(Token);
-  end;
-end;}
-
 function TOroxExport.DateToOroxFormat(DateValue: TDateTime): string;
 begin
-  if DateValue = 0 then
+  if IsNaN(DateValue) or (DateValue <= 0) then
     Result:= ''
   else
     Result:= FormatDateTime('yyyy-mm-dd', DateValue);
+end;
+
+function TOroxExport.IsValidDate(const Value: TDateTime): Boolean;
+begin
+  // NaN is nooit gelijk aan iets; vergelijk expliciet.
+  // TDateTime(0) = 30-12-1899; echte datums zijn altijd > 0.
+  Result:= (not IsNaN(Value)) and (Value > 0);
 end;
 
 function TOroxExport.ConvertWKTToGML(const WKT: string): string;
@@ -2112,7 +2067,7 @@ begin
   end;
 end;
 
-function TOroxExport.CreateGMLLineStringForPersleiding(const Persleiding : PGWSWPersleiding) : string;
+function TOroxExport.CreateGMLLineStringForPersleiding(const Persleiding: PGWSWPersleiding): string;
 var
   PosList: string;
   i: Integer;
@@ -2319,14 +2274,14 @@ begin
   end;
 end;
 
-procedure TOroxExport.AddPutKenmerken(SL : TStringList; const Put : PGWSWPut);
+procedure TOroxExport.AddPutKenmerken(SL: TStringList; const Put: PGWSWPut);
 begin
   // Als puttype contains gemaal dan een aantal velden anders in de ttl zetten
   if fExportConfig.IncludePutBreedte then begin
     if not IsNan(Put^.Breedte) and (Put^.Breedte > 0) then begin
       if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
-               FloatToOrox(Put^.Breedte, 3) + ' ] ;');
+               FloatToOrox(Put^.Breedte, 0) + ' ] ;');
       end
       else
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteBouwwerk ; gwsw:hasValue ' +
@@ -2338,7 +2293,7 @@ begin
     if not IsNan(Put^.Lengte) and (Put^.Lengte > 0) then begin
       if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
-               FloatToOrox(Put^.Lengte, 3) + ' ] ;');
+               FloatToOrox(Put^.Lengte, 0) + ' ] ;');
       end
       else
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteBouwwerk ; gwsw:hasValue ' +
@@ -2350,7 +2305,7 @@ begin
     if not IsNan(Put^.Hoogte) and (Put^.Hoogte > 0) then begin
       if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
-               FloatToOrox(Put^.Hoogte, 3) + ' ] ;');
+               FloatToOrox(Put^.Hoogte, 0) + ' ] ;');
       end
       else
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteBouwwerk ; gwsw:hasValue ' +
@@ -2396,15 +2351,22 @@ begin
   end;
 
   if fExportConfig.IncludePutBegindatum then begin
-    if Put^.Begindatum > 0 then
+    if IsValidDate(Put^.Begindatum) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
              'gwsw:hasValue "' + DateToOroxFormat(Put^.Begindatum) + '"^^xsd:date ] ;');
+    {if Put^.Begindatum > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+             'gwsw:hasValue "' + DateToOroxFormat(Put^.Begindatum) + '"^^xsd:date ] ;');}
   end;
 
   if fExportConfig.IncludePutEinddatum then begin
-    if Put^.Einddatum > 0 then
+    if IsValidDate(Put^.Einddatum) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
              'gwsw:hasValue "' + DateToOroxFormat(Put^.Einddatum) + '"^^xsd:date ] ;');
+
+    {if Put^.Einddatum > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+             'gwsw:hasValue "' + DateToOroxFormat(Put^.Einddatum) + '"^^xsd:date ] ;');}
     end;
 end;
 
@@ -2432,8 +2394,7 @@ begin
   HasMaaiveldhoogte:= not IsNaN(Put^.Maaiveldhoogte);
 
   // Controleer of maaiveldhoogte geëxporteerd moet worden (zoals in AddPutKenmerken)
-  if fExportConfig.IncludePutMaaiveldhoogte then
-  begin
+  if fExportConfig.IncludePutMaaiveldhoogte then begin
     if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
       // Alleen maaiveldorientatie toevoegen als we een waarde hebben ...
       if HasMaaiveldhoogte then begin
@@ -2447,8 +2408,7 @@ begin
 
   // Alleen maaiveldorientatie blok toevoegen als we een waarde hebben EN het geëxporteerd moet worden
   if fExportConfig.IncludePutMaaiveldhoogte and HasMaaiveldhoogte and
-     (not AnsiContainsText(Put^.PutTypeUri, 'gemaal')) then
-  begin
+     (not AnsiContainsText(Put^.PutTypeUri, 'gemaal')) then begin
     SL.Add('_:' + Put^.GUID + '_maaiveld_ori');
     SL.Add('  rdf:type                      gwsw:Maaiveldorientatie ;');
     SL.Add('  gwsw:hasAspect                [');
@@ -2464,7 +2424,7 @@ begin
   end;
 end;
 
-procedure TOroxExport.AddLeidingKenmerken(SL : TStringList; const Leiding : PGWSWLeiding);
+procedure TOroxExport.AddLeidingKenmerken(SL: TStringList; const Leiding: PGWSWLeiding);
 begin
   if fExportConfig.IncludeLeidingLengte then begin
     if Leiding^.Lengte > 0 then
@@ -2502,7 +2462,6 @@ begin
            'gwsw:hasReference ' + Leiding^.MateriaalURI + ' ] ;');
   end;
 
-  // Funndering
   if fExportConfig.IncludeLeidingFundering then begin
     if Leiding^.FunderingUri <> '' then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Fundering ; ' +
@@ -2523,19 +2482,26 @@ begin
   end;
 
   if fExportConfig.IncludeLeidingBegindatum then begin
-    if Leiding^.Begindatum <> 0 then
+    if IsValidDate(Leiding^.Begindatum) then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+             'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Begindatum) + '"^^xsd:date ] ;');
+{    if Leiding^.Begindatum <> 0 then
     SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
            'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Begindatum) + '"^^xsd:date ] ;'); // OROX/RDF heeft datum alstijd in formaat: YYYY-MM-DD
+           }
   end;
 
   if fExportConfig.IncludeLeidingEinddatum then begin
-    if Leiding^.Einddatum > 0 then
+    if IsValidDate(Leiding^.Einddatum) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
              'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Einddatum) + '"^^xsd:date ] ;');
+{    if Leiding^.Einddatum > 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+             'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Einddatum) + '"^^xsd:date ] ;');}
   end;
 end;
 
-procedure TOroxExport.AddPersleidingKenmerken(SL : TStringList; const Persleiding : PGWSWPersleiding);
+procedure TOroxExport.AddPersleidingKenmerken(SL: TStringList; const Persleiding: PGWSWPersleiding);
 begin
   if fExportConfig.IncludePersleidingLengte then begin
     if Persleiding^.Lengte > 0 then
@@ -2574,19 +2540,25 @@ begin
   end;
 
   if fExportConfig.IncludePersleidingBegindatum then begin
-    if Persleiding^.Begindatum <> 0 then
+    if IsValidDate(Persleiding^.Begindatum) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
-           'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Begindatum) + '"^^xsd:date ] ;');
+             'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Begindatum) + '"^^xsd:date ] ;');
+{    if Persleiding^.Begindatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Begindatum) + '"^^xsd:date ] ;');}
   end;
 
   if fExportConfig.IncludePersleidingEinddatum then begin
-    if Persleiding^.Einddatum <> 0 then
+    if IsValidDate(Persleiding^.Einddatum) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
-           'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Einddatum) + '"^^xsd:date ] ;');
+             'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Einddatum) + '"^^xsd:date ] ;');
+{    if Persleiding^.Einddatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Persleiding^.Einddatum) + '"^^xsd:date ] ;');}
   end;
 end;
 
-procedure TOroxExport.ExportPersleidingOrientatie(SL : TStringList; const Persleiding : PGWSWPersleiding);
+procedure TOroxExport.ExportPersleidingOrientatie(SL: TStringList; const Persleiding: PGWSWPersleiding);
 var
   GMLString: string;
   HasBobBegin, HasBobEind: Boolean;
@@ -2642,7 +2614,7 @@ begin
   SL.Add('');
 end;
 
-procedure TOroxExport.AddKolkKenmerken(SL : TStringList; const Kolk : PGWSWKolk);
+procedure TOroxExport.AddKolkKenmerken(SL: TStringList; const Kolk: PGWSWKolk);
 begin
   // Lengte
   if fExportConfig.IncludeKolkLengte then begin
@@ -2655,14 +2627,14 @@ begin
   if fExportConfig.IncludeKolkBreedte then begin
     if not IsNan(Kolk^.Breedte) and (Kolk^.Breedte > 0) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
-             FloatToOrox(Kolk^.Breedte, 3) + ' ] ;');
+             FloatToOrox(Kolk^.Breedte, 0) + ' ] ;');
   end;
 
   // Hoogte
   if fExportConfig.IncludeKolkHoogte then begin
     if not IsNan(Kolk^.Hoogte) and (Kolk^.Hoogte > 0) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
-             FloatToOrox(Kolk^.Hoogte, 3) + ' ] ;');
+             FloatToOrox(Kolk^.Hoogte, 0) + ' ] ;');
   end;
 
   // Diameter
@@ -2695,20 +2667,26 @@ begin
 
   // Begindatum
   if fExportConfig.IncludeKolkBegindatum then begin
-    if Kolk^.Begindatum <> 0 then
+    if IsValidDate(Kolk^.Begindatum) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
-           'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Begindatum) + '"^^xsd:date ] ;');
+             'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Begindatum) + '"^^xsd:date ] ;');
+{    if Kolk^.Begindatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Begindatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Begindatum) + '"^^xsd:date ] ;');}
   end;
 
   // einddatum
   if fExportConfig.IncludeKolkEinddatum then begin
-    if Kolk^.Einddatum <> 0 then
+    if IsValidDate(Kolk^.Einddatum) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
-           'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Einddatum) + '"^^xsd:date ] ;');
+             'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Einddatum) + '"^^xsd:date ] ;');
+{    if Kolk^.Einddatum <> 0 then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
+           'gwsw:hasValue "' + DateToOroxFormat(Kolk^.Einddatum) + '"^^xsd:date ] ;');}
   end;
 end;
 
-procedure TOroxExport.AddKolkOrientatie(SL : TStringList; const Kolk : PGWSWKolk);
+procedure TOroxExport.AddKolkOrientatie(SL: TStringList; const Kolk: PGWSWKolk);
 var
   GMLString: string;
 begin
@@ -2749,22 +2727,23 @@ begin
 end;
 
 function TOroxExport.FormatOrox(const FormatStr: string; const Args: array of const): string;
+var
+  fS: TFormatSettings;
 begin
-  Result:= Format(FormatStr, Args);
-
-  // STEP 1: First remove a thousand separation
-  if DefaultFormatSettings.ThousandSeparator <> #0 then
-    Result:= StringReplace(Result, DefaultFormatSettings.ThousandSeparator, '', [rfReplaceAll]);
-
-  // STEP 2: Then replace decimal separation with dot
-  Result:= StringReplace(Result, DefaultFormatSettings.DecimalSeparator, '.', [rfReplaceAll]);
+  fS:= DefaultFormatSettings;
+  fS.DecimalSeparator:= '.';
+  fS.ThousandSeparator:= #0;
+  Result:= Format(FormatStr, Args, fS);
 end;
 
 function TOroxExport.FloatToOrox(Value: Double; Decimals: Integer): String;
 var
-  FormatStr: string;
+  fS: TFormatSettings;
 begin
-  Result:= FormatOrox('%.*f', [Decimals, Value]);
+  fS:= DefaultFormatSettings;
+  fS.DecimalSeparator:= '.';
+  fS.ThousandSeparator:= #0;
+  Result:= FloatToStrF(Value, ffFixed, 15, Decimals, fS);
 end;
 
 procedure TOroxExport.ExportStelselToTurtle(SL: TStringList; const Stelsel: PGWSWStelsel);
@@ -2790,19 +2769,16 @@ begin
 
   PartsList:= fStelselIndex.GetParts(Stelsel^.GUID);
 
-  if (PartsList <> nil) and (PartsList.Count > 0) then
-  begin
+  if (PartsList <> nil) and (PartsList.Count > 0) then begin
     SL.Add('  gwsw:hasPart');
-    for i:= 0 to PartsList.Count - 1 do
-    begin
+    for i:= 0 to PartsList.Count - 1 do begin
       if i < PartsList.Count - 1 then
         SL.Add(PartsList[i] + ' ,')
       else
         SL.Add(PartsList[i] + ' .');
     end;
   end
-  else
-  begin
+  else begin
     // Geen delen, sluit af met .
     FinishTurtleBlock(SL);
   end;
@@ -2972,8 +2948,7 @@ begin
   // Formaat: DD-MM-YYYY (of DD-MM-YYYY HH:MM:SS)
   FmtSettings.ShortDateFormat:= 'DD-MM-YYYY';
   FmtSettings.DateSeparator:= '-';
-  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then
-  begin
+  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then begin
     Result:= True;
     Exit;
   end;
@@ -2981,8 +2956,7 @@ begin
   // Formaat: DD/MM/YYYY
   FmtSettings.ShortDateFormat:= 'DD/MM/YYYY';
   FmtSettings.DateSeparator:= '/';
-  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then
-  begin
+  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then begin
     Result:= True;
     Exit;
   end;
@@ -2990,8 +2964,7 @@ begin
   // Formaat: YYYY-MM-DD (ISO)
   FmtSettings.ShortDateFormat:= 'YYYY-MM-DD';
   FmtSettings.DateSeparator:= '-';
-  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then
-  begin
+  if TryStrToDateTime(ValueStr, DateVal, FmtSettings) then begin
     Result:= True;
     Exit;
   end;
@@ -2999,8 +2972,7 @@ begin
   // Probeer ook zonder tijd component
   FmtSettings.ShortDateFormat:= 'DD-MM-YYYY';
   FmtSettings.DateSeparator:= '-';
-  if TryStrToDate(ValueStr, DateVal, FmtSettings) then
-  begin
+  if TryStrToDate(ValueStr, DateVal, FmtSettings) then begin
     Result:= True;
     Exit;
   end;
@@ -3008,16 +2980,12 @@ end;
 
 procedure TOroxExport.ReportProgress(const Msg: string);
 begin
-  if Assigned(fProgressReporter) then
-  begin
+  if Assigned(fProgressReporter) then begin
     fProgressReporter.ReportProgressMsg(Msg);
     // Als we bezig zijn met records verwerken, stuur ook de progress count
     if fTotalRecords > 0 then
       fProgressReporter.ReportProgressCount(fCurrentRecord, fTotalRecords);
   end;
-
-{  if Assigned(fProgressReporter) then
-    fProgressReporter.ReportProgressMsg(Msg);}
 end;
 
 procedure TOroxExport.ReportError(const ErrMsg: string; const ErrorType: Integer; const Guid: string);
@@ -3096,10 +3064,9 @@ var
 begin
   ReportProgress('Export gestart...');
   // Retrieve validation data
-//  LoadGWSWConfig(GWSW_versie_16, GWSWversion);  // get the GWSW version. Used with validation
-  case GWSWversion of
-    'GWSW_versie_16': lVersion:= '1.6';
-  end;
+
+  lVersion:= GWSWversion;
+  if lVersion = '1.7.0' then lVersion:= '1.7';
 
   LoadGWSWConfig(lVersion, GWSWversion);  // get the GWSW version. Used with validation
   InitValidationConfig;  // Initialize global config in validation unit
@@ -3141,8 +3108,7 @@ begin
     ReportProgress('Export succesvol voltooid!');
     UpdateProgressCount(TotalRecords, TotalRecords);
   except
-      on E: Exception do
-      begin
+      on E: Exception do begin
         ReportError('Onverwachte fout: ' + E.Message);
       end;
     end;

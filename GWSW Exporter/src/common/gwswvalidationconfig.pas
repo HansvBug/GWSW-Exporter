@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit GWSWValidationConfig;
 
 {$mode ObjFPC}{$H+}
@@ -54,7 +57,7 @@ uses common.consts, IniFiles;
 var
   fGWSWConfig: TGWSWConfig;
 
-procedure LoadGWSWConfig(const Section, Version : string);
+procedure LoadGWSWConfig(const Section, Version: string);
 var
   Ini: TIniFile;
   lVersion: String;
@@ -148,14 +151,12 @@ begin
     // Hoogtes
     Ini.WriteInteger(Section, 'MinZCoord', fGWSWConfig.MinZCoord);
     Ini.WriteInteger(Section, 'MazZCoord', fGWSWConfig.MaxZCoord);
-
-
   finally
     Ini.Free;
   end;
 end;
 
-function GetGWSWConfig : TGWSWConfig;
+function GetGWSWConfig: TGWSWConfig;
 begin
   Result:= fGWSWConfig;
 end;

@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -9,7 +12,7 @@ const
   { Application constants }
   Application_version            = '0.5.0.0';
   Application_initial_start_date = '12-12-2025';
-  Application_build_date         = '14-05-2026';
+  Application_build_date         = '04-11-2026';
 
   DefaultOroXFileExt = 'orox.ttl'; // Is prescribed in this way.
 
@@ -38,31 +41,28 @@ const
   prCreateDir               = prUser + 3;
   prStatusBarPanelText      = prUser + 4;
   prLoggingText             = prUser + 5;
-  prAppSettings             = prUser + 6;
-  prAppSingleSetting        = prUser + 7;
-  prFormState               = prUser + 8;
-  prStatusBarPanelWidth     = prUser + 9;
-  prDbConnection            = prUser + 10;
-  prRetrieveData            = prUser + 11;
-  prExportToOroxTtlFile     = prUser + 12;
-  prReportProgress          = prUser + 13;
-  prReportError             = prUser + 14;
-  prReportProgressCount     = prUser + 15;
-  prUniqueStringlist        = prUser + 16;
-  prSortDbGrid              = prUser + 17;
-  prRetrieveCSVData         = prUser + 18;
-
-  prDirDataNeeded = prUser + 100; { carries a TDirInfoTrx in aNotifyClass }
-  prFetchDirData = prUser + 101; { carries a TDirInfoTrx in aNotifyClass & an 'IStrings' in UserData }
-  prFetchFileData = prUser + 102; { carries a TDirInfoTrx in aNotifyClass & an 'IStrings' in UserData }
-  //etc...
+  prAppSingleSetting        = prUser + 6;
+  prStatusBarPanelWidth     = prUser + 7;
+  prDbConnection            = prUser + 8;
+  prRetrieveData            = prUser + 9;
+  prExportToOroxTtlFile     = prUser + 10;
+  prReportProgress          = prUser + 11;
+  prReportError             = prUser + 12;
+  prReportProgressCount     = prUser + 13;
+  prUniqueStringlist        = prUser + 14;
+  prSortDbGrid              = prUser + 15;
+  prRetrieveCSVData         = prUser + 16;
+  prLoadFormState           = prUser + 17;  // form-state gelezen → TSettingsRec
+  prStoreFormState          = prUser + 18;  // form-state geschreven → TSettingsRec
+  prSaveSettings            = prUser + 19;  // gewone settings geschreven → TSettingsRec
 
   // View.configure
   prConfigStaticTexts      = prUser + 1000;
-  prFormStateConfig        = prUser + 1001;
-  prAppSettingsConfig      = prUser + 1002;
-  prStaticHintsConfig      = prUser + 1003;
-  prAppSingleSettingConfig = prUser + 1004;
+  prStaticHintsConfig      = prUser + 1001;
+  prLoadConfigFormState    = prUser + 2002;
+  prStoreConfigFormState   = prUser + 2003;
+  prSaveConfigSettings     = prUser + 2004;
+
 
   (* from model.decl *)
   { string guids for the interfaces in this app, used when we can't "see" the type }
@@ -79,16 +79,17 @@ const
 
   { targettexts below lets you use 1 handler in view, 1 result record and differentiate on target-id }
   TargetTexts: TStringArray = ('Directories', 'Resources', 'Models', 'Presenters', 'Views'); // example
-                                          { (a)pplication (d)irectories }
-  adSettings   = 'Settings';
 
+  { (a)pplication (d)irectories }
+  adSettings   = 'Settings';
   adLogging    = 'Logging';
   adDomainlist = 'Domainlist';
   adExport     = 'Export';
   adQueries    = 'Queries';
 
-  // GWSW versies
-  GWSW_versie_16 = '1.6';
+  // GWSW versions
+  GWSW_versie_16  = '1.6';
+  GWSW_versie_170 = '1.7.0';
 
   { (e)xport (e)rror (t)ypes }
   eetInformation     = 0;  // Default

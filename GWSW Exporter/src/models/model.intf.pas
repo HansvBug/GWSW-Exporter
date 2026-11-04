@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -27,21 +30,21 @@ type
     procedure SwitchLanguage;
     function IsDirWritable(const aRootDir: string): Boolean;
     function CreateDirs(const aRootDir, AppDir: string; const aDirList: string = ''): TNewDirectoriesRec;
-    function SetStatusbarText(const aText: string; panel : Word): TStatusbarPanelText;
+    function SetStatusbarText(const aText: string; panel: Word): TStatusbarPanelText;
     function DoesFileExists(const FullFileName: String): Boolean;
     function ReadFormState(Settingsdata: PSettingsRec): TSettingsRec;
     function ReadSettings(Settingsdata: PSettingsRec): TSettingsRec;
     function StoreFormState(Settingsdata: PSettingsRec): TSettingsRec;
     function WriteSettings(Settingsdata: PSettingsRec): TSettingsRec;
-    procedure WriteSingleSetting(SettingData : PSingleSettingRec);
+    procedure WriteSingleSetting(SettingData: PSingleSettingRec);
     procedure StartLogging;
     procedure StopLogging;
     procedure WriteToLog(const LogType, LogText: String);
     function SetStatusbarPanelsWidth(stbWidth, lpWidth, rpWidth: Integer): TstbPanelsSize;
     function IsFileInUse(const FileName: String): Boolean;
 
-    procedure MakeDbConnection(DbConnectionData : PDbConnectRec);
-    procedure DbDisconnect(DbConnectionData : PDbConnectRec);
+    procedure MakeDbConnection(DbConnectionData: PDbConnectRec);
+    procedure DbDisconnect(DbConnectionData: PDbConnectRec);
     function IsConnected: Boolean;
     function RetrieveData(Data: PRetrieveDataRec): TRetrieveDataRec;
     function ExportToOroxTtlFile(Data: PExportToOroxTtlFileRec): TExportToOroxTtlFileRec;
@@ -50,7 +53,7 @@ type
     function GetLastUsedOrganization: String;
     // get a setting
     function GetSetting_AskToOpenExportFile: Boolean;
-    procedure DisableChildControls(aData : TExportInProgressRec);
+    procedure DisableChildControls(aData: TExportInProgressRec);
     function GetSingleSetting(const SettingName: String): String;
     procedure SortDbGrid(Data: PSortDbGridRec);
     function LoadCSVData(aRec: PRetrieveCSVDataRec): TRetrieveCSVDataRec;  { #todo : aRec is een betere naam dan Data. OVERAL hernoemen }
@@ -68,7 +71,7 @@ type
     function ReadSettings(Settingsdata: PSettingsRec): TSettingsRec;
     function StoreFormState(Settingsdata: PSettingsRec): TSettingsRec;
     function WriteSettings(Settingsdata: PSettingsRec): TSettingsRec;
-    procedure WriteSingleSetting(SettingData : PSingleSettingRec);
+    procedure WriteSingleSetting(SettingData: PSingleSettingRec);
     procedure WriteToLog(const aLogAction, LogText: String);
   end; { IModelConfigure }
 
@@ -77,15 +80,15 @@ type
   ITransactionManager = interface(ICorba)['{C75AE70E-43DA-4A76-A52D-061AFC6562D0}']
     function get_ActiveTrx: ITransaction;
     function get_Model: IModelMain;
-    function get_ModelConfig : IModelConfigure;
+    function get_ModelConfig: IModelConfigure;
     function get_Owner: IPresenterMain;
     procedure CommitTransaction;
-    function get_OwnerConfig : IPresenterConfigure;
+    function get_OwnerConfig: IPresenterConfigure;
     function InTransaction: boolean; { below is register for runtime jic, NOT startup!!! }
     procedure RegisterTransactionClass(aModReason: ptrint; aTransactionClass: TTransactionClass);
     procedure RollbackTransaction;
-    procedure set_ModelConfig(AValue : IModelConfigure);
-    procedure set_OwnerConfig(AValue : IPresenterConfigure);
+    procedure set_ModelConfig(AValue: IModelConfigure);
+    procedure set_OwnerConfig(AValue: IPresenterConfigure);
     function StartTransaction(aModReason: ptrint): TTransaction;
     property ActiveTrx: ITransaction read get_ActiveTrx;
 
@@ -130,6 +133,8 @@ type
     function GetLastUsedOrganization: String;
     procedure ExportInProgress(aData: TExportInProgressRec);
     function GetSingleSetting(const SettingName: String): String;
+    function  GetSettings(const aSettingsFile: string = ''): TSettingsRec;
+    procedure SaveSettings(const aSettings: TSettingsRec);
 
     property Model: IModelMain read get_Model; // TODO: write set_Model;
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -150,6 +155,8 @@ type
     //...
     procedure SwitchLanguage(const aSection: String);
     procedure WriteToLog(const aSection, aLogAction, LogText: String);
+    function  GetSettings(const aSettingsFile: string = ''): TSettingsRec;
+    procedure SaveSettings(const aSettings: TSettingsRec);
 
     property Model: IModelConfigure read get_Model;
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -216,7 +223,7 @@ begin
   QSections.Push(strnew(pchar('['+aSect+']'))); { enqueue the [section] for later update }
 end;
 
-procedure RegisterConfigureSection(const aSect : string);
+procedure RegisterConfigureSection(const aSect: string);
 begin
   if aSect = '' then exit; { no empty allocations }
   ConfSections.Push(strnew(pchar('['+aSect+']'))); { enqueue the [section] for later update }
@@ -238,7 +245,7 @@ begin
   end;
 end;
 
-procedure UpdateConfigureSections(var anArray : TStringArray);
+procedure UpdateConfigureSections(var anArray: TStringArray);
 var
   lai: integer;
   lp: pchar = nil;

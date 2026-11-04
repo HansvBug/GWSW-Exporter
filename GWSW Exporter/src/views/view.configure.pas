@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit view.configure;
 
 {$mode ObjFPC}{$H+}
@@ -42,12 +44,12 @@ type
     pnlMain: TPanel;
     pnlBottom: TPanel;
     pnlTop: TPanel;
-    stbInfo : TStatusBar;
+    stbInfo: TStatusBar;
     tbsGWSW: TTabSheet;
     tbsMiscellaneous: TTabSheet;
-    procedure BitBtnQueryFileLocationClick(Sender : TObject);
+    procedure BitBtnQueryFileLocationClick(Sender: TObject);
     procedure BitBtnSelectMappingsFileClick(Sender: TObject);
-    procedure chkActiveLoggingChange(Sender : TObject);
+    procedure chkActiveLoggingChange(Sender: TObject);
     procedure pgcConfigureChange(Sender: TObject);
   private
     fPresenter: IPresenterConfigure;
@@ -71,11 +73,10 @@ type
     procedure BtnCloseOnClick(Sender: TObject);
   protected
     procedure DoStaticTexts(Texts: IStrings);
-    procedure DoStatus({%H-}anObj: TObject; {%H-}aData: pointer);
     procedure DoAppSettings({%H-}anObj: TObject; aData: PSettingsRec);
     procedure DoFormState({%H-}anObj: TObject; aData: PSettingsRec);
     procedure SetStaticHints(Texts: IStrings);
-    procedure HandleObsNotify(aReason : ptrint; aNotifyClass : TObject; aData : pointer);
+    procedure HandleObsNotify(aReason: ptrint; aNotifyClass: TObject; aData: pointer);
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -85,12 +86,12 @@ type
 
   function SetUpConfigureView(aMainPresenter: IPresenterMain): Boolean;
 var
-  frmConfigure : TfrmConfigure;
+  frmConfigure: TfrmConfigure;
 
 implementation
 uses obs_prosu, common.consts;
 
-function SetUpConfigureView(aMainPresenter : IPresenterMain) : Boolean;
+function SetUpConfigureView(aMainPresenter: IPresenterMain): Boolean;
 begin (*  S T A R T U P  F U N C T I O N  *)
   with TfrmConfigure.Create(nil) do try
     { this takes care of setting up the trx-stuff, with model & owner }
@@ -108,7 +109,7 @@ end;
 
 { TfrmConfigure }
 
-procedure TfrmConfigure.chkActiveLoggingChange(Sender : TObject);
+procedure TfrmConfigure.chkActiveLoggingChange(Sender: TObject);
 begin
   if chkActiveLogging.Checked then begin
     chkAppendLogging.Enabled:= True;
@@ -126,7 +127,7 @@ begin
   end;
 end;
 
-procedure TfrmConfigure.BitBtnQueryFileLocationClick(Sender : TObject);
+procedure TfrmConfigure.BitBtnQueryFileLocationClick(Sender: TObject);
 var
   openDialog: TOpenDialog;
 begin
@@ -175,22 +176,22 @@ begin
   end;
 end;
 
-function TfrmConfigure.get_Observer : IobsSubscriber;
+function TfrmConfigure.get_Observer: IobsSubscriber;
 begin
   Result:= fSubscriber;
 end;
 
-function TfrmConfigure.get_Presenter : IPresenterConfigure;
+function TfrmConfigure.get_Presenter: IPresenterConfigure;
 begin
   Result:= fPresenter;
 end;
 
-function TfrmConfigure.Obj : TObject;
+function TfrmConfigure.Obj: TObject;
 begin
   Result:= Self;
 end;
 
-procedure TfrmConfigure.set_Observer(aValue : IobsSubscriber);
+procedure TfrmConfigure.set_Observer(aValue: IobsSubscriber);
 begin
   if aValue <> nil then begin
     if fSubscriber <> nil then begin // trying to avoid dangling refs
@@ -205,7 +206,7 @@ begin
   end; /// we don't care for nil 'cause we need the observer/subscriber to function at all!
 end;
 
-procedure TfrmConfigure.set_Presenter(aValue : IPresenterConfigure);
+procedure TfrmConfigure.set_Presenter(aValue: IPresenterConfigure);
 begin
   if aValue <> nil then begin
     if Assigned(fPresenter) then begin
@@ -234,10 +235,10 @@ begin
     Lang:= CreStrListFromFile(SetFile).Values['Language'].Trim; ///<- i18n. // This just reads te line from the ini file.
 
   if (Lang = '') or (SetFile = '') then
-    Lang := 'en';  // The default comes to the rescue when the settingsfile is (not) found but language is empty.
+    Lang:= 'en';  // The default comes to the rescue when the settingsfile is (not) found but language is empty.
 end;
 
-function TfrmConfigure.GetSettingsFile : String;
+function TfrmConfigure.GetSettingsFile: String;
 var
   UserName: String;
 begin
@@ -253,15 +254,12 @@ end;
 
 procedure TfrmConfigure.ReadFormState;
 var
-  lTrx: TSettingsConfigTrx;
+  lTrx: TLoadConfigFormStateTrx;
 begin
-  lTrx:= fPresenter.TrxMan.StartTransaction(prFormStateConfig) as TSettingsConfigTrx;
+  lTrx:= fPresenter.TrxMan.StartTransaction(prLoadConfigFormState) as TLoadConfigFormStateTrx;
   try
-    lTrx.ReadSettings:= True;
-    lTrx.ReadFormState:= True;
+    lTrx.SettingsFile:= GetSettingsFile;
     lTrx.FormName:= UnitName;
-    lTrx.SettingsLocationAndFileName:= GetSettingsFile;
-
     fPresenter.TrxMan.CommitTransaction;
   except
     fPresenter.TrxMan.RollbackTransaction;
@@ -270,24 +268,25 @@ end;
 
 procedure TfrmConfigure.StoreFormstate;
 var
-  lTrx : TSettingsConfigTrx;
+  lRec: TSettingsRec;
+  lTrx: TStoreConfigFormStateTrx;
 begin
-  lTrx := fPresenter.TrxMan.StartTransaction(prAppSettingsConfig) as TSettingsConfigTrx;
-  try
-    lTrx.WriteSettings:= True;
-    lTrx.StoreFormState:= True;
-    lTrx.FormName := UnitName;
-    lTrx.FormWindowstate:= integer(Windowstate);
-    lTrx.FormTop:= Top;
-    lTrx.FormLeft:= Left;
-    lTrx.FormHeight:= Height;
-    lTrx.FormWidth:= Width;
-    lTrx.FormRestoredTop:= RestoredTop;
-    lTrx.FormRestoredLeft:= RestoredLeft;
-    lTrx.FormRestoredHeight:= RestoredHeight;
-    lTrx.FormRestoredWidth:= RestoredWidth;
-    lTrx.SettingsLocationAndFileName:= GetSettingsFile;
+  lRec.setSettingsFile:= GetSettingsFile;
+  lRec.setFrmName:= UnitName;
+  lRec.setFrmWindowState:= Integer(WindowState);
+  lRec.setFrmTop:= Top;
+  lRec.setFrmLeft:= Left;
+  lRec.setFrmHeight:= Height;
+  lRec.setFrmWidth:= Width;
+  lRec.setFrmRestoredTop:= RestoredTop;
+  lRec.setFrmRestoredLeft:= RestoredLeft;
+  lRec.setFrmRestoredHeight:= RestoredHeight;
+  lRec.setFrmRestoredWidth:= RestoredWidth;
 
+  lTrx:= fPresenter.TrxMan.StartTransaction(prStoreConfigFormState) as TStoreConfigFormStateTrx;
+  try
+    lTrx.SettingsFile:= GetSettingsFile;
+    lTrx.Settings:= lRec;
     fPresenter.TrxMan.CommitTransaction;
   except
     fPresenter.TrxMan.RollbackTransaction;
@@ -296,67 +295,53 @@ end;
 
 procedure TfrmConfigure.WriteSettings;
 var
-  lTrx: TSettingsConfigTrx;
+  lRec: TSettingsRec;
 begin
-  lTrx:= fPresenter.TrxMan.StartTransaction(prAppSettingsConfig) as TSettingsConfigTrx;
-  try
-    lTrx.WriteSettings:= True;
-    lTrx.ReadSettings:= False;
-    lTrx.FormName:= UnitName;
-    lTrx.ActivateLogging:= chkActiveLogging.Checked;
-    lTrx.AppendLogging:= chkAppendLogging.Checked;
-    lTrx.Language:= Lang;
-    lTrx.SettingsLocationAndFileName:= GetSettingsFile;
-    lTrx.DbGridRowHighlight:= chkBdGridRowhighligth.Checked;
-    lTrx.SqlFileLocation:= edtSqlFileLocation.Text;
-    lTrx.AskToOpenExportFile:= chkAskToOpenExportFile.Checked;
-    lTrx.KeepLastOrganization:= chkKeepLastOrganization.Checked;
-    lTrx.RapportMappingError:= chkMapping.Checked;
-    lTrx.RapportFatalError:= chkFatal.Checked;
-    lTrx.RapportFieldIsEmpty:= chkFieldIsEmpty.Checked;
-    lTrx.RapportFieldIsMissing:= chkFieldIsMissing.Checked;
-    lTrx.RapportOutOfRange:= chkValueOutOfRange.Checked;
-    lTrx.MappingFile:= edtMappingsFile.Text;
+  lRec:= fPresenter.GetSettings(GetSettingsFile);
+  lRec.setFrmName:= UnitName;
+  lRec.setActivateLogging:= chkActiveLogging.Checked;
+  lRec.setAppendLogging:= chkAppendLogging.Checked;
+  lRec.setLanguage:= Lang;
+  lRec.setDbGridRowHighlight:= chkBdGridRowhighligth.Checked;
+  lRec.setSqlFileLocation:= edtSqlFileLocation.Text;
+  lRec.setAskToOpenExportFile:= chkAskToOpenExportFile.Checked;
+  lRec.setKeepLastOrganization:= chkKeepLastOrganization.Checked;
+  lRec.setRapportMappingError:= chkMapping.Checked;
+  lRec.setRapportFatalError:= chkFatal.Checked;
+  lRec.setRapportFieldIsEmpty:= chkFieldIsEmpty.Checked;
+  lRec.setRapportFieldIsMissing:= chkFieldIsMissing.Checked;
+  lRec.setRapportOutOfRange:= chkValueOutOfRange.Checked;
+  lRec.setMappingFile:= edtMappingsFile.Text;
+  lRec.setGWSWVersion:= cbGWSWVersion.Text;
 
-    fPresenter.TrxMan.CommitTransaction;
-  except
-    FPresenter.TrxMan.RollbackTransaction;
-  end;
+  fPresenter.SaveSettings(lRec);
 end;
 
 procedure TfrmConfigure.ReadSettings;
 var
-  lTrx: TSettingsConfigTrx;
+  lRec: TSettingsRec;
 begin
-  lTrx:= fPresenter.TrxMan.StartTransaction(prAppSettingsConfig) as TSettingsConfigTrx;
-  try
-    lTrx.ReadSettings:= True;
-    lTrx.WriteSettings:= False;
-    lTrx.SettingsLocationAndFileName:= GetSettingsFile;
-    lTrx.FormName:= UnitName;
-
-    FPresenter.TrxMan.CommitTransaction;
-  except
-    FPresenter.TrxMan.RollbackTransaction;
-  end;
+  lRec:= fPresenter.GetSettings(GetSettingsFile);
+  lRec.setFrmName:= UnitName;
+  DoAppSettings(Self, @lRec);
 end;
 
-procedure TfrmConfigure.OnFormCreate(Sender : TObject);
+procedure TfrmConfigure.OnFormCreate(Sender: TObject);
 begin
   pgcConfigure.ActivePage:= tbsMiscellaneous; // Set the active page.
 end;
 
-procedure TfrmConfigure.OnFormShow(Sender : TObject);
+procedure TfrmConfigure.OnFormShow(Sender: TObject);
 begin
   ReadFormState;
 end;
 
-procedure TfrmConfigure.BtnCloseOnClick(Sender : TObject);
+procedure TfrmConfigure.BtnCloseOnClick(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TfrmConfigure.DoStaticTexts(Texts : IStrings);
+procedure TfrmConfigure.DoStaticTexts(Texts: IStrings);
 var
   i: integer;
   lc: TComponent;
@@ -382,12 +367,7 @@ begin
   end;
 end;
 
-procedure TfrmConfigure.DoStatus(anObj : TObject; aData : pointer);
-begin
-  //...
-end;
-
-procedure TfrmConfigure.DoAppSettings(anObj : TObject; aData : PSettingsRec);
+procedure TfrmConfigure.DoAppSettings(anObj: TObject; aData: PSettingsRec);
 begin
   With PSettingsRec(aData)^ do begin
     if setSucces then begin
@@ -405,7 +385,7 @@ begin
         chkFieldIsMissing.Checked:= setRapportFieldIsMissing;
         chkValueOutOfRange.Checked:= setRapportOutOfRange;
         edtMappingsFile.Text:= setMappingFile;
-        cbGWSWVersion.Text:= setGWSWVersion;
+        cbGWSWVersion.Text:= setGWSWVersion; // Get the gwsw version
       end
       else if (setWriteSettings) and (setFrmName = UnitName) then begin
         // ...
@@ -414,7 +394,7 @@ begin
   end;
 end;
 
-procedure TfrmConfigure.DoFormState(anObj : TObject; aData : PSettingsRec);
+procedure TfrmConfigure.DoFormState(anObj: TObject; aData: PSettingsRec);
 var
   LastWindowState: TWindowstate;
 begin
@@ -433,7 +413,7 @@ begin
       end
       else begin
         WindowState:= wsNormal;
-        BoundsRect := Bounds(
+        BoundsRect:= Bounds(
           aData^.setFrmLeft,
           aData^.setFrmTop,
           aData^.setFrmWidth,
@@ -444,8 +424,7 @@ begin
     end;
   end;
 end;
-
-procedure TfrmConfigure.SetStaticHints(Texts : IStrings);
+procedure TfrmConfigure.SetStaticHints(Texts: IStrings);
 var
   i: integer;
   lc: TComponent;
@@ -459,15 +438,14 @@ begin
   end;
 end;
 
-procedure TfrmConfigure.HandleObsNotify(aReason : ptrint; aNotifyClass : TObject; aData : pointer);
+procedure TfrmConfigure.HandleObsNotify(aReason: ptrint; aNotifyClass: TObject; aData: pointer);
 begin
   case aReason of
     prConfigStaticTexts: DoStaticTexts(IStringList(aData)); { important startup-code }
-    prStatus: if aNotifyClass = nil then stbInfo.SimpleText:= Pch2Str(aData)
-              else DoStatus(aNotifyClass,aData);
-    prFormStateConfig    : DoFormState(aNotifyClass, aData);
-    prAppSettingsConfig  : DoAppSettings(aNotifyClass, aData);
-    prStaticHintsConfig  : SetStaticHints(IStringList(aData));
+    prStaticHintsConfig   : SetStaticHints(IStringList(aData));
+
+    prLoadConfigFormState : DoFormState(aNotifyClass, aData);
+    prSaveConfigSettings  : DoAppSettings(aNotifyClass, aData);
   end;
 end;
 
@@ -481,10 +459,15 @@ begin
   // So here no fuctions which are in need of the presenter.  <<--------------!!!!
 
   self.Color:= clWindow;
+  edtSqlFileLocation.Text:= '';
   // Connect eventhandlers.
   Self.OnCreate:= @OnFormCreate;
   Self.OnShow:= @OnFormShow;
   btnClose.OnClick:= @BtnCloseOnClick;
+
+  // gwsw version
+  cbGWSWVersion.Items.Add(GWSW_versie_16);
+  cbGWSWVersion.Items.Add(GWSW_versie_170);
 
   pgcConfigure.ActivePageIndex:= 0;
 end;

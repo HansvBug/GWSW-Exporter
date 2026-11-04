@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit GWSWTypes;
 
 {$mode objfpc} {$H+}
@@ -85,61 +87,61 @@ end;
 
   // Kolk
   TGWSWKolk = record
-     GUID: String;
-     aLabel: String;
-     KolkTypeUri: String;
-     Breedte: Integer;
-     Lengte: Integer;
-     Hoogte: Integer;
-     Diameter: Integer;
-     MateriaalURI: String;
-     VormURI: String;
-     Wanddikte: Integer;
-     Begindatum: TDate;
-     Einddatum: TDate;
-     // Topologie
-     X: Double;
-     Y: Double;
-     Z: Double;
-     HasOrientation: Boolean;
-     WKTGeometry: String;
-     HasWKTGeometry: Boolean;
-   end;
+    GUID: String;
+    aLabel: String;
+    KolkTypeUri: String;
+    Breedte: Integer;
+    Lengte: Integer;
+    Hoogte: Integer;
+    Diameter: Integer;
+    MateriaalURI: String;
+    VormURI: String;
+    Wanddikte: Integer;
+    Begindatum: TDate;
+    Einddatum: TDate;
+    // Topologie
+    X: Double;
+    Y: Double;
+    Z: Double;
+    HasOrientation: Boolean;
+    WKTGeometry: String;
+    HasWKTGeometry: Boolean;
+  end;
 
   // Persleiding
   TGWSWPersleiding = record
-      GUID: String;  // OBJECT_GUID
-      aLabel: String;
-      PersleidingTypeURI: String;
-      VormURI: String;
-      BeginPutID: String;
-      EindPutID: String;
-      Lengte: Double;
-      Diameter: Integer;
-      Breedte: Integer;
-      Hoogte: Integer;
-      MateriaalURI: String;
-      StatusFunctionerenURI: String;
-      Begindatum: TDate;
-      Einddatum: TDate;
-      BobBegin: Double; // Dit is DIEPTE_BEGIN
-      BobEind: Double;  // Dit is DIEPTE_EIND
+    GUID: String;  // OBJECT_GUID
+    aLabel: String;
+    PersleidingTypeURI: String;
+    VormURI: String;
+    BeginPutID: String;
+    EindPutID: String;
+    Lengte: Double;
+    Diameter: Integer;
+    Breedte: Integer;
+    Hoogte: Integer;
+    MateriaalURI: String;
+    StatusFunctionerenURI: String;
+    Begindatum: TDate;
+    Einddatum: TDate;
+    BobBegin: Double; // Dit is DIEPTE_BEGIN
+    BobEind: Double;  // Dit is DIEPTE_EIND
 
-      // Geometrie specifiek voor persleiding (kan meerdere vertices hebben)
-      HasMultipleVertices: Boolean;
-      Vertices: array of array[0..2] of Double;  // X, Y, Z voor elk vertex
-      WKTGeometry: String;
-      HasWKTGeometry: Boolean;
+    // Geometrie specifiek voor persleiding (kan meerdere vertices hebben)
+    HasMultipleVertices: Boolean;
+    Vertices: array of array[0..2] of Double;  // X, Y, Z voor elk vertex
+    WKTGeometry: String;
+    HasWKTGeometry: Boolean;
 
-      // Topologie coördinaten
-      BeginPutX, BeginPutY, BeginPutZ: Double;
-      EindPutX, EindPutY, EindPutZ: Double;
+    // Topologie coördinaten
+    BeginPutX, BeginPutY, BeginPutZ: Double;
+    EindPutX, EindPutY, EindPutZ: Double;
 
-      // Stelsel relatie
-      StelselID: String;
-      StelselURI: String;
-      Stelselnaam: String;
-    end;
+    // Stelsel relatie
+    StelselID: String;
+    StelselURI: String;
+    Stelselnaam: String;
+  end;
 
   // Validate
   TGWSWConfig = record

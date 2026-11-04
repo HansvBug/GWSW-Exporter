@@ -1,0 +1,51 @@
+object FrmCredits: TFrmCredits
+  Left = 584
+  Height = 420
+  Top = 37
+  Width = 618
+  BorderStyle = bsNone
+  Caption = 'FrmCredits'
+  ClientHeight = 420
+  ClientWidth = 618
+  Color = 13006080
+  DesignTimePPI = 144
+  Position = poOwnerFormCenter
+  LCLVersion = '5.0.1.0'
+  OnCreate = FormCreate
+  object Panel1: TPanel
+    Left = 5
+    Height = 410
+    Top = 5
+    Width = 608
+    Align = alClient
+    BorderSpacing.Around = 5
+    Caption = 'Panel1'
+    ClientHeight = 410
+    ClientWidth = 608
+    Color = clWhite
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 0
+    object memCredits: TMemo
+      Left = 8
+      Height = 344
+      Top = 8
+      Width = 590
+      Anchors = [akTop, akLeft, akRight]
+      Lines.Strings = (
+        'GWSW-Exporter'
+      )
+      ReadOnly = True
+      TabOrder = 0
+    end
+    object btnClose: TButton
+      Left = 485
+      Height = 38
+      Top = 360
+      Width = 113
+      Caption = 'btnClose'
+      TabOrder = 1
+      OnClick = btnCloseClick
+    end
+  end
+end

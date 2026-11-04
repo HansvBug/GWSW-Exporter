@@ -1,29 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
-{
-  Settings.pas - Application Configuration Manager
-
-  Purpose:
-  This unit provides centralized management of application settings, including:
-  - Application metadata (name, version, build date)
-  - User preferences (language, logging settings)
-  - Form position and state persistence
-  - INI file-based configuration storage
-
-  Key Features:
-  - Read/write application settings from/to INI file
-  - Store and restore form positions and states
-  - Manage application metadata
-  - Thread-safe configuration operations
-  - Default value handling for missing settings
-
-  Usage:
-  1. Create TSettings instance
-  2. Set SettingsFile property
-  3. Call ReadFile to load settings
-  4. Access properties as needed
-  5. Call WriteSettings to persist changes
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
 }
-
 unit Settings;
 
 {$mode ObjFPC}{$H+}
@@ -31,569 +8,462 @@ unit Settings;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, ExportConfig;
+  Classes, SysUtils, IniFiles, ExportConfig, model.base;
 
 type
-  { TSettings }
-  { Manages application configuration and form state persistence. }
+  { TSettings — Application Configuration Manager
+
+    Een nieuwe setting toevoegen:
+      1. Voeg veld toe aan TSettingsRec (model.base.pas)
+      2. Voeg één Read*-regel toe in TSettings.Load
+      3. Voeg één Write*-regel toe in TSettings.Save
+  }
   TSettings = class(TObject)
   private
-    fExportConfig: TExportConfig;
-
-    { Configuration fields. }
-    fAppendLogFile: Boolean;
-    fAskToOpenExportFile : Boolean;
-    fDbGridRowHighlight : Boolean;
-    fGWSWVersion: String;
-    fIncludeKolkBegindatum: Boolean;
-    fIncludeKolkBreedte: Boolean;
-    fIncludeKolkDiameter: Boolean;
-    fIncludeKolkEinddatum: Boolean;
-    fIncludeKolkHoogte: Boolean;
-    fIncludeKolkLengte: Boolean;
-    fIncludeKolkMateriaal: Boolean;
-    fIncludeKolkVorm: Boolean;
-    fIncludeKolkWanddikte: Boolean;
-    fIncludeLeidingBegindatum: Boolean;
-    fIncludeLeidingBobBegin: Boolean;
-    fIncludeLeidingBobEind: Boolean;
-    fIncludeLeidingBreedte: Boolean;
-    fIncludeLeidingDiameter: Boolean;
-    fIncludeLeidingEinddatum: Boolean;
-    fIncludeLeidingFundering: Boolean;
-    fIncludeLeidingHoogte: Boolean;
-    fIncludeLeidingLengte: Boolean;
-    fIncludeLeidingMateriaal: Boolean;
-    fIncludeLeidingStatusFunctioneren: Boolean;
-    fIncludeLeidingVorm: Boolean;
-    fIncludeLeidingWIBONThema: Boolean;
-    fIncludePersleidingBegindatum: Boolean;
-    fIncludePersleidingBobBegin: Boolean;
-    fIncludePersleidingBobEind: Boolean;
-    fIncludePersleidingDiameter: Boolean;
-    fIncludePersleidingEinddatum: Boolean;
-    fIncludePersleidingHoogte: Boolean;
-    fIncludePersleidingLengte: Boolean;
-    fIncludePersleidingMateriaal: Boolean;
-    fIncludePersleidingStatusFunctioneren: Boolean;
-    fIncludePersleidingVorm: Boolean;
-    fIncludePutBegindatum: Boolean;
-    fIncludePutBreedte: Boolean;
-    fIncludePutDiameter: Boolean;
-    fIncludePutEinddatum: Boolean;
-    fIncludePutFundering: Boolean;
-    fIncludePutHoogte: Boolean;
-    fIncludePutLengte: Boolean;
-    fIncludePutMaaiveldhoogte: Boolean;
-    fIncludePutMateriaal: Boolean;
-    fKeepLastOrganization: Boolean;
-    fLanguage: String;
-    fLastUsedOrganization: String;
-    fIncludePutVorm: Boolean;
-    fMappingFile : String;
-    fRapportFatalError: Boolean;
-    fRapportFieldIsEmpty: Boolean;
-    fRapportFieldIsMissing: Boolean;
-    fRapportMappingError: Boolean;
-    fRapportOutOfRange: Boolean;
-    fSettingsFile: String;
-    fAppName: String;
-    fAppVersion: String;
-    fAppBuildDate: String;
-    fActivateLogging: Boolean;
-    fSplitterDataSettings,
-    fSplitterdataGrid,
-    fSplitterMemos: Integer;
-    fSqlFileLocation: String;
-    fSucces: Boolean;
-
-    { Form state fields. }
-    fFrmName: String;
-    fFrmWindowstate: Integer;
-    fFrmTop: Integer;
-    fFrmLeft: Integer;
-    fFrmHeight: Integer;
-    fFrmWidth: Integer;
-    fFrmRestoredTop: Integer;
-    fFrmRestoredLeft: Integer;
-    fFrmRestoredHeight: Integer;
-    fFrmRestoredWidth: Integer;
-
-    { Property access methods. }
+    fAllSettings: TSettingsRec;
     function GetExportConfig: TExportConfig;
-    function get_AppBuildDate: String;
-    function get_AppName: String;
-    function get_AppVersion: String;
-    procedure set_AppBuildDate(AValue: String);
-    procedure set_AppName(AValue: String);
-    procedure set_AppVersion(AValue: String);
+    procedure ResetToDefaults;
   public
-    { Lifecycle management. }
     constructor Create; overload;
+    constructor Create(const aFile: string); overload;
     destructor Destroy; override;
 
-    { Configuration operations. }
-    procedure ReadFile;
-    procedure WriteSettings;
-    procedure WriteSetting(const SettingName, Section, AValue: String);
+    { Primaire API — enige I/O }
+    procedure Load;
+    function  Save: Boolean;
+    procedure WriteSetting(const SettingName, Section, AValue: String);  { TODO : Write single setting moet nog een keer weg.  }
 
-    { Form state management. }
+    { Form state }
     procedure StoreFormState;
     procedure ReadFormState;
 
-    procedure LoadExportConfigFromIni;
-
-    { Application properties. }
-    property SettingsFile: String read fSettingsFile write fSettingsFile;
-    property AppName: String read get_AppName write set_AppName;
-    property AppVersion: String read get_AppVersion write set_AppVersion;
-    property AppBuildDate: String read get_AppBuildDate write set_AppBuildDate;
-    { Form state properties. }
-    property FormName: String read fFrmName write FFrmName;
-    property FormWindowstate: Integer read fFrmWindowstate write fFrmWindowstate;
-    property FormTop: Integer read fFrmTop write fFrmTop;
-    property FormLeft: Integer read fFrmLeft write fFrmLeft;
-    property FormHeight: Integer read fFrmHeight write fFrmHeight;
-    property FormWidth: Integer read fFrmWidth write fFrmWidth;
-    property FormRestoredTop: Integer read fFrmRestoredTop write fFrmRestoredTop;
-    property FormRestoredLeft: Integer read fFrmRestoredLeft write fFrmRestoredLeft;
-    property FormRestoredHeight: Integer read fFrmRestoredHeight write fFrmRestoredHeight;
-    property FormRestoredWidth: Integer read fFrmRestoredWidth write fFrmRestoredWidth;
-    { User preferences. }
-    property Language: String read fLanguage write fLanguage;
-    property ActivateLogging: Boolean read fActivateLogging write fActivateLogging;
-    property AppendLogFile: Boolean read fAppendLogFile write fAppendLogFile;
-    property MappingFile: String read fMappingFile write fMappingFile;
-    property SqlFileLocation: String read fSqlFileLocation write fSqlFileLocation;
-    property SplitterDataSettings: Integer read fSplitterDataSettings write fSplitterDataSettings;
-    property SplitterDataGrid: Integer read fSplitterDataGrid write fSplitterDataGrid;
-    property SplitterMemos: Integer read fSplitterMemos write fSplitterMemos;
-    property DbGridRowHighlight: Boolean read fDbGridRowHighlight write fDbGridRowHighlight;
-    property AskToOpenExportFile: Boolean read fAskToOpenExportFile write fAskToOpenExportFile;
-    property KeepLastOrganization: Boolean read fKeepLastOrganization write fKeepLastOrganization;
-    property LastUsedOrganization: String read fLastUsedOrganization write fLastUsedOrganization;
-
-    property RapportMappingError: Boolean read fRapportMappingError write fRapportMappingError;
-    property RapportFatalError: Boolean read fRapportFatalError write fRapportFatalError;
-    property RapportFieldIsEmpty: Boolean read fRapportFieldIsEmpty write fRapportFieldIsEmpty;
-    property RapportFieldIsMissing: Boolean read fRapportFieldIsMissing write fRapportFieldIsMissing;
-    property RapportOutOfRange: Boolean read fRapportOutOfRange write fRapportOutOfRange;
-    property GWSWVersion: String read fGWSWVersion write fGWSWVersion;
-    // Export settings
-    // Put
-    Property IncludePutLengte: Boolean read fIncludePutLengte write fIncludePutLengte;
-    Property IncludePutBreedte: Boolean read fIncludePutBreedte write fIncludePutBreedte;
-    Property IncludePutHoogte: Boolean read fIncludePutHoogte write fIncludePutHoogte;
-    Property IncludePutDiameter: Boolean read fIncludePutDiameter write fIncludePutDiameter;
-    Property IncludePutVorm: Boolean read fIncludePutVorm write fIncludePutVorm;
-    Property IncludePutMateriaal: Boolean read fIncludePutMateriaal write fIncludePutMateriaal;
-    Property IncludePutFundering: Boolean read fIncludePutFundering write fIncludePutFundering;
-    Property IncludePutBegindatum: Boolean read fIncludePutBegindatum write fIncludePutBegindatum;
-    Property IncludePutEinddatum: Boolean read fIncludePutEinddatum write fIncludePutEinddatum;
-    property IncludePutMaaiveldhoogte: Boolean read fIncludePutMaaiveldhoogte write fIncludePutMaaiveldhoogte;
-    // Leiding
-    property IncludeLeidingLengte: Boolean read fIncludeLeidingLengte write fIncludeLeidingLengte;
-    property IncludeLeidingBreedte: Boolean read fIncludeLeidingBreedte write fIncludeLeidingBreedte;
-    property IncludeLeidingHoogte: Boolean read fIncludeLeidingHoogte write fIncludeLeidingHoogte;
-    property IncludeLeidingDiameter: Boolean read fIncludeLeidingDiameter write fIncludeLeidingDiameter;
-    property IncludeLeidingVorm: Boolean read fIncludeLeidingVorm write fIncludeLeidingVorm;
-    property IncludeLeidingMateriaal: Boolean read fIncludeLeidingMateriaal write fIncludeLeidingMateriaal;
-    property IncludeLeidingFundering: Boolean read fIncludeLeidingFundering write fIncludeLeidingFundering;
-    property IncludeLeidingStatusFunctioneren: Boolean read fIncludeLeidingStatusFunctioneren write fIncludeLeidingStatusFunctioneren;
-    property IncludeLeidingWIBONThema: Boolean read fIncludeLeidingWIBONThema write fIncludeLeidingWIBONThema;
-    property IncludeLeidingBegindatum: Boolean read fIncludeLeidingBegindatum write fIncludeLeidingBegindatum;
-    property IncludeLeidingEinddatum: Boolean read fIncludeLeidingEinddatum write fIncludeLeidingEinddatum;
-    property IncludeLeidingBobBegin: Boolean read fIncludeLeidingBobBegin write fIncludeLeidingBobBegin;
-    property IncludeLeidingBobEind: Boolean read fIncludeLeidingBobEind write fIncludeLeidingBobEind;
-    // Persleding
-    property IncludePersleidingLengte: Boolean read fIncludePersleidingLengte write fIncludePersleidingLengte;
-    property IncludePersleidingHoogte: Boolean read fIncludePersleidingHoogte write fIncludePersleidingHoogte;
-    property IncludePersleidingDiameter: Boolean read fIncludePersleidingDiameter write fIncludePersleidingDiameter;
-    property IncludePersleidingVorm: Boolean read fIncludePersleidingVorm write fIncludePersleidingVorm;
-    property IncludePersleidingMateriaal: Boolean read fIncludePersleidingMateriaal write fIncludePersleidingMateriaal;
-    property IncludePersleidingStatusFunctioneren: Boolean read fIncludePersleidingStatusFunctioneren write fIncludePersleidingStatusFunctioneren;
-    property IncludePersleidingBegindatum: Boolean read fIncludePersleidingBegindatum write fIncludePersleidingBegindatum;
-    property IncludePersleidingEinddatum: Boolean read fIncludePersleidingEinddatum write fIncludePersleidingEinddatum;
-    property IncludePersleidingBobBegin: Boolean read fIncludePersleidingBobBegin write fIncludePersleidingBobBegin;
-    property IncludePersleidingBobEind: Boolean read fIncludePersleidingBobEind write fIncludePersleidingBobEind;
-    // Kolk
-    property IncludeKolkLengte: Boolean read fIncludeKolkLengte write fIncludeKolkLengte;
-    property IncludeKolkBreedte: Boolean read fIncludeKolkBreedte write fIncludeKolkBreedte;
-    property IncludeKolkHoogte: Boolean read fIncludeKolkHoogte write fIncludeKolkHoogte;
-    property IncludeKolkDiameter: Boolean read fIncludeKolkDiameter write fIncludeKolkDiameter;
-    property IncludeKolkVorm: Boolean read fIncludeKolkVorm write fIncludeKolkVorm;
-    property IncludeKolkMateriaal: Boolean read fIncludeKolkMateriaal write fIncludeKolkMateriaal;
-    property IncludeKolkWanddikte: Boolean read fIncludeKolkWanddikte write fIncludeKolkWanddikte;
-    property IncludeKolkBegindatum: Boolean read fIncludeKolkBegindatum write fIncludeKolkBegindatum;
-    property IncludeKolkEinddatum: Boolean read fIncludeKolkEinddatum write fIncludeKolkEinddatum;
-
-    { Operation status. }
-    property Succes: Boolean read fSucces write fSucces;
-    // Export settings
+    { Nieuwe primaire state }
+    property AllSettings: TSettingsRec read fAllSettings write fAllSettings;
     property ExportConfig: TExportConfig read GetExportConfig;
+
+    property SettingsFile: String read fAllSettings.setSettingsFile write fAllSettings.setSettingsFile;
+    property FormName: String read fAllSettings.setFrmName write fAllSettings.setFrmName;
+    property AppName: String read fAllSettings.setApplicationName write fAllSettings.setApplicationName;
+    property AppVersion: String read fAllSettings.setApplicationVersion write fAllSettings.setApplicationVersion;
+    property AppBuildDate: String read fAllSettings.setApplicationBuildDate write fAllSettings.setApplicationBuildDate;
+    property Succes: Boolean read fAllSettings.setSucces write fAllSettings.setSucces;
   end;
 
 implementation
 
 { TSettings }
+
 constructor TSettings.Create;
 begin
   inherited Create;
-  // Initialize default values.
-  fActivateLogging:= True;
-  fAppendLogFile:= True;
-  fLanguage:= 'en';
-  fSucces:= False;
+  ResetToDefaults;
+end;
+
+constructor TSettings.Create(const aFile: string);
+begin
+  Create;
+  fAllSettings.setSettingsFile:= aFile;
 end;
 
 destructor TSettings.Destroy;
 begin
-  // Cleanup if needed.
   inherited Destroy;
-end;
-
-function TSettings.get_AppBuildDate: String;
-begin
-  Result:= fAppBuildDate;
 end;
 
 function TSettings.GetExportConfig: TExportConfig;
 begin
-  Result:= fExportConfig;
+  // Afgeleide view op fAllSettings — geen aparte state meer
+  Result.IncludePutLengte:= fAllSettings.setIncludePutLengte;
+  Result.IncludePutBreedte:= fAllSettings.setIncludePutBreedte;
+  Result.IncludePutHoogte:= fAllSettings.setIncludePutHoogte;
+  Result.IncludePutDiameter:= fAllSettings.setIncludePutDiameter;
+  Result.IncludePutVorm:= fAllSettings.setIncludePutVorm;
+  Result.IncludePutMateriaal:= fAllSettings.setIncludePutMateriaal;
+  Result.IncludePutFundering:= fAllSettings.setIncludePutFundering;
+  Result.IncludePutMaaiveldhoogte:= fAllSettings.setIncludePutMaaiveldhoogte;
+  Result.IncludePutBegindatum:= fAllSettings.setIncludePutBegindatum;
+  Result.IncludePutEinddatum:= fAllSettings.setIncludePutEinddatum;
+
+  Result.IncludeLeidingLengte:= fAllSettings.setIncludeLeidingLengte;
+  Result.IncludeLeidingBreedte:= fAllSettings.setIncludeLeidingBreedte;
+  Result.IncludeLeidingHoogte:= fAllSettings.setIncludeLeidingHoogte;
+  Result.IncludeLeidingDiameter:= fAllSettings.setIncludeLeidingDiameter;
+  Result.IncludeLeidingVorm:= fAllSettings.setIncludeLeidingVorm;
+  Result.IncludeLeidingMateriaal:= fAllSettings.setIncludeLeidingMateriaal;
+  Result.IncludeLeidingFundering:= fAllSettings.setIncludeLeidingFundering;
+  Result.IncludeLeidingStatusFunctioneren:= fAllSettings.setIncludeLeidingStatusFunctioneren;
+  Result.IncludeLeidingWIBONThema:= fAllSettings.setIncludeLeidingWIBONThema;
+  Result.IncludeLeidingBegindatum:= fAllSettings.setIncludeLeidingBegindatum;
+  Result.IncludeLeidingEinddatum:= fAllSettings.setIncludeLeidingEinddatum;
+  Result.IncludeLeidingBobBegin:= fAllSettings.setIncludeLeidingBobBegin;
+  Result.IncludeLeidingBobEind:= fAllSettings.setIncludeLeidingBobEind;
+
+  Result.IncludePersleidingLengte:= fAllSettings.setIncludePersleidingLengte;
+  Result.IncludePersleidingHoogte:= fAllSettings.setIncludePersleidingHoogte;
+  Result.IncludePersleidingDiameter:= fAllSettings.setIncludePersleidingDiameter;
+  Result.IncludePersleidingVorm:= fAllSettings.setIncludePersleidingVorm;
+  Result.IncludePersleidingMateriaal:= fAllSettings.setIncludePersleidingMateriaal;
+  Result.IncludePersleidingStatusFunctioneren:= fAllSettings.setIncludePersleidingStatusFunctioneren;
+  Result.IncludePersleidingBegindatum:= fAllSettings.setIncludePersleidingBegindatum;
+  Result.IncludePersleidingEinddatum:= fAllSettings.setIncludePersleidingEinddatum;
+  Result.IncludePersleidingBobBegin:= fAllSettings.setIncludePersleidingBobBegin;
+  Result.IncludePersleidingBobEind:= fAllSettings.setIncludePersleidingBobEind;
+
+  Result.IncludeKolkLengte:= fAllSettings.setIncludeKolkLengte;
+  Result.IncludeKolkBreedte:= fAllSettings.setIncludeKolkBreedte;
+  Result.IncludeKolkHoogte:= fAllSettings.setIncludeKolkHoogte;
+  Result.IncludeKolkDiameter:= fAllSettings.setIncludeKolkDiameter;
+  Result.IncludeKolkVorm:= fAllSettings.setIncludeKolkVorm;
+  Result.IncludeKolkMateriaal:= fAllSettings.setIncludeKolkMateriaal;
+  Result.IncludeKolkWanddikte:= fAllSettings.setIncludeKolkWanddikte;
+  Result.IncludeKolkBegindatum:= fAllSettings.setIncludeKolkBegindatum;
+  Result.IncludeKolkEinddatum:= fAllSettings.setIncludeKolkEinddatum;
 end;
 
-procedure TSettings.set_AppBuildDate(AValue: String);
+procedure TSettings.ResetToDefaults;
 begin
-  fAppBuildDate:= AValue;
+  // Algemeen
+  fAllSettings.setActivateLogging:= True;
+  fAllSettings.setAppendLogging:= True;
+  fAllSettings.setLanguage:= 'en';
+  fAllSettings.setSucces:= False;
+
+  // GWSW / paden
+  fAllSettings.setGWSWVersion:= '1.7.0';   { TODO : Moet een const worden }
+  fAllSettings.setMappingFile:= '';
+  fAllSettings.setSqlFileLocation:= '';
+  fAllSettings.setLastUsedOrganization:= '';
+
+  // Layout (voorkomt 0-waarden bij eerste run zonder ini)
+  fAllSettings.setSplitterDataSettings:= 300;
+  fAllSettings.setSplitterdataGrid:= 400;
+  fAllSettings.setSplitterMemos:= 500;
+
+  // UI-gedrag
+  fAllSettings.setDbGridRowHighlight:= True;
+  fAllSettings.setAskToOpenExportFile:= True;
+  fAllSettings.setKeepLastOrganization:= True;
+
+  // Rapportage
+  fAllSettings.setRapportMappingError:= True;
+  fAllSettings.setRapportFatalError:= True;
+  fAllSettings.setRapportFieldIsEmpty:= False;
+  fAllSettings.setRapportFieldIsMissing:= True;
+  fAllSettings.setRapportOutOfRange:= True;
+
+  // Export — Put
+  fAllSettings.setIncludePutLengte:= True;
+  fAllSettings.setIncludePutBreedte:= True;
+  fAllSettings.setIncludePutHoogte:= True;
+  fAllSettings.setIncludePutDiameter:= True;
+  fAllSettings.setIncludePutVorm:= True;
+  fAllSettings.setIncludePutMateriaal:= True;
+  fAllSettings.setIncludePutFundering:= True;
+  fAllSettings.setIncludePutBegindatum:= True;
+  fAllSettings.setIncludePutEinddatum:= False;
+  fAllSettings.setIncludePutMaaiveldhoogte:= True;
+
+  // Export — Leiding
+  fAllSettings.setIncludeLeidingLengte:= True;
+  fAllSettings.setIncludeLeidingBreedte:= True;
+  fAllSettings.setIncludeLeidingHoogte:= True;
+  fAllSettings.setIncludeLeidingDiameter:= True;
+  fAllSettings.setIncludeLeidingVorm:= True;
+  fAllSettings.setIncludeLeidingMateriaal:= True;
+  fAllSettings.setIncludeLeidingFundering:= True;
+  fAllSettings.setIncludeLeidingStatusFunctioneren:= True;
+  fAllSettings.setIncludeLeidingWIBONThema:= False;
+  fAllSettings.setIncludeLeidingBegindatum:= True;
+  fAllSettings.setIncludeLeidingEinddatum:= False;
+  fAllSettings.setIncludeLeidingBobBegin:= True;
+  fAllSettings.setIncludeLeidingBobEind:= True;
+
+  // Export — Persleiding
+  fAllSettings.setIncludePersleidingLengte:= True;
+  fAllSettings.setIncludePersleidingHoogte:= True;
+  fAllSettings.setIncludePersleidingDiameter:= True;
+  fAllSettings.setIncludePersleidingVorm:= True;
+  fAllSettings.setIncludePersleidingMateriaal:= True;
+  fAllSettings.setIncludePersleidingStatusFunctioneren:= True;
+  fAllSettings.setIncludePersleidingBegindatum:= True;
+  fAllSettings.setIncludePersleidingEinddatum:= False;
+  fAllSettings.setIncludePersleidingBobBegin:= True;
+  fAllSettings.setIncludePersleidingBobEind:= True;
+
+  // Export — Kolk
+  fAllSettings.setIncludeKolkLengte:= True;
+  fAllSettings.setIncludeKolkBreedte:= True;
+  fAllSettings.setIncludeKolkHoogte:= True;
+  fAllSettings.setIncludeKolkDiameter:= True;
+  fAllSettings.setIncludeKolkVorm:= True;
+  fAllSettings.setIncludeKolkMateriaal:= True;
+  fAllSettings.setIncludeKolkWanddikte:= False;
+  fAllSettings.setIncludeKolkBegindatum:= True;
+  fAllSettings.setIncludeKolkEinddatum:= False;
 end;
 
-function TSettings.get_AppName: String;
-begin
-  Result:= fAppName;
-end;
-
-procedure TSettings.set_AppName(AValue: String);
-begin
-  fAppName:= AValue;
-end;
-
-function TSettings.get_AppVersion: String;
-begin
-  Result:= fAppVersion;
-end;
-
-procedure TSettings.set_AppVersion(AValue: String);
-begin
-  fAppVersion:= AValue;
-end;
-
-procedure TSettings.StoreFormState;
-begin
-  Succes:= False;
-  if FileExists(fSettingsFile) then
-  begin
-    with TIniFile.Create(fSettingsFile) do
-    try
-      WriteInteger('Position', fFrmName + '_Windowstate', fFrmWindowstate);
-      WriteInteger('Position', fFrmName + '_Top', fFrmTop);
-      WriteInteger('Position', fFrmName + '_Left', fFrmLeft);
-      WriteInteger('Position', fFrmName + '_Height', fFrmHeight);
-      WriteInteger('Position', fFrmName + '_Width', fFrmWidth);
-      WriteInteger('Position', fFrmName + '_RestoredTop', fFrmRestoredTop);
-      WriteInteger('Position', fFrmName + '_RestoredLeft', fFrmRestoredLeft);
-      WriteInteger('Position', fFrmName + '_RestoredHeight', fFrmRestoredHeight);
-      WriteInteger('Position', fFrmName + '_RestoredWidth', fFrmRestoredWidth);
-      UpdateFile;
-      Succes:= True;
-    finally
-      Free;
-    end;
-  end;
-end;
-
-procedure TSettings.ReadFormState;
-begin
-  if FileExists(fSettingsFile) then
-  begin
-    with TIniFile.Create(fSettingsFile) do
-    try
-      FormWindowstate:= ReadInteger('Position', FormName + '_Windowstate', 0);
-      FormTop:= ReadInteger('Position', FormName + '_Top', 10);
-      FormLeft:= ReadInteger('Position', FormName + '_Left', 10);
-      FormHeight:= ReadInteger('Position', FormName + '_Height', 400);
-      FormWidth:= ReadInteger('Position', FormName + '_Width', 800);
-      FormRestoredTop:= ReadInteger('Position', FormName + '_RestoredTop', 10);
-      FormRestoredLeft:= ReadInteger('Position', FormName + '_RestoredLeft', 10);
-      FormRestoredHeight:= ReadInteger('Position', FormName + '_RestoredHeight', 400);
-      FormRestoredWidth:= ReadInteger('Position', FormName + '_RestoredWidth', 800);
-    finally
-      Free;
-    end;
-  end;
-end;
-
-procedure TSettings.LoadExportConfigFromIni;
+procedure TSettings.Load;
 var
-  Ini: TIniFile;
+  lIni: TIniFile;
 begin
-  Ini:= TIniFile.Create(FSettingsFile);
+  fAllSettings.setSucces:= False;
+
+  if (fAllSettings.setSettingsFile = '') or
+     (not FileExists(fAllSettings.setSettingsFile)) then
+    Exit;
+
+  lIni:= TIniFile.Create(fAllSettings.setSettingsFile);
   try
-    // Put attributen
-    fExportConfig.IncludePutVorm:= Ini.ReadBool('Export', 'IncludePutVorm', True);
-    fExportConfig.IncludePutMateriaal:= Ini.ReadBool('Export', 'IncludePutMateriaal', True);
-    fExportConfig.IncludePutFundering:= Ini.ReadBool('Export', 'IncludePutFundering', True);
-    fExportConfig.IncludePutDiameter:= Ini.ReadBool('Export', 'IncludePutDiameter', True);
-    fExportConfig.IncludePutBreedte:= Ini.ReadBool('Export', 'IncludePutBreedte', True);
-    fExportConfig.IncludePutLengte:= Ini.ReadBool('Export', 'IncludePutLengte', True);
-    fExportConfig.IncludePutHoogte:= Ini.ReadBool('Export', 'IncludePutHoogte', True);
-    fExportConfig.IncludePutMaaiveldhoogte:= Ini.ReadBool('Export', 'IncludePutMaaiveldhoogte', True);
-    fExportConfig.IncludePutBegindatum:= Ini.ReadBool('Export', 'IncludePutBegindatum', True);
-    fExportConfig.IncludePutEinddatum:= Ini.ReadBool('Export', 'IncludePutEinddatum', False);
-    // Leiding attributen
-    fExportConfig.IncludeLeidingLengte:= Ini.ReadBool('Export', 'IncludeLeidingLengte', True);
-    fExportConfig.IncludeLeidingBreedte:= Ini.ReadBool('Export', 'IncludeLeidingBreedte', True);
-    fExportConfig.IncludeLeidingHoogte:= Ini.ReadBool('Export', 'IncludeLeidingHoogte', True);
-    fExportConfig.IncludeLeidingDiameter:= Ini.ReadBool('Export', 'IncludeLeidingDiameter', True);
-    fExportConfig.IncludeLeidingVorm:= Ini.ReadBool('Export', 'IncludeLeidingVorm', True);
-    fExportConfig.IncludeLeidingMateriaal:= Ini.ReadBool('Export', 'IncludeLeidingMateriaal', True);
-    fExportConfig.IncludeLeidingFundering:= Ini.ReadBool('Export', 'IncludeLeidingFundering', True);
-    fExportConfig.IncludeLeidingStatusFunctioneren:= Ini.ReadBool('Export', 'IncludeLeidingStatusFunctioneren', True);
-    fExportConfig.IncludeLeidingWIBONThema:= Ini.ReadBool('Export', 'IncludeLeidingWIBONThema', True);
-    fExportConfig.IncludeLeidingBegindatum:= Ini.ReadBool('Export', 'IncludeLeidingBegindatum', True);
-    fExportConfig.IncludeLeidingEinddatum:= Ini.ReadBool('Export', 'IncludeLeidingEinddatum', False);
-    fExportConfig.IncludeLeidingBobBegin:= Ini.ReadBool('Export', 'IncludeLeidingBobBegin', True);
-    fExportConfig.IncludeLeidingBobEind:= Ini.ReadBool('Export', 'IncludeLeidingBobEind', False);
-    // Persleiding attributen
-    fExportConfig.IncludePersleidingLengte:= Ini.ReadBool('Export', 'IncludePersleidingLengte', True);
-    fExportConfig.IncludePersleidingHoogte:= Ini.ReadBool('Export', 'IncludePersleidingHoogte', True);
-    fExportConfig.IncludePersleidingDiameter:= Ini.ReadBool('Export', 'IncludePersleidingDiameter', True);
-    fExportConfig.IncludePersleidingVorm:= Ini.ReadBool('Export', 'IncludePersleidingVorm', True);
-    fExportConfig.IncludePersleidingMateriaal:= Ini.ReadBool('Export', 'IncludePersleidingMateriaal', True);
-    fExportConfig.IncludePersleidingStatusFunctioneren:= Ini.ReadBool('Export', 'IncludePersleidingStatusFunctioneren', True);
-    fExportConfig.IncludePersleidingBegindatum:= Ini.ReadBool('Export', 'IncludePersleidingBegindatum', True);
-    fExportConfig.IncludePersleidingEinddatum:= Ini.ReadBool('Export', 'IncludePersleidingEinddatum', False);
-    fExportConfig.IncludePersleidingBobBegin:= Ini.ReadBool('Export', 'IncludePersleidingBobBegin', False);
-    fExportConfig.IncludePersleidingBobEind:= Ini.ReadBool('Export', 'IncludePersleidingBobEind', False);
+    // Algemeen
+    fAllSettings.setActivateLogging:= lIni.ReadBool  ('Configure', 'ActivateLogging', True);
+    fAllSettings.setAppendLogging:= lIni.ReadBool  ('Configure', 'AppendLogFile', True);
+    fAllSettings.setLanguage:= lIni.ReadString('Configure', 'Language', 'en');
+    fAllSettings.setMappingFile:= lIni.ReadString('Configure', 'MappingFile', '');
+    fAllSettings.setGWSWVersion:= lIni.ReadString('Configure', 'GWSWVersion', '1.6');
+    fAllSettings.setSqlFileLocation:= lIni.ReadString('Configure', 'SQLfileLocation', '');
+    fAllSettings.setSplitterDataSettings:= lIni.ReadInteger('Configure', 'SplitterDataSettings', 300);
+    fAllSettings.setSplitterdataGrid:= lIni.ReadInteger('Configure', 'SplitterdataGrid', 400);
+    fAllSettings.setSplitterMemos:= lIni.ReadInteger('Configure', 'SplitterMemos', 500);
+    fAllSettings.setDbGridRowHighlight:= lIni.ReadBool('Configure', 'DbGridRowHighlight', True);
+    fAllSettings.setAskToOpenExportFile:= lIni.ReadBool('Configure', 'AskToOpenExportFile', True);
+    fAllSettings.setKeepLastOrganization:= lIni.ReadBool('Configure', 'KeepLastOrganization', True);
+    fAllSettings.setLastUsedOrganization:= lIni.ReadString('Configure', 'LastUsedOrganization', '');
 
-    // Kolk attributen
-    fExportConfig.IncludeKolkLengte:= Ini.ReadBool('Export', 'IncludeKolkLengte', True);
-    fExportConfig.IncludeKolkBreedte:= Ini.ReadBool('Export', 'IncludeKolkBreedte', True);
-    fExportConfig.IncludeKolkHoogte:= Ini.ReadBool('Export', 'IncludeKolkHoogte', True);
-    fExportConfig.IncludeKolkDiameter:= Ini.ReadBool('Export', 'IncludeKolkDiameter', True);
-    fExportConfig.IncludeKolkVorm:= Ini.ReadBool('Export', 'IncludeKolkVorm', True);
-    fExportConfig.IncludeKolkMateriaal:= Ini.ReadBool('Export', 'IncludeKolkMateriaal', True);
-    fExportConfig.IncludeKolkWanddikte:= Ini.ReadBool('Export', 'IncludeKolkWanddikte', False);
-    fExportConfig.IncludeKolkBegindatum:= Ini.ReadBool('Export', 'IncludeKolkBegindatum', True);
-    fExportConfig.IncludeKolkEinddatum:= Ini.ReadBool('Export', 'IncludeKolkEinddatum', False);
+    fAllSettings.setRapportMappingError:= lIni.ReadBool('Configure', 'RapportMappingError', True);
+    fAllSettings.setRapportFatalError:= lIni.ReadBool('Configure', 'RapportFatalError', True);
+    fAllSettings.setRapportFieldIsEmpty:= lIni.ReadBool('Configure', 'RapportFieldIsEmpty', False);
+    fAllSettings.setRapportFieldIsMissing:= lIni.ReadBool('Configure', 'RapportFieldIsMissing', True);
+    fAllSettings.setRapportOutOfRange:= lIni.ReadBool('Configure', 'RapportOutOfRange', True);
 
+    // Export — Put
+    fAllSettings.setIncludePutLengte:= lIni.ReadBool('Export', 'IncludePutLengte', True);
+    fAllSettings.setIncludePutBreedte:= lIni.ReadBool('Export', 'IncludePutBreedte', True);
+    fAllSettings.setIncludePutHoogte:= lIni.ReadBool('Export', 'IncludePutHoogte', True);
+    fAllSettings.setIncludePutDiameter:= lIni.ReadBool('Export', 'IncludePutDiameter', True);
+    fAllSettings.setIncludePutVorm:= lIni.ReadBool('Export', 'IncludePutVorm', True);
+    fAllSettings.setIncludePutMateriaal:= lIni.ReadBool('Export', 'IncludePutMateriaal', True);
+    fAllSettings.setIncludePutFundering:= lIni.ReadBool('Export', 'IncludePutFundering', False);
+    fAllSettings.setIncludePutBegindatum:= lIni.ReadBool('Export', 'IncludePutBegindatum', True);
+    fAllSettings.setIncludePutEinddatum:= lIni.ReadBool('Export', 'IncludePutEinddatum', False);
+    fAllSettings.setIncludePutMaaiveldhoogte:= lIni.ReadBool('Export', 'IncludePutMaaiveldhoogte', True);
 
-    // Object types  Beter dan alleen de query. { #todo : Aanzet. Nog inbouwen }
-//    fExportConfig.IncludePutten:= Ini.ReadBool('Export', 'IncludePutten', True);
-//    fExportConfig.IncludeLeidingen:= Ini.ReadBool('Export', 'IncludeLeidingen', True);
-//    fExportConfig.IncludePersleidingen:= Ini.ReadBool('Export', 'IncludePersleidingen', True);
-//    fExportConfig.IncludeKolken:= Ini.ReadBool('Export', 'IncludeKolken', True);
-//    fExportConfig.IncludeStelsels:= Ini.ReadBool('Export', 'IncludeStelsels', True);
+    // Export — Leiding
+    fAllSettings.setIncludeLeidingLengte:= lIni.ReadBool('Export', 'IncludeLeidingLengte', True);
+    fAllSettings.setIncludeLeidingBreedte:= lIni.ReadBool('Export', 'IncludeLeidingBreedte', True);
+    fAllSettings.setIncludeLeidingHoogte:= lIni.ReadBool('Export', 'IncludeLeidingHoogte', True);
+    fAllSettings.setIncludeLeidingDiameter:= lIni.ReadBool('Export', 'IncludeLeidingDiameter', True);
+    fAllSettings.setIncludeLeidingVorm:= lIni.ReadBool('Export', 'IncludeLeidingVorm', True);
+    fAllSettings.setIncludeLeidingMateriaal:= lIni.ReadBool('Export', 'IncludeLeidingMateriaal', True);
+    fAllSettings.setIncludeLeidingFundering:= lIni.ReadBool('Export', 'IncludeLeidingFundering', True);
+    fAllSettings.setIncludeLeidingStatusFunctioneren:=lIni.ReadBool('Export', 'IncludeLeidingStatusFunctioneren', True);
+    fAllSettings.setIncludeLeidingWIBONThema:= lIni.ReadBool('Export', 'IncludeLeidingWIBONThema', False);
+    fAllSettings.setIncludeLeidingBegindatum:= lIni.ReadBool('Export', 'IncludeLeidingBegindatum', True);
+    fAllSettings.setIncludeLeidingEinddatum:= lIni.ReadBool('Export', 'IncludeLeidingEinddatum', False);
+    fAllSettings.setIncludeLeidingBobBegin:= lIni.ReadBool('Export', 'IncludeLeidingBobBegin', True);
+    fAllSettings.setIncludeLeidingBobEind:= lIni.ReadBool('Export', 'IncludeLeidingBobEind', True);
+
+    // Export — Persleiding
+    fAllSettings.setIncludePersleidingLengte:= lIni.ReadBool('Export', 'IncludePersleidingLengte', True);
+    fAllSettings.setIncludePersleidingHoogte:= lIni.ReadBool('Export', 'IncludePersleidingHoogte', True);
+    fAllSettings.setIncludePersleidingDiameter:= lIni.ReadBool('Export', 'IncludePersleidingDiameter', True);
+    fAllSettings.setIncludePersleidingVorm:= lIni.ReadBool('Export', 'IncludePersleidingVorm', True);
+    fAllSettings.setIncludePersleidingMateriaal:= lIni.ReadBool('Export', 'IncludePersleidingMateriaal', True);
+    fAllSettings.setIncludePersleidingStatusFunctioneren:=lIni.ReadBool('Export', 'IncludePersleidingStatusFunctioneren', True);
+    fAllSettings.setIncludePersleidingBegindatum:= lIni.ReadBool('Export', 'IncludePersleidingBegindatum', True);
+    fAllSettings.setIncludePersleidingEinddatum:= lIni.ReadBool('Export', 'IncludePersleidingEinddatum', False);
+    fAllSettings.setIncludePersleidingBobBegin:= lIni.ReadBool('Export', 'IncludePersleidingBobBegin', False);
+    fAllSettings.setIncludePersleidingBobEind:= lIni.ReadBool('Export', 'IncludePersleidingBobEind', False);
+
+    // Export — Kolk
+    fAllSettings.setIncludeKolkLengte:= lIni.ReadBool('Export', 'IncludeKolkLengte', True);
+    fAllSettings.setIncludeKolkBreedte:= lIni.ReadBool('Export', 'IncludeKolkBreedte', True);
+    fAllSettings.setIncludeKolkHoogte:= lIni.ReadBool('Export', 'IncludeKolkHoogte', True);
+    fAllSettings.setIncludeKolkDiameter:= lIni.ReadBool('Export', 'IncludeKolkDiameter', True);
+    fAllSettings.setIncludeKolkVorm:= lIni.ReadBool('Export', 'IncludeKolkVorm', True);
+    fAllSettings.setIncludeKolkMateriaal:= lIni.ReadBool('Export', 'IncludeKolkMateriaal', True);
+    fAllSettings.setIncludeKolkWanddikte:= lIni.ReadBool('Export', 'IncludeKolkWanddikte', False);
+    fAllSettings.setIncludeKolkBegindatum:= lIni.ReadBool('Export', 'IncludeKolkBegindatum', True);
+    fAllSettings.setIncludeKolkEinddatum:= lIni.ReadBool('Export', 'IncludeKolkEinddatum', False);
+
+    // Application-info (in de ini, maar niet in het Configure/Export-blok)
+    fAllSettings.setApplicationName:= lIni.ReadString('Application', 'Name', fAllSettings.setApplicationName);
+    fAllSettings.setApplicationVersion:= lIni.ReadString('Application', 'Version', fAllSettings.setApplicationVersion);
+    fAllSettings.setApplicationBuildDate:= lIni.ReadString('Application', 'Build date', fAllSettings.setApplicationBuildDate);
+
+    fAllSettings.setSucces:= True;
   finally
-    Ini.Free;
+    lIni.Free;
   end;
 end;
 
-procedure TSettings.ReadFile;
+function TSettings.Save: Boolean;
+var
+  lIni: TIniFile;
 begin
-  with TIniFile.Create(fSettingsFile) do
+  Result:= False;
+  if fAllSettings.setSettingsFile = '' then Exit;
+
+  lIni:= TIniFile.Create(fAllSettings.setSettingsFile);
   try
-    Succes:= False;
-    if FileExists(fSettingsFile) then begin
-      // Read existing settings.
-      ActivateLogging:= ReadBool('Configure', 'ActivateLogging', True);
-      AppendLogFile:= ReadBool('Configure', 'AppendLogFile', True);
-      Language:= ReadString('Configure', 'Language', 'en');
-      MappingFile:= ReadString('Configure', 'MappingFile', '');
-      GWSWVersion:= ReadString('Configure', 'GWSWVersion', 'GWSW_versie_16');  // Start with version: GWSW_versie_16
-      SqlFileLocation:= ReadString('Configure', 'SQLfileLocation', '');
-      SplitterDataSettings:= ReadInteger('Configure', 'SplitterDataSettings', 300);
-      SplitterDataGrid:= ReadInteger('Configure', 'SplitterdataGrid', 400);
-      SplitterMemos:= ReadInteger('Configure', 'SplitterMemos', 500);
-      DbGridRowHighlight:= ReadBool('Configure', 'DbGridRowHighlight', True);
-      AskToOpenExportFile:= ReadBool('Configure', 'AskToOpenExportFile', True);
-      KeepLastOrganization:= ReadBool('Configure', 'KeepLastOrganization', True);
-      LastUsedOrganization:= ReadString('Configure', 'LastUsedOrganization', '');
+    // Application-info
+    lIni.WriteString('Application', 'Name', fAllSettings.setApplicationName);
+    lIni.WriteString('Application', 'Version', fAllSettings.setApplicationVersion);
+    lIni.WriteString('Application', 'Build date', fAllSettings.setApplicationBuildDate);
 
-      RapportMappingError:= ReadBool('Configure', 'RapportMappingError', True);
-      RapportFatalError:= ReadBool('Configure', 'RapportFatalError', True);
-      RapportFieldIsEmpty:= ReadBool('Configure', 'RapportFieldIsEmpty', False);
-      RapportFieldIsMissing:= ReadBool('Configure', 'RapportFieldIsMissing', True);
-      RapportOutOfRange:= ReadBool('Configure', 'RapportOutOfRange', True);
+    // Configure
+    lIni.WriteBool('Configure', 'ActivateLogging', fAllSettings.setActivateLogging);
+    lIni.WriteBool('Configure', 'AppendLogFile', fAllSettings.setAppendLogging);
+    if fAllSettings.setLanguage <> '' then
+      lIni.WriteString('Configure', 'Language', fAllSettings.setLanguage);
 
-      // Export settings
-      // Put
-      IncludePutLengte:= ReadBool('Export', 'IncludePutLengte', True);
-      IncludePutBreedte:= ReadBool('Export', 'IncludePutBreedte', True);
-      IncludePutHoogte:= ReadBool('Export', 'IncludePutHoogte', True);
-      IncludePutDiameter:= ReadBool('Export', 'IncludePutDiameter', True);
-      IncludePutVorm:= ReadBool('Export', 'IncludePutVorm', True);
-      IncludePutMateriaal:= ReadBool('Export', 'IncludePutMateriaal', True);
-      IncludePutFundering:= ReadBool('Export', 'IncludePutFundering', False);
-      IncludePutBegindatum:= ReadBool('Export', 'IncludePutBegindatum', True);
-      IncludePutEinddatum:= ReadBool('Export', 'IncludePutEinddatum', False);
-      IncludePutMaaiveldhoogte:= ReadBool('Export', 'IncludePutMaaiveldhoogte', True);
-      // Leiding
-      IncludeLeidingLengte:= ReadBool('Export', 'IncludeLeidingLengte', True);
-      IncludeLeidingBreedte:= ReadBool('Export', 'IncludeLeidingBreedte', True);
-      IncludeLeidingHoogte:= ReadBool('Export', 'IncludeLeidingHoogte', True);
-      IncludeLeidingDiameter:= ReadBool('Export', 'IncludeLeidingDiameter', True);
-      IncludeLeidingVorm:= ReadBool('Export', 'IncludeLeidingVorm', True);
-      IncludeLeidingMateriaal:= ReadBool('Export', 'IncludeLeidingMateriaal', True);
-      IncludeLeidingFundering:= ReadBool('Export', 'IncludeLeidingFundering', True);
-      IncludeLeidingStatusFunctioneren:= ReadBool('Export', 'IncludeLeidingStatusFunctioneren', True);
-      IncludeLeidingWIBONThema:= ReadBool('Export', 'IncludeLeidingWIBONThema', False);
-      IncludeLeidingBegindatum:= ReadBool('Export', 'IncludeLeidingBegindatum', True);
-      IncludeLeidingEinddatum:= ReadBool('Export', 'IncludeLeidingEinddatum', False);
-      IncludeLeidingBobBegin:= ReadBool('Export', 'IncludeLeidingBobBegin', True);
-      IncludeLeidingBobEind:= ReadBool('Export', 'IncludeLeidingBobEind', True);
-      // Persleiding
-      IncludePersleidingLengte:= ReadBool('Export', 'IncludePersleidingLengte', True);
-      IncludePersleidingHoogte:= ReadBool('Export', 'IncludePersleidingHoogte', True);
-      IncludePersleidingDiameter:= ReadBool('Export', 'IncludePersleidingDiameter', True);
-      IncludePersleidingVorm:= ReadBool('Export', 'IncludePersleidingVorm', True);
-      IncludePersleidingMateriaal:= ReadBool('Export', 'IncludePersleidingMateriaal', True);
-      IncludePersleidingStatusFunctioneren:= ReadBool('Export', 'IncludePersleidingStatusFunctioneren', True);
-      IncludePersleidingBegindatum:= ReadBool('Export', 'IncludePersleidingBegindatum', True);
-      IncludePersleidingEinddatum:= ReadBool('Export', 'IncludePersleidingEinddatum', False);
-      IncludePersleidingBobBegin:= ReadBool('Export', 'IncludePersleidingBobBegin', False);
-      IncludePersleidingBobEind:= ReadBool('Export', 'IncludePersleidingBobEind', False);
-      // Kolk
-      IncludeKolkLengte:= ReadBool('Export', 'IncludeKolkLengte', True);
-      IncludeKolkBreedte:= ReadBool('Export', 'IncludeKolkBreedte', True);
-      IncludeKolkHoogte:= ReadBool('Export', 'IncludeKolkHoogte', True);
-      IncludeKolkDiameter:= ReadBool('Export', 'IncludeKolkDiameter', True);
-      IncludeKolkVorm:= ReadBool('Export', 'IncludeKolkVorm', True);
-      IncludeKolkMateriaal:= ReadBool('Export', 'IncludeKolkMateriaal', True);
-      IncludeKolkWanddikte:= ReadBool('Export', 'IncludeKolkWanddikte', False);
-      IncludeKolkBegindatum:= ReadBool('Export', 'IncludeKolkBegindatum', True);
-      IncludeKolkEinddatum:= ReadBool('Export', 'IncludeKolkEinddatum', False);
-      // new setting...
+    lIni.WriteString('Configure', 'SQLfileLocation', fAllSettings.setSqlFileLocation);
+    lIni.WriteBool('Configure', 'DbGridRowHighlight', fAllSettings.setDbGridRowHighlight);
+    lIni.WriteBool('Configure', 'AskToOpenExportFile', fAllSettings.setAskToOpenExportFile);
+    lIni.WriteBool('Configure', 'KeepLastOrganization', fAllSettings.setKeepLastOrganization);
+    lIni.WriteBool('Configure', 'RapportMappingError', fAllSettings.setRapportMappingError);
+    lIni.WriteBool('Configure', 'RapportFatalError', fAllSettings.setRapportFatalError);
+    lIni.WriteBool('Configure', 'RapportFieldIsEmpty', fAllSettings.setRapportFieldIsEmpty);
+    lIni.WriteBool('Configure', 'RapportFieldIsMissing', fAllSettings.setRapportFieldIsMissing);
+    lIni.WriteBool('Configure', 'RapportOutOfRange', fAllSettings.setRapportOutOfRange);
+    lIni.WriteString('Configure', 'GWSWVersion', fAllSettings.setGWSWVersion);
+    lIni.WriteString('Configure', 'MappingFile', fAllSettings.setMappingFile);
 
-      Succes:= True;
-    end
-    else begin  // Never gets here. The settings file is created in the afterconstruct of view.main
-      // Create new settings file with defaults.
-      WriteString('Application', 'Name', AppName);
-      WriteString('Application', 'Version', AppVersion);
-      WriteString('Application', 'Build date', AppBuilddate);
+    // Export — Put
+    lIni.WriteBool('Export', 'IncludePutVorm', fAllSettings.setIncludePutVorm);
+    lIni.WriteBool('Export', 'IncludePutLengte', fAllSettings.setIncludePutLengte);
+    lIni.WriteBool('Export', 'IncludePutBreedte', fAllSettings.setIncludePutBreedte);
+    lIni.WriteBool('Export', 'IncludePutHoogte', fAllSettings.setIncludePutHoogte);
+    lIni.WriteBool('Export', 'IncludePutMateriaal', fAllSettings.setIncludePutMateriaal);
+    lIni.WriteBool('Export', 'IncludePutFundering', fAllSettings.setIncludePutFundering);
+    lIni.WriteBool('Export', 'IncludePutBegindatum', fAllSettings.setIncludePutBegindatum);
+    lIni.WriteBool('Export', 'IncludePutEinddatum', fAllSettings.setIncludePutEinddatum);
+    lIni.WriteBool('Export', 'IncludePutDiameter', fAllSettings.setIncludePutDiameter);
+    lIni.WriteBool('Export', 'IncludePutMaaiveldhoogte', fAllSettings.setIncludePutMaaiveldhoogte);
 
-      // Default configuration.
-      WriteBool('Configure', 'ActivateLogging', True);
-      WriteBool('Configure', 'AppendLogFile', True);
-      WriteString('Configure', 'Language', 'en');
+    // Export — Leiding
+    lIni.WriteBool('Export', 'IncludeLeidingLengte', fAllSettings.setIncludeLeidingLengte);
+    lIni.WriteBool('Export', 'IncludeLeidingBreedte', fAllSettings.setIncludeLeidingBreedte);
+    lIni.WriteBool('Export', 'IncludeLeidingHoogte', fAllSettings.setIncludeLeidingHoogte);
+    lIni.WriteBool('Export', 'IncludeLeidingDiameter', fAllSettings.setIncludeLeidingDiameter);
+    lIni.WriteBool('Export', 'IncludeLeidingVorm', fAllSettings.setIncludeLeidingVorm);
+    lIni.WriteBool('Export', 'IncludeLeidingMateriaal', fAllSettings.setIncludeLeidingMateriaal);
+    lIni.WriteBool('Export', 'IncludeLeidingFundering', fAllSettings.setIncludeLeidingFundering);
+    lIni.WriteBool('Export', 'IncludeLeidingStatusFunctioneren', fAllSettings.setIncludeLeidingStatusFunctioneren);
+    lIni.WriteBool('Export', 'IncludeLeidingWIBONThema', fAllSettings.setIncludeLeidingWIBONThema);
+    lIni.WriteBool('Export', 'IncludeLeidingBegindatum', fAllSettings.setIncludeLeidingBegindatum);
+    lIni.WriteBool('Export', 'IncludeLeidingEinddatum', fAllSettings.setIncludeLeidingEinddatum);
+    lIni.WriteBool('Export', 'IncludeLeidingBobBegin', fAllSettings.setIncludeLeidingBobBegin);
+    lIni.WriteBool('Export', 'IncludeLeidingBobEind', fAllSettings.setIncludeLeidingBobEind);
 
-      Succes:= True;
-    end;
+    // Export — Persleiding
+    lIni.WriteBool('Export', 'IncludePersleidingLengte', fAllSettings.setIncludePersleidingLengte);
+    lIni.WriteBool('Export', 'IncludePersleidingHoogte', fAllSettings.setIncludePersleidingHoogte);
+    lIni.WriteBool('Export', 'IncludePersleidingDiameter', fAllSettings.setIncludePersleidingDiameter);
+    lIni.WriteBool('Export', 'IncludePersleidingVorm', fAllSettings.setIncludePersleidingVorm);
+    lIni.WriteBool('Export', 'IncludePersleidingMateriaal', fAllSettings.setIncludePersleidingMateriaal);
+    lIni.WriteBool('Export', 'IncludePersleidingStatusFunctioneren', fAllSettings.setIncludePersleidingStatusFunctioneren);
+    lIni.WriteBool('Export', 'IncludePersleidingBegindatum', fAllSettings.setIncludePersleidingBegindatum);
+    lIni.WriteBool('Export', 'IncludePersleidingEinddatum', fAllSettings.setIncludePersleidingEinddatum);
+    lIni.WriteBool('Export', 'IncludePersleidingBobBegin', fAllSettings.setIncludePersleidingBobBegin);
+    lIni.WriteBool('Export', 'IncludePersleidingBobEind', fAllSettings.setIncludePersleidingBobEind);
+
+    // Export — Kolk
+    lIni.WriteBool('Export', 'IncludeKolkLengte', fAllSettings.setIncludeKolkLengte);
+    lIni.WriteBool('Export', 'IncludeKolkBreedte', fAllSettings.setIncludeKolkBreedte);
+    lIni.WriteBool('Export', 'IncludeKolkHoogte', fAllSettings.setIncludeKolkHoogte);
+    lIni.WriteBool('Export', 'IncludeKolkDiameter', fAllSettings.setIncludeKolkDiameter);
+    lIni.WriteBool('Export', 'IncludeKolkVorm', fAllSettings.setIncludeKolkVorm);
+    lIni.WriteBool('Export', 'IncludeKolkMateriaal', fAllSettings.setIncludeKolkMateriaal);
+    lIni.WriteBool('Export', 'IncludeKolkWanddikte', fAllSettings.setIncludeKolkWanddikte);
+    lIni.WriteBool('Export', 'IncludeKolkBegindatum', fAllSettings.setIncludeKolkBegindatum);
+    lIni.WriteBool('Export', 'IncludeKolkEinddatum', fAllSettings.setIncludeKolkEinddatum);
+
+    lIni.UpdateFile;
+    fAllSettings.setSucces:= True;
+    Result:= True;
   finally
-    Free;
-  end;
-end;
-
-procedure TSettings.WriteSettings;
-begin
-  Succes:= False;
-  with TIniFile.Create(fSettingsFile) do
-  try
-    // Write application info.
-    WriteString('Application', 'Name', AppName);
-    WriteString('Application', 'Version', AppVersion);
-    WriteString('Application', 'Build date', AppBuilddate);
-
-    // Write configuration.
-    WriteBool('Configure', 'ActivateLogging', ActivateLogging);
-    WriteBool('Configure', 'AppendLogFile', AppendLogFile);
-    if Language <> '' then
-      WriteString('Configure', 'Language', Language);
-
-    //... new settings
-    WriteString('Configure', 'SQLfileLocation', SqlFileLocation);
-    WriteBool('Configure', 'DbGridRowHighlight', DbGridRowHighlight);
-    WriteBool('Configure', 'AskToOpenExportFile', AskToOpenExportFile);
-    WriteBool('Configure', 'KeepLastOrganization', KeepLastOrganization);
-
-    WriteBool('Configure', 'RapportMappingError', RapportMappingError);
-    WriteBool('Configure', 'RapportFatalError', RapportFatalError);
-    WriteBool('Configure', 'RapportFieldIsEmpty', RapportFieldIsEmpty);
-    WriteBool('Configure', 'RapportFieldIsMissing', RapportFieldIsMissing);
-    WriteBool('Configure', 'RapportOutOfRange', RapportOutOfRange);
-    WriteString('Configure', 'GWSWVersion', 'GWSW_versie_16');
-    WriteString('Configure', 'MappingFile', MappingFile);
-
-    WriteBool('Configure', 'IncludePutVorm' , IncludePutVorm);
-    WriteBool('Configure', 'IncludePutLengte' , IncludePutLengte);
-    WriteBool('Configure', 'IncludePutBreedte' , IncludePutBreedte);
-    WriteBool('Configure', 'IncludePutHoogte' , IncludePutHoogte);
-    WriteBool('Configure', 'IncludePutMateriaal' , IncludePutMateriaal);
-    WriteBool('Configure', 'IncludePutFundering' , IncludePutFundering);
-    WriteBool('Configure', 'IncludePutBegindatum' , IncludePutBegindatum);
-    WriteBool('Configure', 'IncludePutEinddatum' , IncludePutEinddatum);
-    WriteBool('Configure', 'IncludePutDiameter' , IncludePutDiameter);
-    WriteBool('Configure', 'IncludePersleidingBegindatum' , IncludePersleidingBegindatum);
-    WriteBool('Configure', 'IncludePersleidingStatusFunctioneren' , IncludePersleidingStatusFunctioneren);
-    WriteBool('Configure', 'IncludePersleidingMateriaal' , IncludePersleidingMateriaal);
-    WriteBool('Configure', 'IncludePersleidingVorm' , IncludePersleidingVorm);
-    WriteBool('Configure', 'IncludePersleidingDiameter' , IncludePersleidingDiameter);
-    WriteBool('Configure', 'IncludePersleidingHoogte' , IncludePersleidingHoogte);
-    WriteBool('Configure', 'IncludePersleidingLengte' , IncludePersleidingLengte);
-    WriteBool('Configure', 'IncludeKolkLengte' , IncludeKolkLengte);
-    WriteBool('Configure', 'IncludeKolkDiameter' , IncludeKolkDiameter);
-    WriteBool('Configure', 'IncludeKolkVorm' , IncludeKolkVorm);
-    WriteBool('Configure', 'IncludeKolkMateriaal' , IncludeKolkMateriaal);
-    WriteBool('Configure', 'IncludeKolkBegindatum' , IncludeKolkBegindatum);
-    WriteBool('Configure', 'IncludeKolkHoogte' , IncludeKolkHoogte);
-    WriteBool('Configure', 'IncludeKolkBreedte' , IncludeKolkBreedte);
-    WriteBool('Configure', 'IncludeLeidingLengte' , IncludeLeidingLengte);
-    WriteBool('Configure', 'IncludeLeidingBreedte' , IncludeLeidingBreedte);
-    WriteBool('Configure', 'IncludeLeidingHoogte' , IncludeLeidingHoogte);
-    WriteBool('Configure', 'IncludeLeidingDiameter' , IncludeLeidingDiameter);
-    WriteBool('Configure', 'IncludeLeidingVorm' , IncludeLeidingVorm);
-    WriteBool('Configure', 'IncludeLeidingMateriaal' , IncludeLeidingMateriaal);
-    WriteBool('Configure', 'IncludeLeidingFundering' , IncludeLeidingFundering);
-    WriteBool('Configure', 'IncludeLeidingStatusFunctioneren' , IncludeLeidingStatusFunctioneren);
-    WriteBool('Configure', 'IncludeLeidingBegindatum' , IncludeLeidingBegindatum);
-    WriteBool('Configure', 'IncludeLeidingBobBegin' , IncludeLeidingBobBegin);
-    WriteBool('Configure', 'IncludeLeidingBobEind' , IncludeLeidingBobEind);
-    WriteBool('Configure', 'IncludeLeidingWIBONThema' , IncludeLeidingWIBONThema);
-    WriteBool('Configure', 'IncludeKolkEinddatum' , IncludeKolkEinddatum);
-    WriteBool('Configure', 'IncludePutMaaiveldhoogte' , IncludePutMaaiveldhoogte);
-    WriteBool('Configure', 'IncludePersleidingBobBegin' , IncludePersleidingBobBegin);
-    WriteBool('Configure', 'IncludePersleidingBobEind' , IncludePersleidingBobEind);
-
-
-    UpdateFile;
-    Succes:= True;
-  finally
-    Free;
+    lIni.Free;
   end;
 end;
 
 procedure TSettings.WriteSetting(const SettingName, Section, AValue: String);
 begin
-  Succes:= False;
-  if FileExists(fSettingsFile) then
-  begin
-    with TIniFile.Create(fSettingsFile) do
-    try
-      if (AValue <> 'True') and (AValue <> 'False') and (AValue <> '-1') and (AValue <> '0') then begin
-        WriteString(Section, SettingName, AValue);
-      end
-      else if  (AValue = 'True') or (AValue = '-1')  then begin
-        WriteString(Section, SettingName, '1');
-      end
-      else if (AValue = 'False') or (AValue = '0') then begin
-        WriteString(Section, SettingName, '0');
-      end;
+  fAllSettings.setSucces:= False;
+  if not FileExists(fAllSettings.setSettingsFile) then Exit;
 
-      UpdateFile;
-      Succes:= True;
-    finally
-      Free;
+  with TIniFile.Create(fAllSettings.setSettingsFile) do
+  try
+    if (AValue <> 'True') and (AValue <> 'False') and (AValue <> '-1') and (AValue <> '0') then
+      WriteString(Section, SettingName, AValue)
+    else if (AValue = 'True') or (AValue = '-1') then
+      WriteString(Section, SettingName, '1')
+    else if (AValue = 'False') or (AValue = '0') then
+      WriteString(Section, SettingName, '0');
+
+    UpdateFile;
+    fAllSettings.setSucces:= True;
+  finally
+    Free;
+  end;
+end;
+
+procedure TSettings.StoreFormState;
+begin
+  fAllSettings.setSucces:= False;
+  if not FileExists(fAllSettings.setSettingsFile) then Exit;
+
+  with TIniFile.Create(fAllSettings.setSettingsFile) do
+  try
+    WriteInteger('Position', fAllSettings.setFrmName + '_Windowstate', fAllSettings.setFrmWindowState);
+    WriteInteger('Position', fAllSettings.setFrmName + '_Top', fAllSettings.setFrmTop);
+    WriteInteger('Position', fAllSettings.setFrmName + '_Left', fAllSettings.setFrmLeft);
+    WriteInteger('Position', fAllSettings.setFrmName + '_Height', fAllSettings.setFrmHeight);
+    WriteInteger('Position', fAllSettings.setFrmName + '_Width', fAllSettings.setFrmWidth);
+    WriteInteger('Position', fAllSettings.setFrmName + '_RestoredTop', fAllSettings.setFrmRestoredTop);
+    WriteInteger('Position', fAllSettings.setFrmName + '_RestoredLeft', fAllSettings.setFrmRestoredLeft);
+    WriteInteger('Position', fAllSettings.setFrmName + '_RestoredHeight', fAllSettings.setFrmRestoredHeight);
+    WriteInteger('Position', fAllSettings.setFrmName + '_RestoredWidth', fAllSettings.setFrmRestoredWidth);
+    UpdateFile;
+    fAllSettings.setSucces:= True;
+  finally
+    Free;
+  end;
+end;
+
+procedure TSettings.ReadFormState;
+begin
+  if not FileExists(fAllSettings.setSettingsFile) then begin  // set deafult values
+    if fAllSettings.setFrmName = 'view.main' then begin
+      fAllSettings.setFrmWindowState:= 0;
+      fAllSettings.setFrmTop:= 10;
+      fAllSettings.setFrmLeft:= 10;
+      fAllSettings.setFrmHeight:= 800;
+      fAllSettings.setFrmWidth:= 1400;
+    end
+    else if fAllSettings.setFrmName = 'view.configure' then begin
+      fAllSettings.setFrmWindowState:= 0;
+      fAllSettings.setFrmTop:= 10;
+      fAllSettings.setFrmLeft:= 10;
+      fAllSettings.setFrmHeight:= 630;
+      fAllSettings.setFrmWidth:= 1090;
     end;
+
+    Exit;
+  end;
+
+  with TIniFile.Create(fAllSettings.setSettingsFile) do
+  try
+    fAllSettings.setFrmWindowState:= ReadInteger('Position', fAllSettings.setFrmName + '_Windowstate', 0);
+    fAllSettings.setFrmTop:= ReadInteger('Position', fAllSettings.setFrmName + '_Top', 10);
+    fAllSettings.setFrmLeft:= ReadInteger('Position', fAllSettings.setFrmName + '_Left', 10);
+    fAllSettings.setFrmHeight:= ReadInteger('Position', fAllSettings.setFrmName + '_Height', 500);
+    fAllSettings.setFrmWidth:= ReadInteger('Position', fAllSettings.setFrmName + '_Width', 1400);
+    fAllSettings.setFrmRestoredTop:= ReadInteger('Position', fAllSettings.setFrmName + '_RestoredTop', 10);
+    fAllSettings.setFrmRestoredLeft:= ReadInteger('Position', fAllSettings.setFrmName + '_RestoredLeft', 10);
+    fAllSettings.setFrmRestoredHeight:= ReadInteger('Position', fAllSettings.setFrmName + '_RestoredHeight', 800);
+    fAllSettings.setFrmRestoredWidth:= ReadInteger('Position', fAllSettings.setFrmName + '_RestoredWidth', 1400);
+  finally
+    Free;
   end;
 end;
 

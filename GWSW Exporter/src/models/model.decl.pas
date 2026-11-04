@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -105,12 +108,12 @@ begin
   Result:= Self;
 end;
 
-procedure TTransactionManager.set_ModelConfig(AValue : IModelConfigure);
+procedure TTransactionManager.set_ModelConfig(AValue: IModelConfigure);
 begin
   fModelConfig:= aValue;
 end;
 
-procedure TTransactionManager.set_OwnerConfig(AValue : IPresenterConfigure);
+procedure TTransactionManager.set_OwnerConfig(AValue: IPresenterConfigure);
 begin
   fOwnerConfig:= aValue;
 end;
@@ -125,7 +128,7 @@ begin
   Result:= fModel;
 end;
 
-function TTransactionManager.get_ModelConfig : IModelConfigure;
+function TTransactionManager.get_ModelConfig: IModelConfigure;
 begin
   Result:= fModelConfig;
 end;
@@ -135,7 +138,7 @@ begin
   Result:= fOwner;
 end;
 
-function TTransactionManager.get_OwnerConfig : IPresenterConfigure;
+function TTransactionManager.get_OwnerConfig: IPresenterConfigure;
 begin
   Result:= fOwnerConfig;
 end;
@@ -209,19 +212,18 @@ begin { first we check if the reason is in our TransactionFactory, if so then ge
       fTrx:= fTraxFactory.GetTransactionByReason(aModReason)
     else case aModReason of { ok, so it wasn't in the factory, then maybe we've made a case for it?!? }
       prCustom: fTrx:= TTransaction.Create(aModReason); // 1 ~ doesn't cause an exception, 0 does!
-      prDataChanged: fTrx:= TTextEdit.Create(aModReason); // 1
       //...
       prCreateDir           : fTrx:= TCreDirTrx.Create(aModReason);
-      prAppSettings         : fTrx:= TSettingstrx.Create(aModReason);
       prAppSingleSetting    : fTrx:= TSingleSettingTrx.Create(aModReason);
-      prFormState           : fTrx:= TSettingsTrx.Create(aModReason);
-      prFormStateConfig     : fTrx:= TSettingsConfigTrx.Create(aModReason);
-      prAppSettingsConfig   : fTrx:= TSettingsConfigTrx.Create(aModReason);
       prRetrieveData        : fTrx:= TRetrieveDataTrx.Create(aModReason);
       prExportToOroxTtlFile : fTrx:= TExportToOroxTtlFileTrx.Create(aModReason);
       prUniqueStringlist    : fTrx:= TUniqueStringlistTrx.Create(aModReason);
       prSortDbGrid          : fTrx:= TSortDbGridTrx.Create(aModReason);
       prRetrieveCSVData     : fTrx:= TRetrieveCSVDataTrx.Create(aModReason);
+      prLoadFormState       : fTrx:= TLoadFormStateTrx.Create(aModReason);
+      prStoreFormState      : fTrx:= TStoreFormStateTrx.Create(aModReason);
+      prLoadConfigFormState : fTrx:= TLoadConfigFormStateTrx.Create(aModReason);
+      prStoreConfigFormState: fTrx:= TStoreConfigFormStateTrx.Create(aModReason);
       /// etc...
 
       else fTrx:= TTransaction.Create(aModReason); // 0 or anything undefined by us

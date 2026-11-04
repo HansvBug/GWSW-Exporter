@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -45,6 +48,8 @@ type
     function GetLastUsedOrganization: String;
     procedure ExportInProgress(aData: TExportInProgressRec);
     function GetSingleSetting(const SettingName: String): String;
+    function  GetSettings(const aSettingsFile: string = ''): TSettingsRec;
+    procedure SaveSettings(const aSettings: TSettingsRec);
 
     property Model: IModelMain read get_Model; // TODO: write set_Model; if needed...
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -141,12 +146,12 @@ begin
   GetStaticTexts(aSection);
 end;
 
-function TPresenterMain.CreatePresenterConfig() : IPresenterConfigure;
+function TPresenterMain.CreatePresenterConfig(): IPresenterConfigure;
 begin
   Result:= TPresenterConfigure.Create(fRootPath,fTrxMgr);
 end;
 
-procedure TPresenterMain.SwitchLanguage(const aSection : String);
+procedure TPresenterMain.SwitchLanguage(const aSection: String);
 var
   ldummy: integer;
 begin
@@ -156,7 +161,7 @@ begin
   //fProvider.NotifySubscribers(prStatus,nil,Str2Pch('(!) Attention: TEST ')); // Example.
 end;
 
-procedure TPresenterMain.SetStatusbarText(const aText : string; panel : word);
+procedure TPresenterMain.SetStatusbarText(const aText: string; panel: word);
 var
   lstbRec: TStatusbarPanelText;
   ldummy: integer;
@@ -174,7 +179,7 @@ begin
   fProvider.NotifySubscribers(prStatusBarPanelText, Self, @lstbRec);
 end;
 
-function TPresenterMain.GetstaticText(const aView, aText : string) : string;
+function TPresenterMain.GetstaticText(const aView, aText: string): string;
 var
   ldummy: integer;
   statText: string;
@@ -193,15 +198,15 @@ begin
   fModel.StartLogging;
 end;
 
-procedure TPresenterMain.WriteToLog(const aSection, LogType, LogText : String);
+procedure TPresenterMain.WriteToLog(const aSection, LogType, LogText: String);
 var
   logString: String;
   ldummy: integer;
   logSection: string;
 begin
   case aSection of
-    'view.main': begin  { #todo :   // --> niet meer handig }
-       logSection := 'view.main.logging';
+    'view.main': begin  { #todo :   // --> niet meer handig --> aanpassen }
+       logSection:= 'view.main.logging';
     end;
   end;
 
@@ -210,7 +215,7 @@ begin
   fModel.WriteToLog(LogType, logString);
 end;
 
-procedure TPresenterMain.SetStatusbarPanelsWidth(Sender : TObject; stbWithd, lpWidth, rpWidth : Integer);
+procedure TPresenterMain.SetStatusbarPanelsWidth(Sender: TObject; stbWithd, lpWidth, rpWidth: Integer);
 var
   lRec: TStbPanelsSize;
 begin
@@ -254,6 +259,28 @@ end;
 function TPresenterMain.GetSingleSetting(const SettingName: String): String;
 begin
   Result:= fModel.GetSingleSetting(SettingName);
+end;
+
+function TPresenterMain.GetSettings(const aSettingsFile: string): TSettingsRec;
+var
+  lRec: TSettingsRec;
+begin
+  lRec.setSettingsFile:=aSettingsFile;
+  lRec.setReadSettings:=True;
+  Result:=fModel.ReadSettings(@lRec);
+  Result.setReadSettings:=True;
+end;
+
+procedure TPresenterMain.SaveSettings(const aSettings: TSettingsRec);
+var
+  lRec: TSettingsRec;
+begin
+  lRec:=aSettings;
+  lRec.setReadSettings:=False;
+  lRec.setWriteSettings:=True;
+  lRec:=fModel.WriteSettings(@lRec);
+  lRec.setWriteSettings:=True;
+  fProvider.NotifySubscribers(prSaveSettings, Self, @lRec);
 end;
 
 

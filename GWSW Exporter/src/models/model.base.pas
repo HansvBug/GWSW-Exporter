@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -52,20 +55,20 @@ type
   PStatusbarPanelText = ^TStatusbarPanelText;
   TStatusbarPanelText = record
     stbPanelText: String;
-    stbActivePanel : Word;
+    stbActivePanel: Word;
   end;
 
   PSettingsRec = ^TSettingsRec;  // used with ReadSettings, TSettingstransaction , ReadFormState; and   StoreFormstate;
   TSettingsRec = record
     setActivateLogging,
     setAppendLogging: Boolean;
-    setLanguage : String;
+    setLanguage: String;
     setSettingsFile,
     setDbFileLocation,
     setApplicationName,
     setApplicationVersion,
-    setApplicationBuildDate : String;
-    setFrmName : String;
+    setApplicationBuildDate: String;
+    setFrmName: String;
     setFrmWindowState,
     setFrmTop,
     setFrmLeft,
@@ -74,11 +77,12 @@ type
     setFrmRestoredTop,
     setFrmRestoredLeft,
     setFrmRestoredHeight,
-    setFrmRestoredWidth : Integer;
+    setFrmRestoredWidth: Integer;
     setSucces,
     setReadSettings,
     setWriteSettings,
-    setReadFormState: Boolean;
+    setReadFormState,
+    setStoreFormState: Boolean;
     setMessage,
     setGWSWVersion: String;
     setMappingFile: String;
@@ -341,9 +345,12 @@ end;
 
 procedure UpdateTransactionManager(aTraxMap: ITraxClassList);
 begin
-  TCL.AssignTo(aTraxMap); { everything and the kitchen-sink }
-  TCL:= nil; { release this reference, it's not needed after the manager is up }
+  if Assigned(TCL) then begin
+    TCL.AssignTo(aTraxMap); { everything and the kitchen-sink }
+    TCL:= nil; { release this reference, it's not needed after the manager is up }
+  end;
 end;
+
 {$EndRegion 'Transaction Registry'}
 {$Region 'TTraxClassList'}
 { TTraxClassList }
@@ -367,7 +374,7 @@ begin
   lidx:= IndexOfReason(aReason);               { is it registered? }
   if lidx > -1 then begin                      { if yes, then }
     FreeMapping(fList[lidx]);                  { free the old one and }
-    fList[lidx]:= CreMapping(aReason,aValue); { substitute with a new one}
+    fList[lidx]:= CreMapping(aReason,aValue);  { substitute with a new one}
   end; { else non-existing -> add?!? }
 end;
 

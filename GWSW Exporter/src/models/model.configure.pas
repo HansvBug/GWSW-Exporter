@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -46,7 +49,7 @@ type
     function ReadSettings(Settingsdata: PSettingsRec): TSettingsRec;
     function StoreFormState(Settingsdata: PSettingsRec): TSettingsRec;
     function WriteSettings(Settingsdata: PSettingsRec): TSettingsRec;
-    procedure WriteSingleSetting(SettingData : PSingleSettingRec);
+    procedure WriteSingleSetting(SettingData: PSingleSettingRec);
     procedure WriteToLog(const aLogAction, LogText: String);
   end;
 
@@ -162,184 +165,123 @@ begin
   fTextCache:= CreStrListFromFile(format(confTexts,['',Lang]));
 end;
 
-function TModelConfigure.DoesFileExists(const settingsFile : String) : Boolean;
+function TModelConfigure.DoesFileExists(const settingsFile: String): Boolean;
 begin
   Result:= FileExists(settingsFile);
 end;
 
-function TModelConfigure.ReadFormState(Settingsdata : PSettingsRec) : TSettingsRec;
+function TModelConfigure.ReadFormState(Settingsdata: PSettingsRec): TSettingsRec;
 begin
-  if assigned(fSettings) then FreeAndNil(fSettings);
+  if not Assigned(fSettings) then
+    fSettings:= TSettings.Create;
 
-  fSettings := TSettings.Create;
-  try
-    with PSettingsRec(Settingsdata)^ do begin
-      //  Transferring the variables to settings object.
-      fSettings.FormName:= setFrmName;
-      fSettings.SettingsFile:= setSettingsFile;
-    end;
-
-    fSettings.ReadFormState;
-  finally
-    //..
-  end;
-
-  with Result do begin
-    try
-      setSettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
-      setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
-      setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
-
-      setFrmName:= fSettings.FormName;
-      setFrmWindowState:= fSettings.FormWindowstate;
-      setFrmTop:= fSettings.FormTop;
-      setFrmLeft:= fSettings.FormLeft;
-      setFrmHeight:= fSettings.FormHeight;
-      setFrmWidth:= fSettings.FormWidth;
-      setFrmRestoredTop:= fSettings.FormRestoredTop;
-      setFrmRestoredLeft:= fSettings.FormRestoredLeft;
-      setFrmRestoredHeight:= fSettings.FormRestoredHeight;
-      setFrmRestoredWidth:= fSettings.FormRestoredWidth;
-      setSucces:= fSettings.Succes;
-    except on E:Exception do
-      setSucces := False;
-    end;
-  end;
-end;
-
-function TModelConfigure.ReadSettings(Settingsdata : PSettingsRec) : TSettingsRec;
-begin
-  if assigned(FSettings) then FreeAndNil(FSettings);
-  fSettings := TSettings.Create;
-
-  try
-    with PSettingsRec(Settingsdata)^ do begin
-      fSettings.FormName:= setFrmName;
-      fSettings.SettingsFile:= setSettingsFile;
-      fSettings.AppName:= setApplicationName;
-      fSettings.AppVersion:= setApplicationVersion;
-      fSettings.AppBuildDate:= setApplicationBuildDate;
-    end;
-
-    fsettings.ReadFile;
-  finally
-    //...
-  end;
-
-  with Result do try
-    setFrmName:= PSettingsRec(Settingsdata)^.setFrmName;
-    setSettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
-    setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
-    setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
-
-    setApplicationName:= fSettings.AppName;
-    setActivateLogging := fSettings.ActivateLogging;
-    setAppendLogging:= fSettings.AppendLogFile;
-    setLanguage:= fSettings.Language;
-    setSqlFileLocation:= fSettings.SqlFileLocation;
-    setDbGridRowHighlight:= fSettings.DbGridRowHighlight;
-    setAskToOpenExportFile:= fSettings.AskToOpenExportFile;
-    setKeepLastOrganization:= fSettings.KeepLastOrganization;
-    setRapportMappingError:= fSettings.RapportMappingError;
-    setRapportFatalError:= fSettings.RapportFatalError;
-    setRapportFieldIsEmpty:= fSettings.RapportFieldIsEmpty;
-    setRapportFieldIsMissing:= fSettings.RapportFieldIsMissing;
-    setRapportOutOfRange:= fSettings.RapportOutOfRange;
-    setMappingFile:= fSettings.MappingFile;
-    setGWSWVersion:= fSettings.GWSWVersion;
-    //...
-
-    setSucces:= fSettings.Succes;
-    setSucces:= True;
-  except on E:Exception do
-    setSucces:= False;
-  end;
-end;
-
-function TModelConfigure.StoreFormState(Settingsdata : PSettingsRec) : TSettingsRec;
-begin
-  if assigned(fSettings) then begin
-    with PSettingsRec(Settingsdata)^ do begin
-      fSettings.SettingsFile:= setSettingsFile;
-      fSettings.FormName:= setFrmName;
-      fSettings.FormWindowstate:= setFrmWindowState;
-      fSettings.FormTop:= setFrmTop;
-      fSettings.FormLeft:= setFrmLeft;
-      fSettings.FormHeight:= setFrmHeight;
-      fSettings.FormWidth:= setFrmWidth;
-      fSettings.FormRestoredTop:= setFrmRestoredTop;
-      fSettings.FormRestoredLeft:= setFrmRestoredLeft;
-      fSettings.FormRestoredHeight:= setFrmRestoredHeight;
-      fSettings.FormRestoredWidth:= setFrmRestoredWidth;
-    end;
-
-    fSettings.StoreFormState;
-
-    With result do begin
-      setSucces:= fSettings.Succes;
-    end;
-  end;
-end;
-
-function TModelConfigure.WriteSettings(Settingsdata : PSettingsRec) : TSettingsRec;
-begin
-  if assigned(fSettings) then begin
-    with PSettingsRec(Settingsdata)^ do begin
-      fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
-      fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
-      fSettings.AppBuildDate:= PSettingsRec(Settingsdata)^.setApplicationBuildDate;
+  if Settingsdata <> nil then begin
+    if PSettingsRec(Settingsdata)^.setSettingsFile <> '' then
+      fSettings.SettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
+    if PSettingsRec(Settingsdata)^.setFrmName <> '' then
       fSettings.FormName:= PSettingsRec(Settingsdata)^.setFrmName;
-      fSettings.ActivateLogging:= setActivateLogging;
-      fSettings.AppendLogFile:= setAppendLogging;
-      if setLanguage <> '' then
-        fSettings.Language:= setLanguage;
-
-      fSettings.SqlFileLocation:= setSqlFileLocation;
-      fSettings.DbGridRowHighlight:= setDbGridRowHighlight;
-      fSettings.AskToOpenExportFile:= setAskToOpenExportFile;
-      fSettings.KeepLastOrganization:= setKeepLastOrganization;
-      fSettings.RapportMappingError:= setRapportMappingError;
-      fSettings.RapportFatalError:= setRapportFatalError;
-      fSettings.RapportFieldIsEmpty:= setRapportFieldIsEmpty;
-      fSettings.RapportFieldIsMissing:= setRapportFieldIsMissing;
-      fSettings.RapportOutOfRange:= setRapportOutOfRange;
-      fSettings.MappingFile:= setMappingFile;
-      //... add new settings
-
-      fSettings.SettingsFile:= setSettingsFile;
-    end;
-
-    fSettings.WriteSettings;
-  end
-  else begin // firt run, there is no settingsfile
-     if not assigned(FSettings) then begin
-       fSettings:= TSettings.Create;
-       fSettings.SettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
-       fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
-       fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
-       fSettings.AppBuildDate:= PSettingsRec(Settingsdata)^.setApplicationBuildDate;
-       fSettings.FormName:= PSettingsRec(Settingsdata)^.setFrmName;
-       fSettings.WriteSettings;
-     end;
   end;
 
-  with Result do begin
-    setReadSettings:= PSettingsRec(Settingsdata)^.setReadSettings;
-    setWriteSettings:= PSettingsRec(Settingsdata)^.setWriteSettings;
-    setFrmName:= PSettingsRec(Settingsdata)^.setFrmName;
-
-    setActivateLogging:= PSettingsRec(Settingsdata)^.setActivateLogging;  // NAKIJKEN!!!! moet uit properties komen van FSettings en niet uit een record
-    setAppendLogging:= PSettingsRec(Settingsdata)^.setAppendLogging;
-    if PSettingsRec(Settingsdata)^.setLanguage <> '' then
-      setLanguage:= PSettingsRec(Settingsdata)^.setLanguage;
-
-    //... add new settings
-
-    setSucces:= fSettings.Succes;
-  end;
+  fSettings.ReadFormState;
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
 end;
 
-procedure TModelConfigure.WriteSingleSetting(SettingData : PSingleSettingRec);
+function TModelConfigure.ReadSettings(Settingsdata: PSettingsRec): TSettingsRec;
+begin
+  if not Assigned(fSettings) then
+    fSettings:= TSettings.Create;
+
+  if Settingsdata <> nil then begin
+    if PSettingsRec(Settingsdata)^.setSettingsFile <> '' then
+      fSettings.SettingsFile:= PSettingsRec(Settingsdata)^.setSettingsFile;
+    if PSettingsRec(Settingsdata)^.setApplicationName <> '' then
+      fSettings.AppName:= PSettingsRec(Settingsdata)^.setApplicationName;
+    if PSettingsRec(Settingsdata)^.setApplicationVersion <> '' then
+      fSettings.AppVersion:= PSettingsRec(Settingsdata)^.setApplicationVersion;
+    if PSettingsRec(Settingsdata)^.setApplicationBuildDate <> '' then
+      fSettings.AppBuildDate:= PSettingsRec(Settingsdata)^.setApplicationBuildDate;
+  end;
+
+  fSettings.Load;
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
+end;
+
+function TModelConfigure.StoreFormState(Settingsdata: PSettingsRec): TSettingsRec;
+var
+  lMerged: TSettingsRec;
+begin
+  if not Assigned(fSettings) then begin
+    Result.setSucces:= False;
+    Result.setMessage:= 'SettingsNotInitialized';
+    Exit;
+  end;
+
+  if Settingsdata <> nil then begin
+    lMerged:= fSettings.AllSettings;
+    with PSettingsRec(Settingsdata)^ do begin
+      if setSettingsFile <> '' then lMerged.setSettingsFile:= setSettingsFile;
+      if setFrmName <> '' then lMerged.setFrmName:= setFrmName;
+      lMerged.setFrmWindowState:= setFrmWindowState;
+      lMerged.setFrmTop:= setFrmTop;
+      lMerged.setFrmLeft:= setFrmLeft;
+      lMerged.setFrmHeight:= setFrmHeight;
+      lMerged.setFrmWidth:= setFrmWidth;
+      lMerged.setFrmRestoredTop:= setFrmRestoredTop;
+      lMerged.setFrmRestoredLeft:= setFrmRestoredLeft;
+      lMerged.setFrmRestoredHeight:= setFrmRestoredHeight;
+      lMerged.setFrmRestoredWidth:= setFrmRestoredWidth;
+    end;
+    fSettings.AllSettings:= lMerged;
+    fSettings.StoreFormState;
+  end;
+
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
+end;
+
+function TModelConfigure.WriteSettings(Settingsdata: PSettingsRec): TSettingsRec;
+var
+  lMerged: TSettingsRec;
+begin
+  if not Assigned(fSettings) then
+    fSettings:= TSettings.Create;
+
+  if Settingsdata <> nil then begin
+    lMerged:= fSettings.AllSettings;
+    with PSettingsRec(Settingsdata)^ do begin
+      if setSettingsFile <> '' then lMerged.setSettingsFile:= setSettingsFile;
+      if setApplicationName <> '' then lMerged.setApplicationName:= setApplicationName;
+      if setApplicationVersion <> '' then lMerged.setApplicationVersion:= setApplicationVersion;
+      if setApplicationBuildDate <> '' then lMerged.setApplicationBuildDate:= setApplicationBuildDate;
+      if setFrmName <> '' then lMerged.setFrmName:= setFrmName;
+      if setLanguage <> '' then lMerged.setLanguage:= setLanguage;
+      if setWriteSettings then begin
+        lMerged.setActivateLogging:= setActivateLogging;
+        lMerged.setAppendLogging:= setAppendLogging;
+        lMerged.setSqlFileLocation:= setSqlFileLocation;
+        lMerged.setDbGridRowHighlight:= setDbGridRowHighlight;
+        lMerged.setAskToOpenExportFile:= setAskToOpenExportFile;
+        lMerged.setKeepLastOrganization:= setKeepLastOrganization;
+        lMerged.setRapportMappingError:= setRapportMappingError;
+        lMerged.setRapportFatalError:= setRapportFatalError;
+        lMerged.setRapportFieldIsEmpty:= setRapportFieldIsEmpty;
+        lMerged.setRapportFieldIsMissing:= setRapportFieldIsMissing;
+        lMerged.setRapportOutOfRange:= setRapportOutOfRange;
+        lMerged.setMappingFile:= setMappingFile;
+        lMerged.setGWSWVersion:= setGWSWVersion;
+      end;
+    end;
+    fSettings.AllSettings:= lMerged;
+  end;
+
+  fSettings.Save;
+  Result:= fSettings.AllSettings;
+  Result.setSucces:= fSettings.Succes;
+end;
+
+procedure TModelConfigure.WriteSingleSetting(SettingData: PSingleSettingRec);
 begin
   if assigned(fSettings) then begin
     with PSingleSettingRec(Settingdata)^ do begin
@@ -349,7 +291,7 @@ begin
   end;
 end;
 
-procedure TModelConfigure.WriteToLog(const aLogAction, LogText : String);
+procedure TModelConfigure.WriteToLog(const aLogAction, LogText: String);
 begin
   if Logging <> Nil then begin
     case aLogAction of
@@ -365,7 +307,7 @@ end;
 
 {$EndRegion 'TModelconfigure'}
 initialization
-  RegisterConfigureSection(TModelConfigure.ClassName);  // BEKIJKEN: RegisterConfigureSection staat in model.intf
+  RegisterConfigureSection(TModelConfigure.ClassName);
 finalization
   if Assigned(Singleton) then FreeAndNil(Singleton); { checks for nil explicitly, freeandnil doesn't! }
 end.

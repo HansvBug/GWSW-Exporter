@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit DbGridHelper;
 
 {$mode ObjFPC}{$H+}
@@ -136,24 +138,19 @@ var
   Oldest: TIndexInfo;
   Idx: Integer;
 begin
-  // Exit early if we haven't reached the cleanup threshold (98 out of 100 indexes)
-  if fIndexList.Count < 98 then Exit;
-
   // Find the least recently used (LRU) index from the internal cache
   Oldest:= FindOldestIndex;
   if not Assigned(Oldest) then Exit;
 
   try
     // Remove the index from the actual TSQLQuery (not just from cache)
-    if Assigned(Query) then
-    begin
+    if Assigned(Query) then begin
       // Ensure IndexDefs are up to date
       UpdateIndexes(Query);
 
       // Find the index in the query's IndexDefs
       Idx:= Query.IndexDefs.IndexOf(Oldest.IndexName);
-      if Idx <> -1 then
-      begin
+      if Idx <> -1 then begin
         // If this index is currently active, deactivate it first
         if Query.IndexName = Oldest.IndexName then
           Query.IndexName:= '';
@@ -167,7 +164,6 @@ begin
     fIndexList.Remove(Oldest);
   except
     // Ignore any errors during index removal to prevent application crashes
-    // This is a defensive measure - index management errors shouldn't break the UI
   end;
 end;
 
@@ -182,8 +178,7 @@ begin
   if not Assigned(Oldest) then Exit;
 
   Idx:= BufDS.IndexDefs.IndexOf(Oldest.IndexName);
-  if Idx <> -1 then
-  begin
+  if Idx <> -1 then begin
     // Release active index first if it's the one being removed
     if BufDS.IndexName = Oldest.IndexName then
       BufDS.IndexName:= '';
@@ -239,19 +234,16 @@ begin
   CurrentSortAscending:= not Boolean(lColumn.tag);
 
   try
-    // Proactive cleanup when approaching index limit
-    if fIndexList.Count >= MAX_INDEXES - 2 then begin
+    // Keep deleting the oldest one until there's enough space or the cache is empty. (delete at least 2)
+    while (lQuery.IndexDefs.Count >= MAX_INDEXES - 2) and (fIndexList.Count > 0) do
       RemoveOldestIndex(lQuery);
-    end;
+
+    if lQuery.IndexDefs.Count >= MAX_INDEXES - 2 then
+      Exit;
 
     // Create or update ascending index
     if not IndexExists(lQuery, ASC_IndexName) then begin
       UpdateIndexes(lQuery);
-      // Prevent index overflow
-      if lQuery.IndexDefs.Count >= MAX_INDEXES - 2 then begin
-        Exit;
-      end;
-
       lQuery.AddIndex(ASC_IndexName, lColumn.FieldName, []);
       UpdateIndexes(lQuery);
       UpdateIndexUsage(ASC_IndexName, lColumn.FieldName, True);
@@ -263,10 +255,6 @@ begin
     // Create or update descending index
     if not IndexExists(lQuery, DESC_IndexName) then begin
       UpdateIndexes(lQuery);
-      if lQuery.IndexDefs.Count >= MAX_INDEXES - 2 then begin
-        Exit;
-      end;
-
       lQuery.AddIndex(DESC_IndexName, lColumn.FieldName, [ixDescending]);
       UpdateIndexes(lQuery);
       UpdateIndexUsage(DESC_IndexName, lColumn.FieldName, False);
@@ -274,7 +262,6 @@ begin
     else begin
       UpdateIndexUsage(DESC_IndexName, lColumn.FieldName, False);
     end;
-
   except
     on E: Exception do begin
       // Gracefully handle index management errors
@@ -340,8 +327,7 @@ begin
     RemoveOldestBufIndex(BufDS);
 
   // Create ascending index if missing
-  if BufDS.IndexDefs.IndexOf(AscIdx) = -1 then
-  begin
+  if BufDS.IndexDefs.IndexOf(AscIdx) = -1 then begin
     BufDS.AddIndex(AscIdx, Col.FieldName, []);
     UpdateIndexUsage(AscIdx, Col.FieldName, True);
   end
@@ -349,8 +335,7 @@ begin
     UpdateIndexUsage(AscIdx, Col.FieldName, True);
 
   // Create descending index if missing
-  if BufDS.IndexDefs.IndexOf(DescIdx) = -1 then
-  begin
+  if BufDS.IndexDefs.IndexOf(DescIdx) = -1 then begin
     BufDS.AddIndex(DescIdx, Col.FieldName, [ixDescending]);
     UpdateIndexUsage(DescIdx, Col.FieldName, False);
   end
@@ -362,13 +347,11 @@ begin
   Col.Tag:= Ord(Ascending);
 
   // Apply sorting and update UI
-  if Ascending then
-  begin
+  if Ascending then begin
     BufDS.IndexName:= AscIdx;
     Col.Title.ImageIndex:= ImageArrowUp;
   end
-  else
-  begin
+  else begin
     BufDS.IndexName:= DescIdx;
     Col.Title.ImageIndex:= ImageArrowDown;
   end;

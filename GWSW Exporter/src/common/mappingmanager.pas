@@ -1,4 +1,6 @@
-{ Copyright ©2025-2026 Hans van Buggenum }
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 unit MappingManager;
 
 interface
@@ -33,7 +35,7 @@ implementation
 uses
   fpspreadsheet, {%H-}fpsallformats; // Without fpsallformats, the export will not work.
 
-constructor TMappingManager.Create(const FileName : String);
+constructor TMappingManager.Create(const FileName: String);
 var
   mt: TMappingType;
 begin
@@ -96,13 +98,12 @@ begin
 
       Worksheet:= Workbook.GetWorksheetByName(SheetName);
       if Worksheet <> nil then begin
-        for i:= 1 to Worksheet.GetLastRowIndex do
-        begin
+        for i:= 1 to Worksheet.GetLastRowIndex do begin
           SourceValue:= Trim(Worksheet.ReadAsText(i, 0));
           GWSWValue:= Trim(Worksheet.ReadAsText(i, 1));
 
           if (SourceValue <> '') and (GWSWValue <> '') then
-            fMappings[MappingType].Values[UpperCase(SourceValue)] := GWSWValue;
+            fMappings[MappingType].Values[UpperCase(SourceValue)]:= GWSWValue;
         end;
       end;
     end;
@@ -141,7 +142,7 @@ begin
   // Check if mappings are loaded
   if fMappings[MappingType].Count = 0 then begin
     { #todo : Maapingstabel ontbreekt.  fouttype voor maken. }
-    Result := '';
+    Result:= '';
     Exit;
   end;
 

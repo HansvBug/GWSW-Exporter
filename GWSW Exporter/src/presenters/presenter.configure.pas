@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -29,8 +32,10 @@ type
     function GetstaticText(const aView, aText: string): string;
     procedure RefreshTextCache(const aSection,aLangStr: string);
     //...
-    procedure SwitchLanguage(const aSection : String);
+    procedure SwitchLanguage(const aSection: String);
     procedure WriteToLog(const aSection, aLogAction, LogText: String);
+    function  GetSettings(const aSettingsFile: string = ''): TSettingsRec;
+    procedure SaveSettings(const aSettings: TSettingsRec);
 
     property Model: IModelConfigure read get_Model;
     property Provider: IobsProvider read get_Provider write set_Provider;
@@ -117,7 +122,7 @@ begin { due to usage of 'out'-param, 'lt' can't be anything else than integer }
   fProvider.NotifySubscribers(prStatus,nil,Str2Pch(fInternalMsg.Values['msgUpnRun'])); ///<-i18n
 end;
 
-function TPresenterConfigure.GetstaticText(const aView, aText : string) : string;
+function TPresenterConfigure.GetstaticText(const aView, aText: string): string;
 var
   ldummy: integer;
   statText: string;
@@ -137,7 +142,7 @@ begin
   GetStaticTexts(aSection);
 end;
 
-procedure TPresenterConfigure.SwitchLanguage(const aSection : String);
+procedure TPresenterConfigure.SwitchLanguage(const aSection: String);
 var
   ldummy: integer;
 begin
@@ -147,7 +152,7 @@ begin
   //fProvider.NotifySubscribers(prStatus,nil,Str2Pch('(!) Attention: TEST ')); // Voorbeeld. Meer gebruiken op deze manier.
 end;
 
-procedure TPresenterConfigure.WriteToLog(const aSection, aLogAction, LogText : String);
+procedure TPresenterConfigure.WriteToLog(const aSection, aLogAction, LogText: String);
 var
   LogString: String;
   ldummy: integer;
@@ -155,13 +160,35 @@ var
 begin
   case aSection of
     'view.configure': begin
-       logSection := 'view.configure.logging';
+       logSection:= 'view.configure.logging';
     end;
   end;
 
   fInternalMsg:= FModel.GetStaticTexts(logSection, ldummy);
   LogString:= fInternalMsg.Values[LogText];
   fModel.WriteToLog(aLogAction, LogString);
+end;
+
+function TPresenterConfigure.GetSettings(const aSettingsFile: string): TSettingsRec;
+var
+  lRec: TSettingsRec;
+begin
+  lRec.setSettingsFile:=aSettingsFile;
+  lRec.setReadSettings:=True;
+  Result:=fModel.ReadSettings(@lRec);
+  Result.setReadSettings:=True;
+end;
+
+procedure TPresenterConfigure.SaveSettings(const aSettings: TSettingsRec);
+var
+  lRec: TSettingsRec;
+begin
+  lRec:=aSettings;
+  lRec.setReadSettings:=False;
+  lRec.setWriteSettings:=True;
+  lRec:=fModel.WriteSettings(@lRec);
+  lRec.setWriteSettings:=True;
+  fProvider.NotifySubscribers(prSaveConfigSettings, Self, @lRec);
 end;
 
 initialization                         { we're taking advantage of the fact, that }

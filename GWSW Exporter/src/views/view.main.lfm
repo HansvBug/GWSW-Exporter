@@ -2,19 +2,18 @@ object frmMain: TfrmMain
   Left = 283
   Height = 884
   Top = 131
-  Width = 1429
+  Width = 1430
   Caption = 'dummy'
   ClientHeight = 884
-  ClientWidth = 1429
+  ClientWidth = 1430
   DesignTimePPI = 144
   Menu = MainMenu1
-  LCLVersion = '4.8.0.0'
-  OnCreate = FormCreate
+  LCLVersion = '5.0.1.0'
   object stbInfo: TStatusBar
     Left = 0
     Height = 36
     Top = 848
-    Width = 1429
+    Width = 1430
     Panels = <    
       item
         Width = 1000
@@ -31,7 +30,7 @@ object frmMain: TfrmMain
     Left = 0
     Height = 75
     Top = 0
-    Width = 1429
+    Width = 1430
     Align = alTop
     BevelOuter = bvNone
     Caption = 'pnlMainTop'
@@ -42,23 +41,23 @@ object frmMain: TfrmMain
   end
   object pnlBottom: TPanel
     Left = 0
-    Height = 75
-    Top = 773
-    Width = 1429
+    Height = 76
+    Top = 772
+    Width = 1430
     Align = alBottom
     BevelOuter = bvNone
     Caption = 'pnlBottom'
-    ClientHeight = 75
-    ClientWidth = 1429
+    ClientHeight = 76
+    ClientWidth = 1430
     Color = 13006080
     ParentBackground = False
     ParentColor = False
     TabOrder = 2
     object btnClose: TButton
-      Left = 1297
+      Left = 1298
       Height = 38
-      Top = 24
-      Width = 113
+      Top = 25
+      Width = 112
       Anchors = [akRight, akBottom]
       Caption = 'btnClose'
       TabOrder = 0
@@ -66,54 +65,54 @@ object frmMain: TfrmMain
   end
   object pnlMainAllClient: TPanel
     Left = 0
-    Height = 698
+    Height = 697
     Top = 75
-    Width = 1429
+    Width = 1430
     Align = alClient
     BevelOuter = bvNone
     Caption = 'pnlMainAllClient'
-    ClientHeight = 698
-    ClientWidth = 1429
+    ClientHeight = 697
+    ClientWidth = 1430
     Color = clSkyBlue
     ParentBackground = False
     ParentColor = False
     TabOrder = 3
     object PageControl1: TPageControl
-      Left = 5
-      Height = 688
-      Top = 5
-      Width = 1419
+      Left = 4
+      Height = 689
+      Top = 4
+      Width = 1422
       ActivePage = tsPrepare
       Align = alClient
-      BorderSpacing.Around = 5
+      BorderSpacing.Around = 4
       TabIndex = 0
       TabOrder = 0
       object tsPrepare: TTabSheet
         Caption = 'tsPrepare'
-        ClientHeight = 650
-        ClientWidth = 1411
+        ClientHeight = 651
+        ClientWidth = 1414
         object pnlPrepareMain: TPanel
           Left = 0
-          Height = 650
+          Height = 651
           Top = 0
-          Width = 1411
+          Width = 1414
           Align = alClient
           Caption = 'pnlPrepareMain'
-          ClientHeight = 650
-          ClientWidth = 1411
+          ClientHeight = 651
+          ClientWidth = 1414
           Color = 13006080
           ParentBackground = False
           ParentColor = False
           TabOrder = 0
           object pnlDataSettings: TPanel
             Left = 1
-            Height = 648
+            Height = 649
             Top = 1
             Width = 390
             Align = alLeft
             BevelOuter = bvNone
             Caption = 'pnlDataSettings'
-            ClientHeight = 648
+            ClientHeight = 649
             ClientWidth = 390
             Color = clSkyBlue
             ParentBackground = False
@@ -123,34 +122,34 @@ object frmMain: TfrmMain
             object ProgressBar: TProgressBar
               Left = 8
               Height = 22
-              Top = 612
-              Width = 375
+              Top = 613
+              Width = 366
               Anchors = [akLeft, akRight, akBottom]
               Smooth = True
               TabOrder = 0
             end
             object PageControl2: TPageControl
               Left = 8
-              Height = 528
+              Height = 592
               Top = 8
               Width = 370
-              ActivePage = tsOracle
+              ActivePage = tsCsv
               Anchors = [akTop, akLeft, akRight]
-              TabIndex = 0
+              TabIndex = 1
               TabOrder = 1
               object tsOracle: TTabSheet
                 Caption = 'tsOracle'
-                ClientHeight = 490
+                ClientHeight = 554
                 ClientWidth = 362
                 object Panel1: TPanel
                   Left = 0
-                  Height = 490
+                  Height = 554
                   Top = 0
                   Width = 362
                   Align = alClient
                   BevelOuter = bvNone
                   Caption = 'Panel1'
-                  ClientHeight = 490
+                  ClientHeight = 554
                   ClientWidth = 362
                   ParentBackground = False
                   TabOrder = 0
@@ -158,11 +157,11 @@ object frmMain: TfrmMain
                     Left = 8
                     Height = 224
                     Top = 8
-                    Width = 350
+                    Width = 352
                     Anchors = [akTop, akLeft, akRight]
                     Caption = 'gbConnection'
                     ClientHeight = 194
-                    ClientWidth = 346
+                    ClientWidth = 348
                     ParentBackground = False
                     TabOrder = 0
                     object edtPassword: TEdit
@@ -240,8 +239,8 @@ object frmMain: TfrmMain
                     object btnDisconnect: TButton
                       Left = 8
                       Height = 38
-                      Top = 142
-                      Width = 113
+                      Top = 143
+                      Width = 114
                       Anchors = [akLeft, akBottom]
                       Caption = 'btnDisconnect'
                       TabOrder = 4
@@ -252,14 +251,14 @@ object frmMain: TfrmMain
                     AnchorSideTop.Control = gbConnection
                     AnchorSideTop.Side = asrBottom
                     Left = 8
-                    Height = 80
+                    Height = 79
                     Top = 247
-                    Width = 350
+                    Width = 352
                     Anchors = [akTop, akLeft, akRight]
                     BorderSpacing.Top = 15
                     Caption = 'gbGetData'
-                    ClientHeight = 50
-                    ClientWidth = 346
+                    ClientHeight = 49
+                    ClientWidth = 348
                     ParentBackground = False
                     TabOrder = 1
                     object btnGetData: TButton
@@ -277,14 +276,14 @@ object frmMain: TfrmMain
                     AnchorSideTop.Control = gbGetData
                     AnchorSideTop.Side = asrBottom
                     Left = 8
-                    Height = 136
-                    Top = 342
-                    Width = 350
+                    Height = 186
+                    Top = 341
+                    Width = 352
                     Anchors = [akTop, akLeft, akRight]
                     BorderSpacing.Top = 15
                     Caption = 'gbExport'
-                    ClientHeight = 106
-                    ClientWidth = 346
+                    ClientHeight = 156
+                    ClientWidth = 348
                     ParentBackground = False
                     TabOrder = 2
                     object btnExportToFileOra: TButton
@@ -308,29 +307,37 @@ object frmMain: TfrmMain
                       Height = 33
                       Top = 8
                       Width = 200
-                      Anchors = [akLeft, akBottom]
                       AutoComplete = True
                       AutoCompleteText = [cbactEnabled, cbactEndOfLineComplete, cbactSearchAscending]
                       ItemHeight = 25
                       TabOrder = 1
                       OnExit = cbOrganizationNameExit
                     end
+                    object lblSelectedVersion: TLabel
+                      Left = 8
+                      Height = 25
+                      Top = 112
+                      Width = 143
+                      Caption = 'lblSelectedVersion'
+                      Font.Color = clGrayText
+                      ParentFont = False
+                    end
                   end
                 end
               end
               object tsCsv: TTabSheet
                 Caption = 'tsCsv'
-                ClientHeight = 490
+                ClientHeight = 554
                 ClientWidth = 362
                 object Panel2: TPanel
                   Left = 0
-                  Height = 490
+                  Height = 554
                   Top = 0
                   Width = 362
                   Align = alClient
                   BevelOuter = bvNone
                   Caption = 'Panel2'
-                  ClientHeight = 490
+                  ClientHeight = 554
                   ClientWidth = 362
                   ParentBackground = False
                   TabOrder = 0
@@ -359,12 +366,12 @@ object frmMain: TfrmMain
                     Left = 8
                     Height = 136
                     Top = 120
-                    Width = 350
+                    Width = 352
                     Anchors = [akTop, akLeft, akRight]
                     BorderSpacing.Top = 15
                     Caption = 'gbExport1'
                     ClientHeight = 106
-                    ClientWidth = 346
+                    ClientWidth = 348
                     ParentBackground = False
                     TabOrder = 2
                     object btnExportToFileCSV: TButton
@@ -386,7 +393,7 @@ object frmMain: TfrmMain
                     object cbOrganizationNameCSV: TComboBox
                       Left = 136
                       Height = 33
-                      Top = 8
+                      Top = 7
                       Width = 200
                       Anchors = [akLeft, akBottom]
                       AutoComplete = True
@@ -401,15 +408,15 @@ object frmMain: TfrmMain
             end
           end
           object pnlPrepareData: TPanel
-            Left = 401
-            Height = 648
+            Left = 399
+            Height = 649
             Top = 1
-            Width = 1009
+            Width = 1014
             Align = alClient
             BevelOuter = bvNone
             Caption = 'pnlPrepareData'
-            ClientHeight = 648
-            ClientWidth = 1009
+            ClientHeight = 649
+            ClientWidth = 1014
             Color = 13006080
             ParentBackground = False
             ParentColor = False
@@ -419,12 +426,12 @@ object frmMain: TfrmMain
               Left = 0
               Height = 300
               Top = 0
-              Width = 1009
+              Width = 1014
               Align = alTop
               BevelOuter = bvNone
               Caption = 'pnlDataGrid'
               ClientHeight = 300
-              ClientWidth = 1009
+              ClientWidth = 1014
               Color = clSkyBlue
               ParentBackground = False
               ParentColor = False
@@ -433,7 +440,7 @@ object frmMain: TfrmMain
                 Left = 8
                 Height = 226
                 Top = 16
-                Width = 997
+                Width = 1002
                 Anchors = [akTop, akLeft, akRight, akBottom]
                 Color = clWindow
                 Columns = <>
@@ -442,10 +449,10 @@ object frmMain: TfrmMain
                 TitleImageList = ImageListDbGridSort
               end
               object btnExportDbgridToCsv: TButton
-                Left = 892
+                Left = 898
                 Height = 38
                 Top = 252
-                Width = 113
+                Width = 112
                 Anchors = [akRight, akBottom]
                 Caption = 'btnExportDbgridToCsv'
                 TabOrder = 1
@@ -476,21 +483,21 @@ object frmMain: TfrmMain
               Left = 0
               Height = 10
               Top = 300
-              Width = 1009
+              Width = 1014
               Align = alTop
               ResizeAnchor = akTop
               OnMoved = SplitterdataGridMoved
             end
             object pnlProgressExport: TPanel
               Left = 0
-              Height = 338
+              Height = 339
               Top = 310
-              Width = 1009
+              Width = 1014
               Align = alClient
               BevelOuter = bvNone
               Caption = 'pnlProgressExport'
-              ClientHeight = 338
-              ClientWidth = 1009
+              ClientHeight = 339
+              ClientWidth = 1014
               Color = 13006080
               ParentBackground = False
               ParentColor = False
@@ -498,13 +505,13 @@ object frmMain: TfrmMain
               OnResize = pnlProgressExportResize
               object pnlProgress: TPanel
                 Left = 0
-                Height = 338
+                Height = 339
                 Top = 0
                 Width = 500
                 Align = alLeft
                 BevelOuter = bvNone
                 Caption = 'pnlProgress'
-                ClientHeight = 338
+                ClientHeight = 339
                 ClientWidth = 500
                 Color = clSkyBlue
                 ParentBackground = False
@@ -512,9 +519,9 @@ object frmMain: TfrmMain
                 TabOrder = 0
                 object memReportProgress: TMemo
                   Left = 8
-                  Height = 248
+                  Height = 249
                   Top = 40
-                  Width = 485
+                  Width = 486
                   Anchors = [akTop, akLeft, akRight, akBottom]
                   Lines.Strings = (
                     'memReportProgress'
@@ -533,7 +540,7 @@ object frmMain: TfrmMain
                 object lblProgress: TLabel
                   Left = 8
                   Height = 25
-                  Top = 308
+                  Top = 309
                   Width = 88
                   Anchors = [akLeft, akBottom]
                   Caption = 'lblProgress'
@@ -541,30 +548,30 @@ object frmMain: TfrmMain
               end
               object SplitterMemos: TSplitter
                 Left = 500
-                Height = 338
+                Height = 339
                 Top = 0
                 Width = 10
                 OnMoved = SplitterMemosMoved
               end
               object pnlError: TPanel
                 Left = 510
-                Height = 338
+                Height = 339
                 Top = 0
-                Width = 499
+                Width = 504
                 Align = alClient
                 BevelOuter = bvNone
                 Caption = 'pnlError'
-                ClientHeight = 338
-                ClientWidth = 499
+                ClientHeight = 339
+                ClientWidth = 504
                 Color = clSkyBlue
                 ParentBackground = False
                 ParentColor = False
                 TabOrder = 2
                 object memReportError: TMemo
                   Left = 8
-                  Height = 248
+                  Height = 249
                   Top = 40
-                  Width = 486
+                  Width = 490
                   Anchors = [akTop, akLeft, akRight, akBottom]
                   Lines.Strings = (
                     'memReportError'
@@ -580,10 +587,10 @@ object frmMain: TfrmMain
                   Caption = 'lblError'
                 end
                 object btnSaveErrorLog: TButton
-                  Left = 381
+                  Left = 386
                   Height = 38
-                  Top = 292
-                  Width = 113
+                  Top = 293
+                  Width = 112
                   Anchors = [akRight, akBottom]
                   Caption = 'btnSaveErrorLog'
                   TabOrder = 1
@@ -594,37 +601,37 @@ object frmMain: TfrmMain
           end
           object SplitterDataSettings: TSplitter
             Left = 391
-            Height = 648
+            Height = 649
             Top = 1
-            Width = 10
+            Width = 8
             OnMoved = SplitterDataSettingsMoved
           end
         end
       end
       object tsExportSettings: TTabSheet
         Caption = 'tsExportSettings'
-        ClientHeight = 650
-        ClientWidth = 1411
+        ClientHeight = 651
+        ClientWidth = 1414
         object pnlSettings: TPanel
           Left = 0
-          Height = 650
+          Height = 651
           Top = 0
-          Width = 1411
+          Width = 1414
           Align = alClient
           BevelOuter = bvNone
           Caption = 'pnlSettings'
-          ClientHeight = 650
-          ClientWidth = 1411
+          ClientHeight = 651
+          ClientWidth = 1414
           ParentBackground = False
           TabOrder = 0
           object gbManholes: TGroupBox
             Left = 16
-            Height = 620
+            Height = 622
             Top = 16
             Width = 320
             Anchors = [akTop, akLeft, akBottom]
             Caption = 'gbManholes'
-            ClientHeight = 590
+            ClientHeight = 592
             ClientWidth = 316
             ParentBackground = False
             TabOrder = 0
@@ -635,7 +642,6 @@ object frmMain: TfrmMain
               Width = 179
               Caption = 'chkIncludePutVorm'
               TabOrder = 4
-              OnChange = chkIncludePutVormChange
             end
             object chkIncludePutLengte: TCheckBox
               Left = 16
@@ -644,7 +650,6 @@ object frmMain: TfrmMain
               Width = 188
               Caption = 'chkIncludePutLengte'
               TabOrder = 0
-              OnChange = chkIncludePutLengteChange
             end
             object chkIncludePutBreedte: TCheckBox
               Left = 16
@@ -653,7 +658,6 @@ object frmMain: TfrmMain
               Width = 195
               Caption = 'chkIncludePutBreedte'
               TabOrder = 1
-              OnChange = chkIncludePutBreedteChange
             end
             object chkIncludePutHoogte: TCheckBox
               Left = 16
@@ -662,7 +666,6 @@ object frmMain: TfrmMain
               Width = 196
               Caption = 'chkIncludePutHoogte'
               TabOrder = 2
-              OnChange = chkIncludePutHoogteChange
             end
             object chkIncludePutDiameter: TCheckBox
               Left = 16
@@ -671,7 +674,6 @@ object frmMain: TfrmMain
               Width = 207
               Caption = 'chkIncludePutDiameter'
               TabOrder = 3
-              OnChange = chkIncludePutDiameterChange
             end
             object chkIncludePutMateriaal: TCheckBox
               Left = 16
@@ -680,7 +682,6 @@ object frmMain: TfrmMain
               Width = 207
               Caption = 'chkIncludePutMateriaal'
               TabOrder = 5
-              OnChange = chkIncludePutMateriaalChange
             end
             object chkIncludePutFundering: TCheckBox
               Left = 16
@@ -689,7 +690,6 @@ object frmMain: TfrmMain
               Width = 215
               Caption = 'chkIncludePutFundering'
               TabOrder = 6
-              OnChange = chkIncludePutFunderingChange
             end
             object chkIncludePutBegindatum: TCheckBox
               Left = 16
@@ -698,7 +698,6 @@ object frmMain: TfrmMain
               Width = 231
               Caption = 'chkIncludePutBegindatum'
               TabOrder = 7
-              OnChange = chkIncludePutBegindatumChange
             end
             object chkIncludePutEinddatum: TCheckBox
               Left = 16
@@ -707,7 +706,6 @@ object frmMain: TfrmMain
               Width = 221
               Caption = 'chkIncludePutEinddatum'
               TabOrder = 8
-              OnChange = chkIncludePutEinddatumChange
             end
             object chkIncludePutMaaiveldhoogte: TCheckBox
               Left = 16
@@ -716,21 +714,29 @@ object frmMain: TfrmMain
               Width = 264
               Caption = 'chkIncludePutMaaiveldhoogte'
               TabOrder = 9
-              OnChange = chkIncludePutMaaiveldhoogteChange
+            end
+            object chkManholesCheckAll: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 544
+              Width = 196
+              Caption = 'chkManholesCheckAll'
+              TabOrder = 10
+              Visible = False
             end
           end
           object gbPipelines: TGroupBox
             AnchorSideLeft.Control = gbManholes
             AnchorSideLeft.Side = asrBottom
             Left = 351
-            Height = 620
+            Height = 622
             Top = 16
-            Width = 320
+            Width = 319
             Anchors = [akTop, akLeft, akBottom]
             BorderSpacing.Left = 15
             Caption = 'gbPipelines'
-            ClientHeight = 590
-            ClientWidth = 316
+            ClientHeight = 592
+            ClientWidth = 315
             ParentBackground = False
             TabOrder = 1
             object chkIncludeLeidingLengte: TCheckBox
@@ -740,7 +746,6 @@ object frmMain: TfrmMain
               Width = 219
               Caption = 'chkIncludeLeidingLengte'
               TabOrder = 0
-              OnChange = chkIncludeLeidingLengteChange
             end
             object chkIncludeLeidingBreedte: TCheckBox
               Left = 16
@@ -749,7 +754,6 @@ object frmMain: TfrmMain
               Width = 226
               Caption = 'chkIncludeLeidingBreedte'
               TabOrder = 1
-              OnChange = chkIncludeLeidingBreedteChange
             end
             object chkIncludeLeidingHoogte: TCheckBox
               Left = 16
@@ -758,7 +762,6 @@ object frmMain: TfrmMain
               Width = 227
               Caption = 'chkIncludeLeidingHoogte'
               TabOrder = 2
-              OnChange = chkIncludeLeidingHoogteChange
             end
             object chkIncludeLeidingDiameter: TCheckBox
               Left = 16
@@ -767,7 +770,6 @@ object frmMain: TfrmMain
               Width = 238
               Caption = 'chkIncludeLeidingDiameter'
               TabOrder = 3
-              OnChange = chkIncludeLeidingDiameterChange
             end
             object chkIncludeLeidingVorm: TCheckBox
               Left = 16
@@ -776,7 +778,6 @@ object frmMain: TfrmMain
               Width = 210
               Caption = 'chkIncludeLeidingVorm'
               TabOrder = 4
-              OnChange = chkIncludeLeidingVormChange
             end
             object chkIncludeLeidingMateriaal: TCheckBox
               Left = 16
@@ -785,7 +786,6 @@ object frmMain: TfrmMain
               Width = 238
               Caption = 'chkIncludeLeidingMateriaal'
               TabOrder = 5
-              OnChange = chkIncludeLeidingMateriaalChange
             end
             object chkIncludeLeidingFundering: TCheckBox
               Left = 16
@@ -794,7 +794,6 @@ object frmMain: TfrmMain
               Width = 246
               Caption = 'chkIncludeLeidingFundering'
               TabOrder = 6
-              OnChange = chkIncludeLeidingFunderingChange
             end
             object chkIncludeLeidingStatusFunctioneren: TCheckBox
               Left = 16
@@ -803,7 +802,6 @@ object frmMain: TfrmMain
               Width = 317
               Caption = 'chkIncludeLeidingStatusFunctioneren'
               TabOrder = 7
-              OnChange = chkIncludeLeidingStatusFunctionerenChange
             end
             object chkIncludeLeidingWIBONThema: TCheckBox
               Left = 16
@@ -812,7 +810,6 @@ object frmMain: TfrmMain
               Width = 278
               Caption = 'chkIncludeLeidingWIBONThema'
               TabOrder = 8
-              OnChange = chkIncludeLeidingWIBONThemaChange
             end
             object chkIncludeLeidingBegindatum: TCheckBox
               Left = 16
@@ -821,7 +818,6 @@ object frmMain: TfrmMain
               Width = 262
               Caption = 'chkIncludeLeidingBegindatum'
               TabOrder = 9
-              OnChange = chkIncludeLeidingBegindatumChange
             end
             object chkIncludeLeidingEinddatum: TCheckBox
               Left = 16
@@ -830,7 +826,6 @@ object frmMain: TfrmMain
               Width = 252
               Caption = 'chkIncludeLeidingEinddatum'
               TabOrder = 10
-              OnChange = chkIncludeLeidingEinddatumChange
             end
             object chkIncludeLeidingBobBegin: TCheckBox
               Left = 16
@@ -839,7 +834,6 @@ object frmMain: TfrmMain
               Width = 242
               Caption = 'chkIncludeLeidingBobBegin'
               TabOrder = 11
-              OnChange = chkIncludeLeidingBobBeginChange
             end
             object chkIncludeLeidingBobEind: TCheckBox
               Left = 16
@@ -848,20 +842,28 @@ object frmMain: TfrmMain
               Width = 232
               Caption = 'chkIncludeLeidingBobEind'
               TabOrder = 12
-              OnChange = chkIncludeLeidingBobEindChange
+            end
+            object chkPipelinesCheckAll: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 544
+              Width = 188
+              Caption = 'chkPipelinesCheckAll'
+              TabOrder = 13
+              Visible = False
             end
           end
           object gbMechanicalPipeline: TGroupBox
             AnchorSideLeft.Control = gbPipelines
             AnchorSideLeft.Side = asrBottom
-            Left = 686
-            Height = 620
+            Left = 685
+            Height = 622
             Top = 16
             Width = 320
             Anchors = [akTop, akLeft, akBottom]
             BorderSpacing.Left = 15
             Caption = 'gbMechanicalPipeline'
-            ClientHeight = 590
+            ClientHeight = 592
             ClientWidth = 316
             ParentBackground = False
             TabOrder = 2
@@ -872,7 +874,6 @@ object frmMain: TfrmMain
               Width = 248
               Caption = 'chkIncludePersleidingLengte'
               TabOrder = 0
-              OnChange = chkIncludePersleidingLengteChange
             end
             object chkIncludePersleidingHoogte: TCheckBox
               Left = 16
@@ -881,7 +882,6 @@ object frmMain: TfrmMain
               Width = 256
               Caption = 'chkIncludePersleidingHoogte'
               TabOrder = 1
-              OnChange = chkIncludePersleidingHoogteChange
             end
             object chkIncludePersleidingDiameter: TCheckBox
               Left = 16
@@ -890,7 +890,6 @@ object frmMain: TfrmMain
               Width = 267
               Caption = 'chkIncludePersleidingDiameter'
               TabOrder = 2
-              OnChange = chkIncludePersleidingDiameterChange
             end
             object chkIncludePersleidingVorm: TCheckBox
               Left = 16
@@ -899,7 +898,6 @@ object frmMain: TfrmMain
               Width = 239
               Caption = 'chkIncludePersleidingVorm'
               TabOrder = 3
-              OnChange = chkIncludePersleidingVormChange
             end
             object chkIncludePersleidingMateriaal: TCheckBox
               Left = 16
@@ -908,7 +906,6 @@ object frmMain: TfrmMain
               Width = 267
               Caption = 'chkIncludePersleidingMateriaal'
               TabOrder = 4
-              OnChange = chkIncludePersleidingMateriaalChange
             end
             object chkIncludePersleidingStatusFunctioneren: TCheckBox
               Left = 16
@@ -917,7 +914,6 @@ object frmMain: TfrmMain
               Width = 346
               Caption = 'chkIncludePersleidingStatusFunctioneren'
               TabOrder = 5
-              OnChange = chkIncludePersleidingStatusFunctionerenChange
             end
             object chkIncludePersleidingBegindatum: TCheckBox
               Left = 16
@@ -926,7 +922,6 @@ object frmMain: TfrmMain
               Width = 291
               Caption = 'chkIncludePersleidingBegindatum'
               TabOrder = 6
-              OnChange = chkIncludePersleidingBegindatumChange
             end
             object chkIncludePersleidingEinddatum: TCheckBox
               Left = 16
@@ -935,7 +930,6 @@ object frmMain: TfrmMain
               Width = 281
               Caption = 'chkIncludePersleidingEinddatum'
               TabOrder = 7
-              OnChange = chkIncludePersleidingEinddatumChange
             end
             object chkIncludePersleidingBobBegin: TCheckBox
               Left = 16
@@ -944,7 +938,6 @@ object frmMain: TfrmMain
               Width = 271
               Caption = 'chkIncludePersleidingBobBegin'
               TabOrder = 8
-              OnChange = chkIncludePersleidingBobBeginChange
             end
             object chkIncludePersleidingBobEind: TCheckBox
               Left = 16
@@ -953,21 +946,29 @@ object frmMain: TfrmMain
               Width = 261
               Caption = 'chkIncludePersleidingBobEind'
               TabOrder = 9
-              OnChange = chkIncludePersleidingBobEindChange
+            end
+            object chkMechanicalPipelineCheckAll: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 544
+              Width = 267
+              Caption = 'chkMechanicalPipelineCheckAll'
+              TabOrder = 10
+              Visible = False
             end
           end
           object gbGully: TGroupBox
             AnchorSideLeft.Control = gbMechanicalPipeline
             AnchorSideLeft.Side = asrBottom
-            Left = 1021
-            Height = 620
+            Left = 1020
+            Height = 622
             Top = 16
-            Width = 320
+            Width = 319
             Anchors = [akTop, akLeft, akBottom]
             BorderSpacing.Left = 15
             Caption = 'gbGully'
-            ClientHeight = 590
-            ClientWidth = 316
+            ClientHeight = 592
+            ClientWidth = 315
             ParentBackground = False
             TabOrder = 3
             object chkIncludeKolkLengte: TCheckBox
@@ -977,7 +978,6 @@ object frmMain: TfrmMain
               Width = 196
               Caption = 'chkIncludeKolkLengte'
               TabOrder = 0
-              OnChange = chkIncludeKolkLengteChange
             end
             object chkIncludeKolkBreedte: TCheckBox
               Left = 16
@@ -986,7 +986,6 @@ object frmMain: TfrmMain
               Width = 203
               Caption = 'chkIncludeKolkBreedte'
               TabOrder = 1
-              OnChange = chkIncludeKolkBreedteChange
             end
             object chkIncludeKolkHoogte: TCheckBox
               Left = 16
@@ -995,7 +994,6 @@ object frmMain: TfrmMain
               Width = 204
               Caption = 'chkIncludeKolkHoogte'
               TabOrder = 2
-              OnChange = chkIncludeKolkHoogteChange
             end
             object chkIncludeKolkDiameter: TCheckBox
               Left = 16
@@ -1004,7 +1002,6 @@ object frmMain: TfrmMain
               Width = 215
               Caption = 'chkIncludeKolkDiameter'
               TabOrder = 3
-              OnChange = chkIncludeKolkDiameterChange
             end
             object chkIncludeKolkVorm: TCheckBox
               Left = 16
@@ -1013,7 +1010,6 @@ object frmMain: TfrmMain
               Width = 187
               Caption = 'chkIncludeKolkVorm'
               TabOrder = 4
-              OnChange = chkIncludeKolkVormChange
             end
             object chkIncludeKolkMateriaal: TCheckBox
               Left = 16
@@ -1022,7 +1018,6 @@ object frmMain: TfrmMain
               Width = 215
               Caption = 'chkIncludeKolkMateriaal'
               TabOrder = 5
-              OnChange = chkIncludeKolkMateriaalChange
             end
             object chkIncludeKolkWanddikte: TCheckBox
               Left = 16
@@ -1031,7 +1026,6 @@ object frmMain: TfrmMain
               Width = 229
               Caption = 'chkIncludeKolkWanddikte'
               TabOrder = 6
-              OnChange = chkIncludeKolkWanddikteChange
             end
             object chkIncludeKolkBegindatum: TCheckBox
               Left = 16
@@ -1040,7 +1034,6 @@ object frmMain: TfrmMain
               Width = 239
               Caption = 'chkIncludeKolkBegindatum'
               TabOrder = 7
-              OnChange = chkIncludeKolkBegindatumChange
             end
             object chkIncludeKolkEinddatum: TCheckBox
               Left = 16
@@ -1049,56 +1042,58 @@ object frmMain: TfrmMain
               Width = 229
               Caption = 'chkIncludeKolkEinddatum'
               TabOrder = 8
-              OnChange = chkIncludeKolkEinddatumChange
+            end
+            object chkGullyCheckAll: TCheckBox
+              Left = 16
+              Height = 29
+              Top = 544
+              Width = 158
+              Caption = 'chkGullyCheckAll'
+              TabOrder = 9
+              Visible = False
             end
           end
         end
       end
       object tsQuery: TTabSheet
         Caption = 'tsQuery'
-        ClientHeight = 650
-        ClientWidth = 1411
+        ClientHeight = 651
+        ClientWidth = 1414
         object pnlQuery: TPanel
           Left = 0
-          Height = 650
+          Height = 651
           Top = 0
-          Width = 1411
+          Width = 1414
           Align = alClient
           BevelOuter = bvNone
           Caption = 'pnlQuery'
-          ClientHeight = 650
-          ClientWidth = 1411
+          ClientHeight = 651
+          ClientWidth = 1414
           ParentBackground = False
           TabOrder = 0
           object gbQuery: TGroupBox
             Left = 8
-            Height = 644
+            Height = 645
             Top = 0
-            Width = 1393
+            Width = 1396
             Anchors = [akTop, akLeft, akRight, akBottom]
-            ClientHeight = 614
-            ClientWidth = 1389
+            ClientHeight = 615
+            ClientWidth = 1392
             ParentBackground = False
             TabOrder = 0
             inline SynEditSqlQuery: TSynEdit
               Left = 8
-              Height = 566
+              Height = 567
               Top = 0
-              Width = 1367
+              Width = 1370
               Anchors = [akTop, akLeft, akRight, akBottom]
               Font.Height = 20
               Font.Name = 'Courier New'
-              Font.Pitch = fpFixed
               Font.Quality = fqNonAntialiased
-              ParentColor = False
-              ParentFont = False
               TabOrder = 0
-              Gutter.Width = 91
-              Gutter.MouseActions = <>
-              RightGutter.Width = 0
-              RightGutter.MouseActions = <>
               Highlighter = SynSQLSyn1
-              Keystrokes = <              
+              KeyStrokes.ForceSaveToLfm = True
+              KeyStrokes = <              
                 item
                   Command = ecUp
                   ShortCut = 38
@@ -1519,9 +1514,6 @@ object frmMain: TfrmMain
                   Command = ecColSelEditorBottom
                   ShortCut = 57379
                 end>
-              MouseActions = <>
-              MouseTextActions = <>
-              MouseSelActions = <>
               Lines.Strings = (
                 'Select'
                 '    ''LEIDING'' as OBJECT_TYPE,'
@@ -1711,76 +1703,26 @@ object frmMain: TfrmMain
                 'where eind_tijd is null'
                 'ORDER BY OBJECT_TYPE, GUID'
               )
-              VisibleSpecialChars = [vscSpace, vscTabAtLast]
-              SelectedColor.BackPriority = 50
-              SelectedColor.ForePriority = 50
-              SelectedColor.FramePriority = 50
-              SelectedColor.BoldPriority = 50
-              SelectedColor.ItalicPriority = 50
-              SelectedColor.UnderlinePriority = 50
-              SelectedColor.StrikeOutPriority = 50
-              BracketHighlightStyle = sbhsBoth
-              BracketMatchColor.Background = clNone
-              BracketMatchColor.Foreground = clNone
-              BracketMatchColor.Style = [fsBold]
-              FoldedCodeColor.Background = clNone
-              FoldedCodeColor.Foreground = clGray
-              FoldedCodeColor.FrameColor = clGray
-              MouseLinkColor.Background = clNone
-              MouseLinkColor.Foreground = clBlue
-              LineHighlightColor.Background = clNone
-              LineHighlightColor.Foreground = clNone
               inline SynLeftGutterPartList1: TSynGutterPartList
                 object SynGutterMarks1: TSynGutterMarks
-                  Width = 36
-                  MouseActions = <>
-                  MaxExtraMarksColums = 0
-                  Options = [sgmoDeDuplicateMarksOnOverflow]
-                  MarkupInfo.Background = clBtnFace
-                  MarkupInfo.Foreground = clNone
                 end
                 object SynGutterLineNumber1: TSynGutterLineNumber
-                  Width = 31
-                  MouseActions = <>
-                  MarkupInfo.Background = clBtnFace
-                  MarkupInfo.Foreground = clNone
-                  DigitCount = 2
-                  ShowOnlyLineNumbersMultiplesOf = 1
-                  ZeroStart = False
-                  LeadingZeros = False
                 end
                 object SynGutterChanges1: TSynGutterChanges
-                  Width = 6
-                  MouseActions = <>
-                  ModifiedColor = 59900
-                  SavedColor = clGreen
-                  MarkupInfo.Background = clNone
-                  MarkupInfo.Foreground = clGreen
-                  MarkupInfo.FrameColor = 59900
                 end
                 object SynGutterSeparator1: TSynGutterSeparator
-                  Width = 3
-                  MouseActions = <>
-                  MarkupInfo.Background = clWhite
-                  MarkupInfo.Foreground = clGray
                 end
                 object SynGutterCodeFolding1: TSynGutterCodeFolding
-                  Width = 15
-                  MouseActions = <>
-                  MarkupInfo.Background = clNone
-                  MarkupInfo.Foreground = clGray
-                  MouseActionsExpanded = <>
-                  MouseActionsCollapsed = <>
                 end
               end
             end
             object btnSaveQuery: TButton
               AnchorSideTop.Control = SynEditSqlQuery
               AnchorSideTop.Side = asrBottom
-              Left = 1262
-              Height = 38
-              Top = 574
-              Width = 113
+              Left = 1264
+              Height = 37
+              Top = 576
+              Width = 114
               Anchors = [akRight, akBottom]
               BorderSpacing.Top = 10
               Caption = 'btnSaveQuery'
@@ -1792,8 +1734,8 @@ object frmMain: TfrmMain
               AnchorSideTop.Side = asrBottom
               Left = 8
               Height = 36
-              Top = 576
-              Width = 113
+              Top = 577
+              Width = 114
               Anchors = [akTop, akLeft, akBottom]
               BorderSpacing.Top = 10
               Caption = 'btnOpenQuery'
@@ -1803,7 +1745,7 @@ object frmMain: TfrmMain
             object lblSQLFileLocation: TLabel
               Left = 136
               Height = 25
-              Top = 587
+              Top = 588
               Width = 144
               Anchors = [akLeft, akBottom]
               Caption = 'lblSQLFileLocation'
@@ -1838,24 +1780,22 @@ object frmMain: TfrmMain
       end
       object mioptionsAbout: TMenuItem
         Caption = 'mioptionsAbout'
-        Visible = False
+        OnClick = mioptionsAboutClick
       end
     end
   end
   object SynSQLSyn1: TSynSQLSyn
-    DefaultFilter = 'SQL Files (*.sql)|*.sql'
-    Enabled = False
     CommentAttri.Foreground = clGreen
     KeyAttri.Foreground = clBlue
     NumberAttri.Foreground = clPurple
     StringAttri.Foreground = clMaroon
     SQLDialect = sqlSybase
     Left = 1064
-    Top = 16
+    Top = 17
   end
   object ImageListDbGridSort: TImageList
-    Left = 892
-    Top = 31
+    Left = 893
+    Top = 32
     Bitmap = {
       4C7A020000001000000010000000EF0000000000000078DACD953D0E83300C85
       C3D2997321C1A5E010C0C2C0443AF4069991183AB4F42E5948FD68064A457E94

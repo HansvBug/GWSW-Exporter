@@ -1,3 +1,6 @@
+{ Copyright ©2025-2026 Hans van Buggenum
+  MIT License
+}
 { The base of this unit is made with "MVP-Setup" from Benny Christensen a.k.a. cdbc
   https://gitlab.com/cdbc-public/releases/mvp-setup
 }
@@ -5,8 +8,7 @@ unit presenter.trax;
 {$mode objfpc}{$H+}
 {.$define dbg}
 interface
-uses classes,sysutils,obs_prosu, common.consts, istrlist, model.intf, model.base,
-  exp.dirinfo; /// <experimental> /// 
+uses classes,sysutils,obs_prosu, common.consts, istrlist, model.intf, model.base;
 
 (* this unit is by design, for specialized transactions... can have siblings :o)    *)
 (* the 'transaction-manager now uses a transaction-factory, which means: to use it  *)
@@ -14,32 +16,6 @@ uses classes,sysutils,obs_prosu, common.consts, istrlist, model.intf, model.base
 (* 'modreason' at unit startup, i.e.: 'initialization' part  --  see at the bottom. *)
 
 type
-  { TTextEdit example, ultra simple, uses the inherited 'Title' prop }
-  TTextEdit = class(TTransaction,ITrxExec) { <- notice the interface => important }
-  private
-    fSuccess: boolean;       { this trx gets triggered by 'prDataChanged' ~ 3 }
-  public
-    function Execute(aMgr: ITransactionManager): boolean;
-    property Success: boolean read fSuccess write fSuccess;
-  end;
-
-  { TDirInfoTrx is tied to 'prFetchDirData' ~ 113, uses 'prDirDataNeeded' ~ 112 }
-  TDirInfoTrx = class(TTransaction,ITrxExecNoRes)
-  private
-    fDi: IDirInfo;
-  public
-    procedure Execute(aMgr: ITransactionManager);
-  end;
-  { TFileInfoTrx is tied to 'prFetchFileData' ~ 114, uses 'prDirDataNeeded' ~ 112 }
-  TFileInfoTrx = class(TTransaction,ITrxExecNoRes)
-  private
-    fDi: IDirInfo;
-  public
-    procedure Execute(aMgr: ITransactionManager);
-  end;  
-
-  { Create new transactions here. ---------------------------------------------------------------------------------}
-
   { TCreDirTrx }
   TCreDirTrx = class(TTransaction, ITrxExec)
   private
@@ -59,69 +35,6 @@ type
     property AppName: String read fAppName write fAppName;
   end;
 
-  { TSettingstrx }
-  TSettingstrx = class(TTransaction, ITrxExec)
-    private
-      fActivateLogging: Boolean;
-      fAppendLogging: Boolean;
-      fLanguage: String;
-
-      fAppName: string;
-      fAppVersion: string;
-      fAppBuildDate: string;
-      fFormHeight: Integer;
-      fFormLeft: Integer;
-      fFormName: String;
-      fFormTop,
-      fFormWidth,
-      fFormWindowstate,
-      fFrmRestoredHeight,
-      fFrmRestoredLeft,
-      fFrmRestoredTop,
-      fFrmRestoredWidth: Integer;
-      fManholeShape: Boolean;
-      fRead: Boolean;
-      fReadFrmState: Boolean;
-      fSettingsFile: String;
-      fSplitterdataGrid: Integer;
-      fSplitterDataSettings: Integer;
-      fSplitterMemos: Integer;
-      fSuccess: boolean;
-      fWrite: Boolean;
-      fStoreFrmState: Boolean;
-    public
-      function Execute(aMgr : ITransactionManager) : Boolean;
-      property Success: boolean read fSuccess write fSuccess;
-      property SettingsLocationAndFileName: String read fSettingsFile write fSettingsFile;
-      property ReadSettings: Boolean read fRead write fRead;     // If true then read the settingsfile.
-      property WriteSettings: Boolean read fWrite write fWrite;  // If true then write the settingsfile.
-      property ReadFormState: Boolean read fReadFrmState write fReadFrmState;
-      property StoreFormState: Boolean read fStoreFrmState write fStoreFrmState;
-
-      property AppName: string read fAppName write fAppName;
-      property AppVersion: string read fAppVersion write fAppVersion;
-      property AppBuildDate: string read fAppBuildDate write fAppBuildDate;
-
-      property ActivateLogging: Boolean read fActivateLogging write fActivateLogging;  // Enable or disbable Logging.
-      property AppendLogging: Boolean read fAppendLogging write fAppendLogging;        // Append new logging to the log file. Or when disabled, delete previous logging and start again.
-      property Language: String read fLanguage write fLanguage;                        // The choosen Language.
-
-      property FormName: String read fFormName write fFormName;                        // Determines which settings are saved.
-      property FormWindowstate: Integer read fFormWindowstate write fFormWindowstate;
-      property FormTop: Integer read fFormTop write fFormTop;
-      property FormLeft: Integer read fFormLeft write fFormLeft;
-      property FormHeight: Integer read fFormHeight write fFormHeight;
-      property FormWidth: Integer read fFormWidth write fFormWidth;
-      property FormRestoredTop: Integer read fFrmRestoredTop write fFrmRestoredTop;
-      property FormRestoredLeft: Integer read fFrmRestoredLeft write fFrmRestoredLeft;
-      property FormRestoredHeight: Integer read fFrmRestoredHeight write fFrmRestoredHeight;
-      property FormRestoredWidth: Integer read fFrmRestoredWidth write fFrmRestoredWidth;
-      property SplitterdataGrid: Integer read fSplitterdataGrid write fSplitterdataGrid;
-      property SplitterDataSettings: Integer read fSplitterDataSettings write fSplitterDataSettings;
-      property SplitterMemos: Integer read fSplitterMemos write fSplitterMemos;
-      //Export settings
-      property ManholeShape: Boolean read fManholeShape write fManholeShape;
-    end;
 
   { TSingleSettingTrx }
   TSingleSettingTrx = class(TTransaction, ITrxExec)
@@ -141,11 +54,11 @@ type
   { TRetrieveDataTrx }
   TRetrieveDataTrx = class(TTransaction, ITrxExec)
     private
-      fDataGrid : TObject;
-      fDataSet : TObject;
-      fMessage : String;
-      fOrganizationName : String;
-      fSqlText : String;
+      fDataGrid: TObject;
+      fDataSet: TObject;
+      fMessage: String;
+      fOrganizationName: String;
+      fSqlText: String;
     public
       function Execute(aMgr: ITransactionManager): boolean;
       property SqlText: String read fSqlText write fSqlText;
@@ -159,19 +72,19 @@ type
   TExportToOroxTtlFileTrx = class(TTransaction, ITrxExec)
     private
       fDataType: String;
-      fDisableErrorReport : Boolean;
+      fDisableErrorReport: Boolean;
       fFileNameCsvFile: String;
-      fFileNameExportFile : String;
-      fMappingFile : String;
-      fMessage : String;
-      fOrganizationName : String;
-      fSuccess : Boolean;
-      fVersion : String;
+      fFileNameExportFile: String;
+      fMappingFile: String;
+      fMessage: String;
+      fOrganizationName: String;
+      fSuccess: Boolean;
+      fVersion: String;
     public
       function Execute(aMgr: ITransactionManager): boolean;
 
       property FileNameExportFile: String read fFileNameExportFile write fFileNameExportFile;
-      property FileNameCsvFile : String read fFileNameCsvFile write fFileNameCsvFile;
+      property FileNameCsvFile: String read fFileNameCsvFile write fFileNameCsvFile;
       property MappingFile: String read fMappingFile write fMappingFile;
       property OrganizationName: String read fOrganizationName write fOrganizationName;
       property DisableErrorReport: Boolean read fDisableErrorReport write fDisableErrorReport;
@@ -184,9 +97,9 @@ type
   { TUniqueStringlistTrx }
   TUniqueStringlistTrx = class(TTransaction, ITrxExecNoRes)
     private
-      faComponent : TObject;
-      fListItems : TStrings;
-      fNewString : String;
+      faComponent: TObject;
+      fListItems: TStrings;
+      fNewString: String;
 
     public
       constructor {%H-}Create(aModReason: word);
@@ -239,6 +152,31 @@ type
       property DataSource: TObject read fDataSource write fDataSource;
   end;
 
+  { TLoadFormStateTrx }
+  TLoadFormStateTrx = class(TTransaction, ITrxExec)
+    private
+      fSettingsFile: string;
+      fFormName: string;
+    public
+      function Execute(aMgr: ITransactionManager): Boolean;
+      property SettingsFile: string read fSettingsFile write fSettingsFile;
+      property FormName: string read fFormName write fFormName;
+    end;
+
+  { TStoreFormStateTrx }
+  TStoreFormStateTrx = class(TTransaction, ITrxExec)
+    private
+      fSettingsFile: string;
+      fSettings: TSettingsRec;
+    public
+      function Execute(aMgr: ITransactionManager): Boolean;
+      property SettingsFile: string read fSettingsFile write fSettingsFile;
+      property Settings: TSettingsRec read fSettings write fSettings;
+    end;
+
+
+{------------------------------------------------------------------------------}
+
 implementation
 // uses StrUtils; { for: 'IndexText' etc... }
 
@@ -250,48 +188,8 @@ function Str2Pch(aStr: string): pchar; external name 'BC_STR2PCH';
   if you have to, then only in this 'implementation' part. }       
 
 
-{ TTextEdit }
-function TTextEdit.Execute(aMgr: ITransactionManager): boolean;
-var
-  lsl: IStringList;
-begin { very lazy example :-/ i don't even touch the model => DON'T DO THIS }
-  Result:= FileExists(fTitle);
-  if Result then begin
-    lsl:= CreateStrList;
-    lsl.LoadFromFile(fTitle);
-    fSuccess:= (lsl.Count > 0);
-    aMgr.OwnerMain.Provider.NotifySubscribers(prDataChanged,Self,lsl);
-  end;
-end; { end of example }
-
-{ TDirInfoTrx }
-procedure TDirInfoTrx.Execute(aMgr: ITransactionManager);
-var
-  lsl: IStringList;
-begin
-  if fTitle = '' then aMgr.OwnerMain.Provider.NotifySubscribers(prDirDataNeeded,self,nil);
-  if fTitle = '' then exit;
-  fDi:= GetDirInfo; { nifty little <experimental> manual interface }
-  lsl:= fDi.GetDirs(fTitle,true);
-  aMgr.OwnerMain.Provider.NotifySubscribers(prFetchDirData,self,lsl);
-  aMgr.OwnerMain.Provider.NotifySubscribers(prStatus,nil,Str2Pch('(i) Dir-Info on "'+Title+'" fetched successfully'));
-end;
-
-{ TFileInfoTrx }
-procedure TFileInfoTrx.Execute(aMgr: ITransactionManager);
-var
-  lsl: IStringList;
-begin
-  if fTitle = '' then aMgr.OwnerMain.Provider.NotifySubscribers(prDirDataNeeded,self,nil);
-  if fTitle = '' then exit;
-  fDi:= GetDirInfo; { nifty little <experimental> manual interface :o) }
-  lsl:= fDi.GetFiles(fTitle,true);
-  aMgr.OwnerMain.Provider.NotifySubscribers(prFetchFileData,self,lsl);
-  aMgr.OwnerMain.Provider.NotifySubscribers(prStatus,nil,Str2Pch('(i) File-Info on "'+Title+'" fetched successfully'));
-end; { end of examples }
-
 { TCreDirTrx }
-constructor TCreDirTrx.Create(aModReason : word);
+constructor TCreDirTrx.Create(aModReason: word);
 begin
   fModReason:= aModReason;
   fNewDirNames:= TStringList.Create;
@@ -304,7 +202,7 @@ begin
   inherited Destroy;
 end;
 
-function TCreDirTrx.Execute(aMgr : ITransactionManager) : Boolean;
+function TCreDirTrx.Execute(aMgr: ITransactionManager): Boolean;
 var
   lRec: TNewDirectoriesRec;
 begin
@@ -325,114 +223,32 @@ begin
   end;
 end;
 
-{ TSettingstrx }
-function TSettingstrx.Execute(aMgr : ITransactionManager) : Boolean;
-var
-  lRec: TSettingsRec;
-begin
-  Result:= aMgr.OwnerMain.Model.DoesFileExists(SettingsLocationAndFileName);
-
-  If Result then begin
-    lRec.setSettingsFile:= SettingsLocationAndFileName;  // Verry important.
-
-    if ReadSettings then begin
-      lRec.setReadSettings:= ReadSettings;
-      if ReadFormState then begin
-        lRec.setFrmName:= FormName;
-        lRec:= aMgr.OwnerMain.Model.ReadFormState(@lRec);
-        lRec.setReadSettings:= ReadSettings;
-        lRec.setReadFormState:= ReadFormState;
-
-        aMgr.OwnerMain.Provider.NotifySubscribers(prFormState, Self, @lRec);
-      end
-      else begin  // read all other settings
-        // pass the settings
-        // first some defaults....
-        lRec.setApplicationName:= AppName;
-        lRec.setApplicationVersion:= AppVersion;
-        lRec.setApplicationBuildDate:= AppBuildDate;
-        lRec.setWriteSettings:= WriteSettings;
-
-        lRec:= aMgr.OwnerMain.Model.ReadSettings(@lRec);
-
-        aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
-      end;
-    end
-    else if WriteSettings then begin
-      lRec.setWriteSettings:= WriteSettings;
-
-      if StoreFormstate then begin
-        lRec.setFrmName := FormName;
-        lRec.setFrmWindowState := FormWindowstate;
-        lRec.setFrmTop:= FormTop;
-        lRec.setFrmLeft := FormLeft;
-        lRec.setFrmHeight := FormHeight;
-        lRec.setFrmWidth := FormWidth;
-        lRec.setFrmRestoredTop := FormRestoredTop;
-        lRec.setFrmRestoredLeft := FormRestoredLeft;
-        lRec.setFrmRestoredHeight := FormRestoredHeight;
-        lRec.setFrmRestoredWidth := FormRestoredWidth;
-        lRec.setSplitterdataGrid:= SplitterdataGrid;  // Noodzakelijk, andsers kan er een div by zero ontstaa in de doappsettings omdat deze settings dan een default waarde die onbekend is.
-        lRec.setSplitterDataSettings:= SplitterDataSettings;
-        lRec.setSplitterMemos:= SplitterMemos;
-        lRec:= aMgr.OwnerMain.Model.StoreFormState(@lRec);
-
-        aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
-      end
-      else begin // Write the regular settings.
-        lRec.setApplicationName:= Application_build_date;
-        lRec.setApplicationVersion:= Application_version;
-        lRec.setApplicationBuildDate:= Application_build_date;
-        lRec.setActivateLogging:= ActivateLogging;
-        lRec.setAppendLogging:= AppendLogging;
-        lRec.setLanguage:= Language;
-        lRec.setApplicationName:= ApplicationName;
-        lRec.setApplicationVersion:= Application_version;
-        lRec.setApplicationBuildDate:= Application_build_date;
-
-        lRec:= aMgr.OwnerMain.Model.WriteSettings(@lRec);
-        aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
-      end;
-    end;
-  end
-  else begin
-    // Write defaults.
-    lRec.setSettingsFile:= SettingsLocationAndFileName;
-    lRec.setApplicationName:= AppName;
-    lRec.setApplicationVersion:= AppVersion;
-    lRec.setApplicationBuildDate:= AppBuildDate;
-    aMgr.OwnerMain.Model.WriteSettings(@lRec);  // Create the settingsfile.
-
-    lRec.setSucces:= False;
-    lRec.setMessage:= 'SettingsFileNotExists' ;
-    aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
-  end;
-end;
 
 { TSingleSettingTrx }
-function TSingleSettingTrx.Execute(aMgr : ITransactionManager) : boolean;
+function TSingleSettingTrx.Execute(aMgr: ITransactionManager): boolean;
 var
   lRec: TSingleSettingRec;
 begin
-  Result:= aMgr.OwnerMain.Model.DoesFileExists(SettingsLocationAndFileName);
+  Result:=aMgr.OwnerMain.Model.DoesFileExists(SettingsLocationAndFileName);
 
   if Result then begin
-    lRec.ssSettingsFile:= SettingsLocationAndFileName;
-    lRec.ssName:= SettingName;
-    lRec.ssSection:= Section;
-    lRec.ssValue:= SettingValue;
-
+    lRec.ssSettingsFile:=SettingsLocationAndFileName;
+    lRec.ssName:=SettingName;
+    lRec.ssSection:=Section;
+    lRec.ssValue:=SettingValue;
     aMgr.OwnerMain.Model.WriteSingleSetting(@lRec);
+    lRec.ssSucces:=True;
   end
   else begin
-    lRec.ssSucces:= False;
-    lRec.ssMessage:= 'SettingsFileNotExists' ;
-    aMgr.OwnerMain.Provider.NotifySubscribers(prAppSettings, Self, @lRec);
+    lRec.ssSucces:=False;
+    lRec.ssMessage:='SettingsFileNotExists';
   end;
+
+  aMgr.OwnerMain.Provider.NotifySubscribers(prAppSingleSetting, Self, @lRec);
 end;
 
 { TRetrieveDataTrx }
-function TRetrieveDataTrx.Execute(aMgr : ITransactionManager) : boolean;
+function TRetrieveDataTrx.Execute(aMgr: ITransactionManager): boolean;
 var
   lRec: TRetrieveDataRec;
 begin
@@ -457,9 +273,9 @@ begin
 end;
 
 { TExportToOroxTtlFileTrx }
-function TExportToOroxTtlFileTrx.Execute(aMgr : ITransactionManager) : boolean;
+function TExportToOroxTtlFileTrx.Execute(aMgr: ITransactionManager): boolean;
 var
-  lRec : TExportToOroxTtlFileRec;
+  lRec: TExportToOroxTtlFileRec;
 begin
   lRec.OrganizationName:= OrganizationName;
   lRec.FileNameExportFile:= FileNameExportFile;
@@ -476,7 +292,7 @@ begin
 end;
 
 { TUniqueStringlistTrx }
-constructor TUniqueStringlistTrx.Create(aModReason : word);
+constructor TUniqueStringlistTrx.Create(aModReason: word);
 begin
   fModReason:= aModReason;
   fListItems:= Nil; //TStringList.Create;
@@ -489,7 +305,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TUniqueStringlistTrx.Execute(aMgr : ITransactionManager);
+procedure TUniqueStringlistTrx.Execute(aMgr: ITransactionManager);
 var
   lRec: TUniqueStringlistRec;
   tempList: TStringList;
@@ -514,15 +330,15 @@ procedure TSortDbGridTrx.Execute(aMgr: ITransactionManager);
 var
   lRec: TSortDbGridRec;
 begin
-  // Bereid de record voor om naar Model te sturen
+  // Prepare the record to send to Model
   lRec.Column:= fColumn;
   lRec.FieldName:= fFieldName;
   lRec.CurrentSortOrder:= fCurrentSortOrder;
   lRec.DataType:= DataType;
-  lRec.DataProvider:= DataProvider;  // wordt voor de csv dataaset gebruikt.
+  lRec.DataProvider:= DataProvider;  // is used by the csv dataset.
   aMgr.OwnerMain.Model.SortDbGrid(@lRec);
 
-  // Stuur het resultaat terug naar de View
+  // Send the result back to the View
   aMgr.OwnerMain.Provider.NotifySubscribers(prSortDbGrid, DbGrid, Nil);
 end;
 
@@ -551,16 +367,38 @@ begin
   aMgr.OwnerMain.Provider.NotifySubscribers(prRetrieveCSVData, DataGrid, @lRec);
 end;
 
+{ TLoadFormStateTrx }
+function TLoadFormStateTrx.Execute(aMgr: ITransactionManager): Boolean;
+var
+  lRec: TSettingsRec;
+begin
+  lRec.setSettingsFile:= fSettingsFile;
+  lRec.setFrmName:= fFormName;
+  lRec:= aMgr.OwnerMain.Model.ReadFormState(@lRec);
+  lRec.setReadFormState:= True;
+  aMgr.OwnerMain.Provider.NotifySubscribers(prLoadFormState, Self, @lRec);
+  Result:= lRec.setSucces;
+end;
 
-
+{ TStoreFormStateTrx }
+function TStoreFormStateTrx.Execute(aMgr: ITransactionManager): Boolean;
+var
+  lRec: TSettingsRec;
+begin
+  lRec:= fSettings;
+  lRec.setSettingsFile:= fSettingsFile;
+  lRec.setStoreFormState:= True;
+  lRec:= aMgr.OwnerMain.Model.StoreFormState(@lRec);
+  lRec.setStoreFormState:= True;
+  aMgr.OwnerMain.Provider.NotifySubscribers(prStoreFormState, Self, @lRec);
+  Result:= lRec.setSucces;
+end;
 
 
 
 procedure InitTrax;
 begin
-  RegisterTransactionClass(prDataChanged,TTextEdit);
-  RegisterTransactionClass(prFetchDirData,TDirInfoTrx);
-  RegisterTransactionClass(prFetchFileData,TFileInfoTrx);
+  // All examples removed, so the transaction factory is empty when the tool starts...
 end;
 
 initialization
