@@ -11,7 +11,7 @@ uses
 type
   TMappingType = (mtMateriaalPut, mtMateriaalLeiding, mtVormPut, mtVormLeiding, mtObjectType,
     mtStatusFunctioneren, mtStelseltype, mtPutType, mtLeidingType, mtKolkType,
-     mtPersleidingType, mtFundering, mtWibonThema);
+     mtPersleidingType, mtFundering, mtWibonThema, mtVerbindingstype);
 
   { TMappingManager }
   TMappingManager = class
@@ -92,6 +92,7 @@ begin
         mtPersleidingType   : SheetName:= 'LeidingType';        // CAUTION. Keep it that way for the time being. Perhaps separate in the ods document.
         mtFundering         : Sheetname:= 'Fundering';          // Used by manhole and pipe.
         mtWibonThema        : Sheetname:= 'WibonThema';
+        mtVerbindingstype   : Sheetname:= 'Verbindingstype';
       end;
 
       fMappings[MappingType].Clear; // Clear existing mappings

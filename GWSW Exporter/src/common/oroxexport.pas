@@ -1120,6 +1120,22 @@ begin
     Exit;
   end;
 
+
+  // Verbingingstype mapping
+  if DataProvider.FieldExists('VERBINDINGSTYPE') then begin
+    lValue:= UpperCase(VarToStrDef(DataProvider.GetFieldValue('VERBINDINGSTYPE'), ''));
+    Leiding^.VerbindingstypeUri:= fMappingManager.GetGWSWURI(mtVerbindingstype, lValue);
+    if Leiding^.VerbindingstypeUri = '' then
+      ReportError('Leiding: "Buisverbindigstype" veld is leeg', eetFieldIsEmpty, Leiding^.GUID)
+    else if Leiding^.VerbindingstypeUri = 'Mapping_error' then begin
+      Leiding^.VerbindingstypeUri:= '';
+      ReportError('Leiding: "Buisverbindigstype" veld niet conform gwsw domeinlijst.', eetMapping, Leiding^.GUID);
+    end
+  end
+  else
+    ReportError('Leiding: "Buisverbindigstype" veld ontbreekt.', eetFieldIsMissing, '');
+
+
   Result:= Leiding;
 end;
 
@@ -2281,7 +2297,7 @@ begin
     if not IsNan(Put^.Breedte) and (Put^.Breedte > 0) then begin
       if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedtePut ; gwsw:hasValue ' +
-               FloatToOrox(Put^.Breedte, 0) + ' ] ;');
+               FloatToOrox(Put^.Breedte, 0) + ' ] ;');  // 0 is afronden op 0 decimalen
       end
       else
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:BreedteBouwwerk ; gwsw:hasValue ' +
@@ -2293,7 +2309,7 @@ begin
     if not IsNan(Put^.Lengte) and (Put^.Lengte > 0) then begin
       if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
-               FloatToOrox(Put^.Lengte, 0) + ' ] ;');
+               FloatToOrox(Put^.Lengte, 0) + ' ] ;'); // 0 is afronden op 0 decimalen   { #todo : instelbaar maken ? }
       end
       else
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengteBouwwerk ; gwsw:hasValue ' +
@@ -2305,7 +2321,7 @@ begin
     if not IsNan(Put^.Hoogte) and (Put^.Hoogte > 0) then begin
       if not AnsiContainsText(Put^.PutTypeUri, 'gemaal') then begin
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogtePut ; gwsw:hasValue ' +
-               FloatToOrox(Put^.Hoogte, 0) + ' ] ;');
+               FloatToOrox(Put^.Hoogte, 0) + ' ] ;'); // 0 is afronden op 0 decimalen
       end
       else
         SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:HoogteBouwwerk ; gwsw:hasValue ' +
@@ -2499,6 +2515,12 @@ begin
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Einddatum ; ' +
              'gwsw:hasValue "' + DateToOroxFormat(Leiding^.Einddatum) + '"^^xsd:date ] ;');}
   end;
+
+  if fExportConfig.IncludeLeidingVerbindingstype then begin
+    if Leiding^.VerbindingstypeUri <> '' then
+      SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:Verbindingstype ; ' +
+           'gwsw:hasReference ' + Leiding^.VerbindingstypeUri + ' ] ;');
+  end;
 end;
 
 procedure TOroxExport.AddPersleidingKenmerken(SL: TStringList; const Persleiding: PGWSWPersleiding);
@@ -2620,7 +2642,7 @@ begin
   if fExportConfig.IncludeKolkLengte then begin
     if not IsNan(Kolk^.Lengte) and (Kolk^.Lengte > 0) then
       SL.Add('  gwsw:hasAspect  [ rdf:type gwsw:LengtePut ; gwsw:hasValue ' +
-             FloatToOrox(Kolk^.Lengte, 3) + ' ] ;');
+             FloatToOrox(Kolk^.Lengte, 0) + ' ] ;');
   end;
 
   // Breedte

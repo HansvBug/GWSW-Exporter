@@ -123,7 +123,8 @@ type
     setIncludeLeidingBegindatum,
     setIncludeLeidingEinddatum,
     setIncludeLeidingBobBegin,
-    setIncludeLeidingBobEind: Boolean;
+    setIncludeLeidingBobEind,
+    setIncludeLeidingVerbindingstype: Boolean;
     // Export persleiding
     setIncludePersleidingLengte,
     setIncludePersleidingHoogte,

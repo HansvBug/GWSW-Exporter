@@ -41,7 +41,8 @@ type
     IncludeLeidingStatusFunctioneren,
     IncludeLeidingWIBONThema,
     IncludeLeidingBegindatum,
-    IncludeLeidingEinddatum: Boolean;
+    IncludeLeidingEinddatum,
+    IncludeLeidingVerbindingstype: Boolean;
 
     // Persleiding attributen
     IncludePersleidingLengte,
@@ -103,6 +104,7 @@ begin
   Result.IncludeLeidingWIBONThema:= S.setIncludeLeidingWIBONThema;
   Result.IncludeLeidingBegindatum:= S.setIncludeLeidingBegindatum;
   Result.IncludeLeidingEinddatum:= S.setIncludeLeidingEinddatum;
+  Result.IncludeLeidingVerbindingstype:= S.setIncludeLeidingVerbindingstype;
 
   // Persleiding
   Result.IncludePersleidingLengte:= S.setIncludePersleidingLengte;

@@ -16,7 +16,7 @@ tsQuery=Query
 gbConnection=Connection
 gbGetData=Get data from database
 gbExport=Export
-btnSaveQuery=Save
+btnSaveQuery=Save (as)
 btnOpenQuery=Open
 btnSaveErrorLog=Save
 lblDatabaseName=Database
@@ -127,6 +127,7 @@ chkIncludeLeidingBegindatum=Start date
 chkIncludeLeidingEinddatum=End date
 chkIncludeLeidingBobBegin=Inside bottom of sewer line, start
 chkIncludeLeidingBobEind=Inside bottom of sewer line, end
+chkIncludeLeidingVerbindingstype=Connection type
 
 gbMechanicalPipeline=Mechanical pipeline
 chkIncludePersleidingLengte=Length

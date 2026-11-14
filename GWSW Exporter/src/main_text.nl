@@ -16,7 +16,7 @@ tsQuery=Query
 gbConnection=Connectie
 gbGetData=Haal de data op
 gbExport=Exporteer
-btnSaveQuery=Opslaan
+btnSaveQuery=Opslaan (als)
 btnOpenQuery=Open
 btnSaveErrorLog=Opslaan
 btnExportDbgridToCsv=Opslaan
@@ -126,6 +126,7 @@ chkIncludeLeidingBegindatum=Begindatum
 chkIncludeLeidingEinddatum=Einddatum
 chkIncludeLeidingBobBegin=B.o.b. begin
 chkIncludeLeidingBobEind=B.o.b. eind
+chkIncludeLeidingVerbindingstype=Verbindingstype
 
 gbMechanicalPipeline=Persleiding
 chkIncludePersleidingLengte=Lengte

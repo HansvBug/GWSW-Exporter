@@ -35,6 +35,7 @@ type
     cbOrganizationName: TComboBox;
     cbOrganizationNameCSV: TComboBox;
     cbUserName: TComboBox;
+    chkIncludeLeidingVerbindingstype: TCheckBox;
     chkGullyCheckAll: TCheckBox;
     chkMechanicalPipelineCheckAll: TCheckBox;
     chkManholesCheckAll: TCheckBox;
@@ -998,6 +999,7 @@ begin
       chkIncludeLeidingEinddatum.Checked:= setIncludeLeidingEinddatum;
       chkIncludeLeidingBobBegin.Checked:= setIncludeLeidingBobBegin;
       chkIncludeLeidingBobEind.Checked:= setIncludeLeidingBobEind;
+      chkIncludeLeidingVerbindingstype.Checked:= setIncludeLeidingVerbindingstype;
 
       // Persleiding
       chkIncludePersleidingLengte.Checked:= setIncludePersleidingLengte;
@@ -1872,6 +1874,7 @@ begin
   lRec.setIncludeLeidingEinddatum:= chkIncludeLeidingEinddatum.Checked;
   lRec.setIncludeLeidingBobBegin:= chkIncludeLeidingBobBegin.Checked;
   lRec.setIncludeLeidingBobEind:= chkIncludeLeidingBobEind.Checked;
+  lRec.setIncludeLeidingVerbindingstype:= chkIncludeLeidingVerbindingstype.Checked;
 
   // Export — Persleiding
   lRec.setIncludePersleidingLengte:= chkIncludePersleidingLengte.Checked;

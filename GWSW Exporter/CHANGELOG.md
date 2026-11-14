@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+## [0.5.3.2] - 2026-11-13
+### Added
+- Sewer pipe connection added
+
 ## [0.5.3] - 2026-11-04
 ### Added
 - GWSW 1.7 URIs can be generated.

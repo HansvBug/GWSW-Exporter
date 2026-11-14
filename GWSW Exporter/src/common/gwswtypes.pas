@@ -68,6 +68,7 @@ type
   StelselID: String;  //
   StelselURI: String;
   Stelselnaam: String;  // Naam van het stelsel voor rdfs:label
+  VerbindingstypeUri: String;
 
   // Topologie
   WKTGeometry: String;

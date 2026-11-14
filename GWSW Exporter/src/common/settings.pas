@@ -97,6 +97,7 @@ begin
   Result.IncludeLeidingEinddatum:= fAllSettings.setIncludeLeidingEinddatum;
   Result.IncludeLeidingBobBegin:= fAllSettings.setIncludeLeidingBobBegin;
   Result.IncludeLeidingBobEind:= fAllSettings.setIncludeLeidingBobEind;
+  Result.IncludeLeidingVerbindingstype:= fAllSettings.setIncludeLeidingVerbindingstype;
 
   Result.IncludePersleidingLengte:= fAllSettings.setIncludePersleidingLengte;
   Result.IncludePersleidingHoogte:= fAllSettings.setIncludePersleidingHoogte;
@@ -177,6 +178,7 @@ begin
   fAllSettings.setIncludeLeidingEinddatum:= False;
   fAllSettings.setIncludeLeidingBobBegin:= True;
   fAllSettings.setIncludeLeidingBobEind:= True;
+  fAllSettings.setIncludeLeidingVerbindingstype:= True;
 
   // Export — Persleiding
   fAllSettings.setIncludePersleidingLengte:= True;
@@ -261,6 +263,7 @@ begin
     fAllSettings.setIncludeLeidingEinddatum:= lIni.ReadBool('Export', 'IncludeLeidingEinddatum', False);
     fAllSettings.setIncludeLeidingBobBegin:= lIni.ReadBool('Export', 'IncludeLeidingBobBegin', True);
     fAllSettings.setIncludeLeidingBobEind:= lIni.ReadBool('Export', 'IncludeLeidingBobEind', True);
+    fAllSettings.setIncludeLeidingVerbindingstype:= lIni.ReadBool('Export', 'IncludeLeidingVerbindingstype', True);
 
     // Export — Persleiding
     fAllSettings.setIncludePersleidingLengte:= lIni.ReadBool('Export', 'IncludePersleidingLengte', True);
@@ -354,6 +357,7 @@ begin
     lIni.WriteBool('Export', 'IncludeLeidingEinddatum', fAllSettings.setIncludeLeidingEinddatum);
     lIni.WriteBool('Export', 'IncludeLeidingBobBegin', fAllSettings.setIncludeLeidingBobBegin);
     lIni.WriteBool('Export', 'IncludeLeidingBobEind', fAllSettings.setIncludeLeidingBobEind);
+    lIni.WriteBool('Export', 'IncludeLeidingVerbindingstype', fAllSettings.setIncludeLeidingVerbindingstype);
 
     // Export — Persleiding
     lIni.WriteBool('Export', 'IncludePersleidingLengte', fAllSettings.setIncludePersleidingLengte);

@@ -10,9 +10,9 @@ interface (* this unit collects nearly all constants & is referenced in most uni
 uses classes, sysutils, obs_prosu;
 const
   { Application constants }
-  Application_version            = '0.5.0.0';
+  Application_version            = '0.5.3.2';
   Application_initial_start_date = '12-12-2025';
-  Application_build_date         = '04-11-2026';
+  Application_build_date         = '14-11-2026';
 
   DefaultOroXFileExt = 'orox.ttl'; // Is prescribed in this way.
 
